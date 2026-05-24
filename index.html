@@ -158,6 +158,10 @@
       <div class="stage-wrap">
         <canvas id="stage" width="480" height="280"></canvas>
       </div>
+      <div class="controls">
+        <button id="btn-run">Run scenario</button>
+        <button id="btn-reset" class="ghost">Reset</button>
+      </div>
       <div id="log" class="log"><div class="line">[idle] click "Run scenario" to start</div></div>
 
       <div class="live-panels">
@@ -191,10 +195,6 @@
         </div>
       </div>
 
-      <div class="controls">
-        <button id="btn-run">Run scenario</button>
-        <button id="btn-reset" class="ghost">Reset</button>
-      </div>
       <div class="credit">
         Sprites: <a href="https://arlantr.itch.io/metrocity">MetroCity by BK.A4</a> · Office layout:
         <a href="https://github.com/thx0701/openclaw-virtual-office">openclaw-virtual-office (MIT)</a>
@@ -240,18 +240,17 @@ function loadAll() {
  * canvas is 480×280; place stations along sensible spots
  * ═══════════════════════════════════════════════════════════════════ */
 
-// Stations sit on the bottom walking lane of the office (y = 240) — clean
-// checkered floor below the conference desk and above the bottom shelves.
-// Furniture extends UP from the agent's feet so it stands clearly against
-// the floor instead of disappearing into background PCs.
-// x-coords spread evenly across width 480 with margin for plants in corners.
+// Stations sit in the open walking lane between the conference desk and
+// the bottom shelves (y ~ 215). Furniture extends UP from the agent's
+// feet, so the bottom-of-bg bookshelves stay visible behind them and
+// nothing "sits on top of" the shelves.
 const STATIONS = {
-  inbox:  { x:  64, y: 238, label: "INBOX"      },
-  skill:  { x: 150, y: 238, label: "SKILL.md"   },
-  mcp:    { x: 240, y: 238, label: "MCP toolbox"},
-  db:     { x: 330, y: 238, label: "DB"         },
-  board:  { x: 416, y: 238, label: "DASHBOARD"  },
-  start:  { x:  64, y: 238, label: ""           },
+  inbox:  { x:  64, y: 218, label: "INBOX"      },
+  skill:  { x: 150, y: 218, label: "SKILL.md"   },
+  mcp:    { x: 240, y: 218, label: "MCP toolbox"},
+  db:     { x: 330, y: 218, label: "DB"         },
+  board:  { x: 416, y: 218, label: "DASHBOARD"  },
+  start:  { x:  64, y: 218, label: ""           },
 };
 
 /* ═══════════════════════════════════════════════════════════════════
