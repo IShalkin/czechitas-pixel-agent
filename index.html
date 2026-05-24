@@ -96,8 +96,8 @@
   .rule-row .label small, .tool-row .label small {
     display: block; color: var(--muted); font-size: 11px; font-family: var(--mono); margin-top: 2px;
   }
-  .rule-row.fired-pass { background: #eaf6e6; }
-  .rule-row.fired-pass .icon { background: #3a7a3a; color: #fff; }
+  .rule-row.fired-pass, .tool-row.fired-pass { background: #eaf6e6; }
+  .rule-row.fired-pass .icon, .tool-row.fired-pass .icon { background: #3a7a3a; color: #fff; }
   .rule-row.fired-fail { background: #fbe6e1; }
   .rule-row.fired-fail .icon { background: var(--accent); color: #fff; }
   .rule-row.skipped { opacity: 0.45; }
@@ -295,6 +295,10 @@ const state = {
   // MCP panel state — which tool is currently being highlighted
   mcpOpen: false,            // chest sprite open/closed
   mcpTool: null,             // null | "list_tables" | "describe_table" | "execute_query" | "blocked"
+
+  // MCP panel state — which tools have been used this run (persist after closeMcp)
+  // map: tool key → "used" | undefined
+  toolStatus: {},
 
   // Skill panel state — which rules have fired this run
   // map: rule key → "pass" | "fail" | "skip" | null (untouched / pending)
@@ -591,6 +595,7 @@ function openMcp(tool = null) {
 }
 function setTool(tool) {
   state.mcpTool = tool;
+  if (tool) state.toolStatus[tool] = "used";
   renderMcpPanel();
 }
 function closeMcp() {
@@ -655,10 +660,12 @@ function renderMcpPanel() {
   panel.classList.toggle("off", !enabled);
   wrap.innerHTML = TOOLS.map(t => {
     const active = enabled && state.mcpTool === t.key;
+    const used   = enabled && state.toolStatus[t.key] === "used";
     let cls = "tool-row";
+    let icon = "·";
     if (!enabled) cls += " disabled";
-    if (active)   cls += " active";
-    const icon = active ? "▶" : "·";
+    else if (active) { cls += " active"; icon = "▶"; }
+    else if (used)   { cls += " fired-pass"; icon = "✓"; }
     return `<div class="${cls}">
       <div class="icon">${icon}</div>
       <div class="label">${escHtml(t.label)}<small>${escHtml(t.sub)}</small></div>
@@ -702,6 +709,7 @@ function escHtml(s) {
 function beginRun() {
   state.ruleStatus = {};
   state.evalStatus = {};
+  state.toolStatus = {};
   state.mcpOpen = false;
   state.mcpTool = null;
   state.chartBars = 0;
@@ -1023,6 +1031,7 @@ function resetAll() {
   state.log = [{ kind: "info", text: "[idle] click \"Run scenario\" to start" }];
   state.ruleStatus = {};
   state.evalStatus = {};
+  state.toolStatus = {};
   state.mcpOpen = false;
   state.mcpTool = null;
   state.chartBars = 0;
