@@ -35,7 +35,7 @@ python -m http.server 8000
 
 Single `index.html`. Pure simulation: each scenario is a sequence of awaitable steps (`gotoStation`, `say`, `activity`, `walkSkillStation`, `useTool`, `drawChartBar`) that read from `state` and react to it. No network, no LLM, no real database.
 
-The office (background, agent sprite, chest, whiteboard, speech bubbles) is drawn on a 480×280 pixel canvas. The two side panels — **SKILL.md** (4 rules) and **MCP server** (3 tools) — are plain HTML rendered live from `state.ruleStatus` and `state.mcpTool`. Canvas is for atmosphere; HTML is for anything you actually need to read.
+The office (background, agent sprite, chest, whiteboard, speech bubbles) is drawn on a 480×280 pixel canvas. The three side panels — **SKILL.md** (4 rules), **MCP server** (3 tools), **evals.json** (3 post-query checks) — are plain HTML rendered live from `state.ruleStatus`, `state.mcpTool`, and `state.evalStatus`. Canvas is for atmosphere; HTML is for anything you actually need to read. Toggling Skill / MCP / Evals off in the rail flips the corresponding panel into a dimmed "OFF" state with a red badge — visible signal of what just got bypassed.
 
 ## Credits
 

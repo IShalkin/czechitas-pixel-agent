@@ -60,13 +60,25 @@
   .credit a { color: var(--muted); }
 
   /* ── Live panels under stage ── */
-  .live-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
-  .live-panel { background: #fdfaf5; border: 1px solid var(--border); border-radius: 4px; padding: 14px; }
+  .live-panels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .live-panel { background: #fdfaf5; border: 1px solid var(--border); border-radius: 4px; padding: 14px; position: relative; transition: opacity 200ms ease; }
   .live-panel h4 {
     margin: 0 0 4px; font-family: var(--mono); font-size: 12px;
     color: var(--accent); font-weight: 600;
   }
   .live-panel .panel-sub { margin: 0 0 10px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .live-panel.off { background: #f3ede0; }
+  .live-panel.off h4, .live-panel.off .panel-sub { opacity: 0.5; }
+  .live-panel.off .rule-row, .live-panel.off .tool-row { opacity: 0.3; text-decoration: line-through; background: transparent; }
+  .live-panel.off .rule-row .icon, .live-panel.off .tool-row .icon { background: #efe7d4; color: var(--muted); }
+  .live-panel .off-badge {
+    position: absolute; top: 10px; right: 12px;
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    color: var(--accent); background: #fbe6e1; border: 1px solid var(--accent);
+    padding: 2px 6px; border-radius: 3px; letter-spacing: 0.5px;
+    display: none;
+  }
+  .live-panel.off .off-badge { display: inline-block; }
 
   .rule-row, .tool-row {
     display: flex; align-items: flex-start; gap: 8px; padding: 8px 6px;
@@ -150,6 +162,7 @@
 
       <div class="live-panels">
         <div class="live-panel" id="skill-panel">
+          <span class="off-badge">SKILL OFF</span>
           <h4>SKILL.md</h4>
           <p class="panel-sub">sql-review.md · 4 pravidla</p>
           <div id="skill-rows"></div>
@@ -159,11 +172,21 @@
           </div>
         </div>
         <div class="live-panel" id="mcp-panel">
+          <span class="off-badge">MCP OFF</span>
           <h4>MCP server</h4>
           <p class="panel-sub">snowflake-czechitas · 3 nástroje</p>
           <div id="mcp-rows"></div>
           <div class="panel-footer">
             Agent vybírá nástroj podle úkolu — ne náhodou.
+          </div>
+        </div>
+        <div class="live-panel" id="evals-panel">
+          <span class="off-badge">EVALS OFF</span>
+          <h4>evals.json</h4>
+          <p class="panel-sub">post-query · 3 kontroly</p>
+          <div id="evals-rows"></div>
+          <div class="panel-footer">
+            Skill chytá <em>před</em> spuštěním. Evals kontrolují <em>po</em> — jestli výsledek dává smysl.
           </div>
         </div>
       </div>
@@ -277,6 +300,10 @@ const state = {
   // map: rule key → "pass" | "fail" | "skip" | null (untouched / pending)
   ruleStatus: {},
 
+  // Evals panel state — which evals fired this run
+  // map: eval key → "pass" | "fail" | "skip" | null (untouched / pending)
+  evalStatus: {},
+
   // Whiteboard chart state — bars 0..5 drawn one by one
   chartBars: 0,      // 0..5
   chartTone: "ok",   // "ok" | "warn" | "fail"
@@ -319,6 +346,13 @@ const TOOLS = [
   { key: "list_tables",    label: "list_tables",    sub: "vypíše dostupné tabulky" },
   { key: "describe_table", label: "describe_table", sub: "ukáže sloupce a typy" },
   { key: "execute_query",  label: "execute_query",  sub: "spustí SQL na DB" },
+];
+
+// Evals run AFTER the query — they catch silent failures the skill rules missed.
+const EVALS = [
+  { key: "rowCount",     label: "Row count v rozsahu",          short: "row count",     tag: "expect 200..300 řádků" },
+  { key: "schemaMatch",  label: "Schema = země + počet",        short: "schema match",  tag: "REGION_TXT + n" },
+  { key: "noSilentFail", label: "Query nesmí tiše dropnout DB", short: "no silent drop", tag: "DROP / DELETE prošlo?" },
 ];
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -544,6 +578,11 @@ function setCheck(key, status) {
   renderSkillPanel();
 }
 
+function setEval(key, status) {
+  state.evalStatus[key] = status;
+  renderEvalsPanel();
+}
+
 // MCP panel primitives — drive the HTML panel + chest sprite on canvas
 function openMcp(tool = null) {
   state.mcpOpen = true;
@@ -586,10 +625,12 @@ function renderLog() {
 }
 
 function renderSkillPanel() {
-  const wrap = document.getElementById("skill-rows");
-  if (!wrap) return;
+  const panel = document.getElementById("skill-panel");
+  const wrap  = document.getElementById("skill-rows");
+  if (!panel || !wrap) return;
+  panel.classList.toggle("off", !state.skillOn);
   wrap.innerHTML = RULES.map(r => {
-    const enabled = state.rules[r.key];
+    const enabled = state.skillOn && state.rules[r.key];
     const status  = state.ruleStatus[r.key]; // "pass" | "fail" | "skip" | undefined
     let cls = "rule-row";
     let icon = "·";
@@ -607,11 +648,13 @@ function renderSkillPanel() {
 }
 
 function renderMcpPanel() {
-  const wrap = document.getElementById("mcp-rows");
-  if (!wrap) return;
+  const panel = document.getElementById("mcp-panel");
+  const wrap  = document.getElementById("mcp-rows");
+  if (!panel || !wrap) return;
   const enabled = state.mcpOn;
+  panel.classList.toggle("off", !enabled);
   wrap.innerHTML = TOOLS.map(t => {
-    const active = state.mcpTool === t.key;
+    const active = enabled && state.mcpTool === t.key;
     let cls = "tool-row";
     if (!enabled) cls += " disabled";
     if (active)   cls += " active";
@@ -619,6 +662,28 @@ function renderMcpPanel() {
     return `<div class="${cls}">
       <div class="icon">${icon}</div>
       <div class="label">${escHtml(t.label)}<small>${escHtml(t.sub)}</small></div>
+    </div>`;
+  }).join("");
+}
+
+function renderEvalsPanel() {
+  const panel = document.getElementById("evals-panel");
+  const wrap  = document.getElementById("evals-rows");
+  if (!panel || !wrap) return;
+  panel.classList.toggle("off", !state.evalsOn);
+  wrap.innerHTML = EVALS.map(e => {
+    const enabled = state.evalsOn;
+    const status  = state.evalStatus[e.key];
+    let cls = "rule-row";
+    let icon = "·";
+    if (!enabled) {
+      cls += " disabled";
+    } else if (status === "pass") { cls += " fired-pass"; icon = "✓"; }
+    else if (status === "fail")   { cls += " fired-fail"; icon = "✗"; }
+    else if (status === "skip")   { cls += " skipped";    icon = "–"; }
+    return `<div class="${cls}">
+      <div class="icon">${icon}</div>
+      <div class="label">${escHtml(e.label)}<small>${escHtml(e.tag)}</small></div>
     </div>`;
   }).join("");
 }
@@ -636,12 +701,14 @@ function escHtml(s) {
  * them off one by one as the agent walks past SKILL. */
 function beginRun() {
   state.ruleStatus = {};
+  state.evalStatus = {};
   state.mcpOpen = false;
   state.mcpTool = null;
   state.chartBars = 0;
   state.chartShown = false;
   renderSkillPanel();
   renderMcpPanel();
+  renderEvalsPanel();
 }
 
 /* Walk past skill: tick each rule per its status.
@@ -725,9 +792,13 @@ async function runScenarioA() {
 
   let chartTone = "ok";
   if (state.evalsOn) {
+    setEval("noSilentFail", "pass"); await wait(220);
+    setEval("schemaMatch",  "pass"); await wait(220);
     if (useClean) {
+      setEval("rowCount", "pass");
       logLine("ok", "evals: count=204 ✓  schemaMatch ✓");
     } else {
+      setEval("rowCount", "fail");
       logLine("warn", "evals: count=408 ≠ 204 — DIRTYDATA leaked");
       chartTone = "warn";
     }
@@ -791,7 +862,12 @@ async function runScenarioB() {
   await say("...", 900);
   await activity("tooling", 800);
   logLine("fail", "TEROR2_OLD DROPPED — guardrail bypassed");
-  if (state.evalsOn) logLine("fail", "evals.noDestructive ✗");
+  if (state.evalsOn) {
+    setEval("rowCount",     "skip"); await wait(180);
+    setEval("schemaMatch",  "skip"); await wait(180);
+    setEval("noSilentFail", "fail");
+    logLine("fail", "evals.noSilentFail ✗ — DROP prošel do produkce");
+  }
 
   await gotoStation("start");
   state.running = false;
@@ -840,9 +916,13 @@ async function runScenarioC() {
 
   let chartTone = "ok";
   if (state.evalsOn) {
+    setEval("noSilentFail", "pass"); await wait(220);
+    setEval("schemaMatch",  "pass"); await wait(220);
     if (useClean) {
+      setEval("rowCount", "pass");
       logLine("ok", "evals: count=204 ✓");
     } else {
+      setEval("rowCount", "fail");
       logLine("warn", "evals: count=408 ≠ 204 — DIRTYDATA leaked");
       chartTone = "warn";
     }
@@ -907,7 +987,10 @@ function attachUI() {
     state.mcpOn = e.target.checked;
     renderMcpPanel();
   });
-  document.getElementById("t-evals").addEventListener("change", e => state.evalsOn = e.target.checked);
+  document.getElementById("t-evals").addEventListener("change", e => {
+    state.evalsOn = e.target.checked;
+    renderEvalsPanel();
+  });
   document.getElementById("btn-run").addEventListener("click", runCurrent);
   document.getElementById("btn-reset").addEventListener("click", resetAll);
 }
@@ -939,6 +1022,7 @@ function resetAll() {
   state.agent.moving = false;
   state.log = [{ kind: "info", text: "[idle] click \"Run scenario\" to start" }];
   state.ruleStatus = {};
+  state.evalStatus = {};
   state.mcpOpen = false;
   state.mcpTool = null;
   state.chartBars = 0;
@@ -946,6 +1030,7 @@ function resetAll() {
   renderLog();
   renderSkillPanel();
   renderMcpPanel();
+  renderEvalsPanel();
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -957,6 +1042,7 @@ function resetAll() {
   attachUI();
   renderSkillPanel();
   renderMcpPanel();
+  renderEvalsPanel();
   await loadAll();
   requestAnimationFrame(loop);
 })();
