@@ -356,7 +356,7 @@
           <div class="sb-preview-wrap">
             <div class="sb-preview-head">
               <span class="file">SKILL.md</span>
-              <span id="sb-preview-count">4 pravidla aktivní</span>
+              <span id="sb-preview-count">5 pravidel aktivních</span>
             </div>
             <pre id="sb-preview" class="sb-preview"></pre>
             <div class="sb-actions">
@@ -413,7 +413,7 @@
         <div class="live-panel" id="skill-panel">
           <span class="off-badge">SKILL OFF</span>
           <h4>SKILL.md</h4>
-          <p class="panel-sub">sql-review.md · 4 pravidla</p>
+          <p class="panel-sub">sql-review.md · 5 pravidel</p>
           <div id="skill-rows"></div>
           <div class="panel-footer">
             Tato pravidla jste si napsali sami v
@@ -517,6 +517,7 @@ const state = {
     noOldTables: true,
     preferCleanLookup: true,
     bigScan: true,
+    renderChart: true,
   },
   skillOn: true,
   mcpOn: true,
@@ -612,6 +613,14 @@ const RULES = [
     tag: "BIG_SCAN",
     pattern: "rows × no WHERE",
     body: "Warn when a query scans a table over 1M rows without a WHERE filter on a date or partition column.",
+  },
+  {
+    key: "renderChart",
+    label: "Výsledek vykresli jako graf, ne jen tabulku",
+    short: "render chart",
+    tag: "RENDER_CHART",
+    pattern: "result rows → dashboard",
+    body: "When the result is tabular (top-N or time series), render it on the dashboard as a bar chart — never dump raw rows into chat.",
   },
 ];
 
@@ -1493,7 +1502,7 @@ async function walkSkillStation(predicates) {
   state.agent.facing = "up";
   state.agent.activity = "reading";
   openRecipe();
-  logLine("skill", "SKILL loaded: sql-review.md (4 pravidla)");
+  logLine("skill", `SKILL loaded: sql-review.md (${RULES.length} pravidel)`);
   await wait(400);
   let blockedBy = null;
   for (const r of RULES) {
@@ -1607,17 +1616,22 @@ async function runScenarioA() {
     logLine("info", "evals OFF (čistá query — prošlo by stejně)");
   }
 
-  if (state.skillOn) {
+  if (state.skillOn && state.rules.renderChart) {
     await gotoStation("board");
-    await say("kreslím dashboard", 900);
+    await say("pravidlo RENDER_CHART —\nkreslím graf", 1200);
     await drawChartBar(chartTone);
     showFullDashboard("ok");
     logLine("ok", "DASHBOARD: top 10 zemí — ready to ship");
   } else {
-    await think("bez skillu nevím,\nco s daty —\nvrátím syrová čísla", 2000);
+    const reason = !state.skillOn
+      ? "bez skillu nevím,\nco s daty —\nvrátím syrová čísla"
+      : "RENDER_CHART je OFF —\nvracím jen řádky";
+    await think(reason, 2000);
     await say("Iraq · Afghan · Pak…", 1400);
     logLine("info", "raw rows: Iraq=15400, Afghanistan=12970, Pakistan=6112, …");
-    logLine("warn", "bez skillu: žádný dashboard — jen tabulka v chatu");
+    logLine("warn", state.skillOn
+      ? "bez RENDER_CHART pravidla: jen tabulka v chatu, žádný dashboard"
+      : "bez skillu: žádný dashboard — jen tabulka v chatu");
   }
 
   await gotoStation("start");
@@ -1774,7 +1788,7 @@ async function runScenarioC() {
     chartTone = "fail";
   }
 
-  if (state.skillOn) {
+  if (state.skillOn && state.rules.renderChart) {
     await gotoStation("board");
     await drawChartBar(chartTone);
     showFullDashboard(chartTone, useClean ? "clean" : "dirty");
@@ -1783,7 +1797,9 @@ async function runScenarioC() {
     if (chartTone === "fail") logLine("fail", "DASHBOARD: silent bad numbers");
   } else {
     await say("data hotová", 1200);
-    logLine("warn", "bez skillu: jen řádky v chatu — žádný dashboard");
+    logLine("warn", state.skillOn
+      ? "bez RENDER_CHART pravidla: jen řádky v chatu, žádný dashboard"
+      : "bez skillu: jen řádky v chatu — žádný dashboard");
   }
 
   await gotoStation("start");
@@ -1868,7 +1884,12 @@ function renderSkillBuilderPreview() {
   el.innerHTML = highlightSkillMd(md);
   if (cnt) {
     const n = RULES.filter(r => state.rules[r.key]).length;
-    cnt.textContent = n === 1 ? "1 pravidlo aktivní" : n + " pravidla aktivní";
+    let label;
+    if (n === 0) label = "0 pravidel aktivních (agent jede naslepo)";
+    else if (n === 1) label = "1 pravidlo aktivní";
+    else if (n < 5)   label = n + " pravidla aktivní";
+    else              label = n + " pravidel aktivních";
+    cnt.textContent = label;
   }
 }
 
