@@ -928,10 +928,12 @@ function loop(t) {
   const dt = t - lastT;
   lastT = t;
 
-  // animate frames
+  // animate frames — walking is brisk, idle/reading/tooling/drawing are slow
+  // (when the agent is standing still, fast frame-cycling reads as nervous fidgeting)
   const a = state.agent;
+  const frameInterval = (a.activity === "walking" || a.moving) ? 140 : 420;
   a.frameTime += dt;
-  if (a.frameTime > 140) {
+  if (a.frameTime > frameInterval) {
     a.frameTime = 0;
     a.frame = (a.frame + 1) % FRAMES;
   }
