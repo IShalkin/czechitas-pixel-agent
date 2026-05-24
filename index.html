@@ -102,6 +102,95 @@
     font-size: 12px; color: var(--muted);
   }
 
+  /* ── Skill Builder (author the SKILL.md the agent will use) ── */
+  .skill-builder {
+    background: #fdfaf5;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 22px 14px;
+    margin-bottom: 18px;
+  }
+  .skill-builder .sb-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap; margin-bottom: 4px;
+  }
+  .skill-builder .sb-title {
+    font-family: var(--serif); font-weight: 400; font-size: 22px; margin: 0;
+  }
+  .skill-builder .sb-sub {
+    font-size: 12px; color: var(--muted); margin: 0;
+  }
+  .skill-builder .sb-cols {
+    display: grid; grid-template-columns: 1.05fr 1fr; gap: 18px;
+    margin-top: 14px;
+  }
+  .skill-builder .sb-rules { display: flex; flex-direction: column; gap: 8px; }
+  .skill-builder .sb-rule {
+    display: grid; grid-template-columns: 22px 1fr; gap: 10px;
+    align-items: start;
+    padding: 10px 12px; background: #fbf3df;
+    border: 1px solid #e8dcc0; border-radius: 4px;
+    cursor: pointer; transition: border-color 150ms ease, opacity 150ms ease;
+  }
+  .skill-builder .sb-rule:hover { border-color: var(--accent); }
+  .skill-builder .sb-rule.off { opacity: 0.45; background: #f3ede0; }
+  .skill-builder .sb-rule input[type="checkbox"] {
+    margin-top: 3px; accent-color: var(--accent); cursor: pointer;
+  }
+  .skill-builder .sb-rule .sb-rule-title {
+    font-size: 13px; font-weight: 600; color: var(--fg);
+  }
+  .skill-builder .sb-rule .sb-rule-body {
+    font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4;
+  }
+  .skill-builder .sb-rule .sb-rule-tag {
+    display: inline-block; margin-top: 4px;
+    font-family: var(--mono); font-size: 10px;
+    background: #fdfaf5; color: var(--accent);
+    border: 1px solid var(--border); border-radius: 3px;
+    padding: 1px 5px; letter-spacing: 0.4px;
+  }
+  .skill-builder .sb-preview-wrap {
+    background: #1a1814; color: #e8d8b8;
+    border-radius: 4px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .skill-builder .sb-preview-head {
+    background: #2a241c; padding: 6px 12px;
+    font-family: var(--mono); font-size: 11px; color: #92d18a;
+    border-bottom: 1px solid #3a342a;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .skill-builder .sb-preview-head .file { color: #e8d8b8; }
+  .skill-builder .sb-preview {
+    margin: 0; padding: 12px 14px;
+    font-family: var(--mono); font-size: 12px; line-height: 1.55;
+    white-space: pre-wrap; word-break: break-word;
+    flex: 1; min-height: 220px; max-height: 360px; overflow-y: auto;
+  }
+  .skill-builder .sb-preview .key   { color: #7adfd6; }
+  .skill-builder .sb-preview .h     { color: #f4c674; font-weight: 700; }
+  .skill-builder .sb-preview .bul   { color: #d4452f; }
+  .skill-builder .sb-preview .com   { color: #8a8478; }
+  .skill-builder .sb-preview .str   { color: #92d18a; }
+  .skill-builder .sb-actions {
+    display: flex; gap: 8px; padding: 8px 12px;
+    background: #2a241c; border-top: 1px solid #3a342a;
+  }
+  .skill-builder .sb-actions button {
+    background: var(--accent); color: var(--cream); border: none;
+    padding: 6px 12px; border-radius: 3px; cursor: pointer;
+    font-family: inherit; font-size: 12px;
+  }
+  .skill-builder .sb-actions button.ghost {
+    background: transparent; color: #e8d8b8; border: 1px solid #5a5040;
+  }
+  .skill-builder .sb-actions .copied { color: #92d18a; font-size: 11px; align-self: center; opacity: 0; transition: opacity 200ms ease; }
+  .skill-builder .sb-actions .copied.show { opacity: 1; }
+  @media (max-width: 800px) {
+    .skill-builder .sb-cols { grid-template-columns: 1fr; }
+  }
+
   /* ── DB terminal (the SQL/result console under the stage) ── */
   .db-terminal {
     margin-top: 14px;
@@ -238,10 +327,6 @@
         <button data-scenario="C">JOIN COUNTRY_DIRTYDATA</button>
       </div>
       <div class="panel">
-        <h3>Skill rules</h3>
-        <div id="rule-toggles"></div>
-      </div>
-      <div class="panel">
         <h3>Layers</h3>
         <div class="toggle-row">
           <input type="checkbox" id="t-skill" checked>
@@ -259,6 +344,30 @@
     </div>
 
     <div>
+      <div class="skill-builder">
+        <div class="sb-head">
+          <div>
+            <h3 class="sb-title">Postav si SKILL.md</h3>
+            <p class="sb-sub">Tahle pravidla agent načte před každým dotazem. Zaškrtni co má hlídat — soubor vlevo dole se mění živě.</p>
+          </div>
+        </div>
+        <div class="sb-cols">
+          <div class="sb-rules" id="sb-rules"></div>
+          <div class="sb-preview-wrap">
+            <div class="sb-preview-head">
+              <span class="file">SKILL.md</span>
+              <span id="sb-preview-count">4 pravidla aktivní</span>
+            </div>
+            <pre id="sb-preview" class="sb-preview"></pre>
+            <div class="sb-actions">
+              <button id="sb-download">Stáhnout SKILL.md</button>
+              <button id="sb-copy" class="ghost">Kopírovat</button>
+              <span id="sb-copied" class="copied">zkopírováno ✓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="stage-wrap">
         <canvas id="stage" width="480" height="280"></canvas>
       </div>
@@ -470,30 +579,39 @@ const state = {
  * ═══════════════════════════════════════════════════════════════════ */
 
 // Czech labels match the Skill Builder app 1:1 — participants recognise their own words.
+// `body` is the markdown bullet that lands in the generated SKILL.md.
 const RULES = [
   {
     key: "noDestructive",
     label: "Odmítej DROP / DELETE / INSERT / UPDATE",
     short: "no destructive",
-    tag: "/(DROP|DELETE|INSERT|UPDATE|TRUNCATE|ALTER|MERGE)/",
+    tag: "NO_DESTRUCTIVE",
+    pattern: "/(DROP|DELETE|INSERT|UPDATE|TRUNCATE|ALTER|MERGE)/",
+    body: "Refuse all destructive operations (DROP, DELETE, INSERT, UPDATE, TRUNCATE, ALTER, MERGE).",
   },
   {
     key: "noOldTables",
     label: "Nepoužívej tabulky _OLD / _LEGACY / _BACKUP",
     short: "no _OLD tables",
-    tag: "/_(OLD|LEGACY|BACKUP)/",
+    tag: "NO_OLD_TABLES",
+    pattern: "/_(OLD|LEGACY|BACKUP)/",
+    body: "Avoid deprecated tables ending in _OLD, _LEGACY, or _BACKUP. Suggest the current alternative.",
   },
   {
     key: "preferCleanLookup",
     label: "Preferuj COUNTRY před COUNTRY_DIRTYDATA",
     short: "prefer COUNTRY",
-    tag: "swap COUNTRY_DIRTYDATA → COUNTRY",
+    tag: "PREFER_CLEAN_LOOKUP",
+    pattern: "swap COUNTRY_DIRTYDATA → COUNTRY",
+    body: "When joining country data, prefer the clean COUNTRY table over COUNTRY_DIRTYDATA (which contains duplicates).",
   },
   {
     key: "bigScan",
     label: "Varuj při skenech přes 1M řádků bez WHERE",
     short: "big scan",
-    tag: "rows × no WHERE",
+    tag: "BIG_SCAN",
+    pattern: "rows × no WHERE",
+    body: "Warn when a query scans a table over 1M rows without a WHERE filter on a date or partition column.",
   },
 ];
 
@@ -1286,7 +1404,7 @@ function renderSkillPanel() {
     else if (status === "skip")    { cls += " skipped";    icon = "–"; }
     return `<div class="${cls}">
       <div class="icon">${icon}</div>
-      <div class="label">${escHtml(r.label)}<small>${escHtml(r.tag)}</small></div>
+      <div class="label">${escHtml(r.label)}<small>${escHtml(r.pattern)}</small></div>
     </div>`;
   }).join("");
 }
@@ -1678,28 +1796,125 @@ const SCENARIOS = { A: runScenarioA, B: runScenarioB, C: runScenarioC };
  * UI WIRING
  * ═══════════════════════════════════════════════════════════════════ */
 
-function buildRuleToggles() {
-  const wrap = document.getElementById("rule-toggles");
+function buildSkillBuilder() {
+  const wrap = document.getElementById("sb-rules");
+  if (!wrap) return;
   wrap.innerHTML = "";
   RULES.forEach(r => {
-    const row = document.createElement("div");
-    row.className = "toggle-row";
+    const row = document.createElement("label");
+    row.className = "sb-rule";
+    row.htmlFor = "sb-" + r.key;
     const cb = document.createElement("input");
     cb.type = "checkbox";
-    cb.id = "r-" + r.key;
+    cb.id = "sb-" + r.key;
     cb.checked = state.rules[r.key];
     cb.addEventListener("change", () => {
       state.rules[r.key] = cb.checked;
+      row.classList.toggle("off", !cb.checked);
       renderSkillPanel();
+      renderSkillBuilderPreview();
     });
-    const lab = document.createElement("label");
-    lab.htmlFor = cb.id;
-    lab.textContent = r.short;
-    lab.title = r.label;
+    const text = document.createElement("div");
+    text.innerHTML =
+      `<div class="sb-rule-title">${escHtml(r.label)}</div>` +
+      `<div class="sb-rule-body">${escHtml(r.body)}</div>` +
+      `<span class="sb-rule-tag">${escHtml(r.tag)}</span>`;
     row.appendChild(cb);
-    row.appendChild(lab);
+    row.appendChild(text);
+    if (!cb.checked) row.classList.add("off");
     wrap.appendChild(row);
   });
+  renderSkillBuilderPreview();
+
+  const dl = document.getElementById("sb-download");
+  if (dl) dl.addEventListener("click", downloadSkillMd);
+  const cp = document.getElementById("sb-copy");
+  if (cp) cp.addEventListener("click", copySkillMd);
+}
+
+function generateSkillMarkdown() {
+  const active = RULES.filter(r => state.rules[r.key]);
+  const lines = [];
+  lines.push("---");
+  lines.push("name: sql-review");
+  lines.push('description: Pravidla, která agent kontroluje na každém SQL dotazu před spuštěním.');
+  lines.push("---");
+  lines.push("");
+  lines.push("# SQL Review");
+  lines.push("");
+  if (active.length === 0) {
+    lines.push("# (žádná pravidla — agent pošle SQL přímo na DB bez kontroly)");
+  } else {
+    lines.push("Před spuštěním každého dotazu:");
+    lines.push("");
+    for (const r of active) {
+      lines.push(`- **${r.tag}** — ${r.body}`);
+    }
+  }
+  lines.push("");
+  lines.push("# Schema: COURSES.SCH_TEROR");
+  lines.push("# - TEROR (84 341 řádků) ← hlavní");
+  lines.push("# - COUNTRY (204) ← použij tuhle");
+  lines.push("# - COUNTRY_DIRTYDATA (408) ← duplicity");
+  lines.push("# - TEROR2_OLD (26 828) ← deprecated");
+  return lines.join("\n");
+}
+
+function renderSkillBuilderPreview() {
+  const el = document.getElementById("sb-preview");
+  const cnt = document.getElementById("sb-preview-count");
+  if (!el) return;
+  const md = generateSkillMarkdown();
+  el.innerHTML = highlightSkillMd(md);
+  if (cnt) {
+    const n = RULES.filter(r => state.rules[r.key]).length;
+    cnt.textContent = n === 1 ? "1 pravidlo aktivní" : n + " pravidla aktivní";
+  }
+}
+
+function highlightSkillMd(md) {
+  const lines = md.split("\n");
+  return lines.map(line => {
+    const safe = escHtml(line);
+    if (/^---\s*$/.test(line)) return `<span class="com">${safe}</span>`;
+    if (/^#/.test(line))       return `<span class="h">${safe}</span>`;
+    if (/^- /.test(line)) {
+      return safe
+        .replace(/^- /, '<span class="bul">- </span>')
+        .replace(/\*\*([^*]+)\*\*/g, '<span class="key">$1</span>');
+    }
+    if (/^[a-zA-Z_][a-zA-Z0-9_]*:/.test(line)) {
+      return safe.replace(/^([a-zA-Z_][a-zA-Z0-9_]*)(:)/, '<span class="key">$1</span>$2');
+    }
+    return safe;
+  }).join("\n");
+}
+
+function downloadSkillMd() {
+  const md = generateSkillMarkdown();
+  const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "SKILL.md";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function copySkillMd() {
+  const md = generateSkillMarkdown();
+  try {
+    await navigator.clipboard.writeText(md);
+    const tag = document.getElementById("sb-copied");
+    if (tag) {
+      tag.classList.add("show");
+      setTimeout(() => tag.classList.remove("show"), 1400);
+    }
+  } catch (e) {
+    console.warn("clipboard write failed:", e);
+  }
 }
 
 function attachUI() {
@@ -1775,7 +1990,7 @@ function resetAll() {
  * ═══════════════════════════════════════════════════════════════════ */
 
 (async function init() {
-  buildRuleToggles();
+  buildSkillBuilder();
   attachUI();
   renderSkillPanel();
   renderMcpPanel();
