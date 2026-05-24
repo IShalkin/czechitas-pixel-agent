@@ -897,10 +897,23 @@ function drawAgent() {
 
   if (!sheet) return; // assets still loading
 
-  const sx = a.frame * SPRITE_W;
-  const drawX = Math.round(a.x - SPRITE_W / 2);
-  const drawY = Math.round(a.y - SPRITE_H + 4); // feet anchor
-  ctx.drawImage(sheet, sx, 0, SPRITE_W, SPRITE_H, drawX, drawY, SPRITE_W, SPRITE_H);
+  // Sheet layouts differ:
+  //   Julia-Idle.png            128×32   →  4 frames of 32×32 in one row
+  //   Julia_walk_<dir>.png      256×64   →  4 frames of 64×64 in one row
+  // Sample each sheet at its actual frame size — sampling 32×40 from the
+  // walk sheets used to splice half-of-frame-0 with the top of row-2,
+  // chopping the sprite at the torso during the walk cycle.
+  const cols = 4;
+  const frameW = Math.floor(sheet.width / cols);
+  const frameH = sheet.height;
+  const sx = a.frame * frameW;
+  // Walk-sheet content sits roughly y=15..47 of a 64-px cell — anchor at
+  // the visual feet (~ 0.74 × frameH) rather than the cell bottom so
+  // the agent doesn't appear to float over the floor labels.
+  const footAnchor = frameH > 32 ? Math.round(frameH * 0.74) : frameH;
+  const drawX = Math.round(a.x - frameW / 2);
+  const drawY = Math.round(a.y - footAnchor + 4);
+  ctx.drawImage(sheet, sx, 0, frameW, frameH, drawX, drawY, frameW, frameH);
 }
 
 function drawBubble(b) {
