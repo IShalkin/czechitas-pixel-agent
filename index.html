@@ -102,6 +102,67 @@
     font-size: 12px; color: var(--muted);
   }
 
+  /* ── DB terminal (the SQL/result console under the stage) ── */
+  .db-terminal {
+    margin-top: 14px;
+    background: #0e1822;
+    color: #e8d8b8;
+    border: 1px solid #1a2838;
+    border-radius: 6px;
+    font-family: var(--mono);
+    overflow: hidden;
+    transition: opacity 200ms ease;
+  }
+  .db-terminal.hidden { display: none; }
+  .db-term-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 14px; background: #1a2838;
+    font-size: 12px; color: #7adfd6; letter-spacing: 0.4px;
+    border-bottom: 1px solid #2a3848;
+  }
+  .db-term-head .right { font-size: 10px; color: #8a8478; letter-spacing: 0.6px; text-transform: uppercase; }
+  .db-term-head .right .live-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: #d4452f; margin-right: 4px; vertical-align: middle;
+    animation: db-blink 1s steps(2) infinite;
+  }
+  @keyframes db-blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0.3; } }
+  .db-term-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    font-size: 13px;
+    line-height: 1.55;
+    min-height: 150px;
+  }
+  .db-term-pane { padding: 12px 16px; }
+  .db-term-pane.sql    { color: #7adfd6; border-right: 1px solid #2a3848; }
+  .db-term-pane.result { color: #e8d8b8; }
+  .db-term-pane .pane-label {
+    font-size: 10px; color: #8a8478; text-transform: uppercase;
+    letter-spacing: 0.7px; margin-bottom: 8px;
+  }
+  .db-term-pane pre {
+    margin: 0; font-family: inherit; font-size: inherit; line-height: inherit;
+    white-space: pre-wrap; word-break: break-word; min-height: 1em;
+  }
+  .db-term-pane .caret {
+    display: inline-block; width: 7px; height: 13px;
+    background: #7adfd6; vertical-align: text-bottom;
+    animation: db-blink 1s steps(2) infinite;
+    margin-left: 1px;
+  }
+  .db-term-pane .row {
+    opacity: 0; animation: db-fade-in 250ms ease-out forwards;
+  }
+  @keyframes db-fade-in { to { opacity: 1; } }
+  .db-term-pane .row.warn { color: #f4c674; }
+  .db-term-pane .row.fail { color: #f4847a; }
+  .db-term-pane .row.ok   { color: #92d18a; }
+  @media (max-width: 800px) {
+    .db-term-body { grid-template-columns: 1fr; }
+    .db-term-pane.sql { border-right: 0; border-bottom: 1px solid #2a3848; }
+  }
+
   /* ── Live panels under stage ── */
   .live-panels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
   .live-panel { background: #fdfaf5; border: 1px solid var(--border); border-radius: 4px; padding: 14px; position: relative; transition: opacity 200ms ease; }
@@ -206,6 +267,23 @@
         <button id="btn-reset" class="ghost">Reset</button>
       </div>
       <div id="log" class="log"><div class="line">[idle] click "Run scenario" to start</div></div>
+
+      <div id="db-terminal" class="db-terminal hidden">
+        <div class="db-term-head">
+          <span><span id="db-term-tool">mcp-snowflake · execute_query</span></span>
+          <span class="right"><span class="live-dot"></span>live</span>
+        </div>
+        <div class="db-term-body">
+          <div class="db-term-pane sql">
+            <div class="pane-label">SQL</div>
+            <pre id="db-term-sql"></pre>
+          </div>
+          <div class="db-term-pane result">
+            <div class="pane-label">Result</div>
+            <pre id="db-term-result"></pre>
+          </div>
+        </div>
+      </div>
 
       <div id="full-dashboard" class="full-dashboard hidden">
         <div class="dash-head">
@@ -479,7 +557,8 @@ function draw() {
   // ── Thinking visualizations (above stations) ──
   drawRecipeCard();
   drawToolbox();
-  drawDbScreen();
+  // (DB monitor on canvas is decorative only — actual SQL/results stream
+  //  in the HTML db-terminal panel below the stage where they're readable.)
 
   // agent sprite
   drawAgent();
@@ -609,11 +688,24 @@ function drawDbMonitor() {
 
   // screen recess
   ctx.fillStyle = "#1a1814"; ctx.fillRect(bx + 2, by + 2, mw - 4, mh - 6);
-  // dim default screen (drawDbScreen will override when active)
-  ctx.fillStyle = "#0e1822"; ctx.fillRect(bx + 3, by + 3, mw - 6, mh - 8);
+  // screen — bright cyan when terminal is live, otherwise dim
+  const live = !document.getElementById("db-terminal")?.classList.contains("hidden");
+  ctx.fillStyle = live ? "#0e2838" : "#0e1822";
+  ctx.fillRect(bx + 3, by + 3, mw - 6, mh - 8);
+  // a few scanlines + blinking cursor when live to suggest activity
+  if (live) {
+    ctx.fillStyle = "rgba(122, 223, 214, 0.35)";
+    for (let i = 0; i < 3; i++) ctx.fillRect(bx + 4, by + 5 + i * 3, mw - 8, 1);
+    // blinking caret
+    if (Math.floor(performance.now() / 400) % 2 === 0) {
+      ctx.fillStyle = "#7adfd6";
+      ctx.fillRect(bx + 4, by + mh - 11, 3, 2);
+    }
+  }
 
   // power LED
-  ctx.fillStyle = "#d4452f"; ctx.fillRect(bx + mw - 4, by + mh - 4, 2, 2);
+  ctx.fillStyle = live ? "#92d18a" : "#d4452f";
+  ctx.fillRect(bx + mw - 4, by + mh - 4, 2, 2);
 }
 
 // DASHBOARD = free-standing whiteboard on a tripod, planted on the floor
@@ -784,38 +876,6 @@ function drawToolbox() {
     ctx.fillText(t.short, bx + chipW / 2, cy + chipH - 4);
   });
   ctx.textAlign = "start";
-}
-
-function drawDbScreen() {
-  if (!state.dbScreen) return;
-  const s = STATIONS.db;
-  // Match drawDbMonitor: monitor at (s.x - 30 - 6, s.y - 24 - 6)
-  // screen area inside casing: (bx+3, by+3) of 24×16
-  const mw = 30, mh = 24;
-  const monX = s.x - mw - 6;
-  const monY = s.y - mh - 6;
-  const bx = Math.round(monX + 3);
-  const by = Math.round(monY + 3);
-  const w = mw - 6, h = mh - 8;
-
-  // illuminated screen
-  ctx.fillStyle = "#0e1822";
-  ctx.fillRect(bx, by, w, h);
-
-  ctx.font = "5px ui-monospace, monospace";
-  ctx.textAlign = "left";
-  // SQL (cyan)
-  ctx.fillStyle = "#7adfd6";
-  const sqlLines = state.dbScreen.sql || [];
-  sqlLines.forEach((ln, i) => {
-    ctx.fillText(ln, bx + 1, by + 5 + i * 5);
-  });
-  // result rows (cream)
-  ctx.fillStyle = "#e8d8b8";
-  const rows = state.dbScreen.rows || [];
-  rows.forEach((r, i) => {
-    ctx.fillText(r, bx + 1, by + 5 + (sqlLines.length + i) * 5);
-  });
 }
 
 function drawAgent() {
@@ -1065,30 +1125,62 @@ function setRecipeLine(key, status) {
 }
 function closeRecipe() { state.recipeCard = null; }
 
-// DB screen primitives — drive the monitor at DB station.
-// Open the screen empty, type SQL line-by-line, then receive result rows
-// one by one so participants can actually read what's happening.
-function openDbScreen() {
-  state.dbScreen = { sql: [], rows: [] };
+// DB terminal primitives — drive the HTML console panel under the stage.
+// Tiny canvas monitor stays as decoration on the desk; the readable action
+// happens in the terminal so participants can actually parse SQL and rows.
+function showDbTerminal(toolLabel = "mcp-snowflake · execute_query") {
+  const panel = document.getElementById("db-terminal");
+  const sqlEl = document.getElementById("db-term-sql");
+  const resEl = document.getElementById("db-term-result");
+  const tool  = document.getElementById("db-term-tool");
+  if (!panel) return;
+  panel.classList.remove("hidden");
+  if (sqlEl) sqlEl.innerHTML = '<span class="caret"></span>';
+  if (resEl) resEl.textContent = "";
+  if (tool)  tool.textContent = toolLabel;
 }
+function hideDbTerminal() {
+  const panel = document.getElementById("db-terminal");
+  const sqlEl = document.getElementById("db-term-sql");
+  const resEl = document.getElementById("db-term-result");
+  if (panel) panel.classList.add("hidden");
+  if (sqlEl) sqlEl.innerHTML = "";
+  if (resEl) resEl.innerHTML = "";
+}
+// Type SQL char-by-char with a blinking caret at the end.
 async function typeDbSql(lines, msPerLine = 380) {
-  if (!state.dbScreen) state.dbScreen = { sql: [], rows: [] };
-  for (const ln of lines) {
-    state.dbScreen.sql.push(ln);
-    await wait(msPerLine);
+  const sqlEl = document.getElementById("db-term-sql");
+  if (!sqlEl) return;
+  const fullText = lines.join("\n");
+  // ~14ms per char keeps total close to msPerLine × lines but reads much
+  // more like a human typing than line-jumps.
+  const total = msPerLine * lines.length;
+  const perChar = Math.max(8, Math.min(28, Math.round(total / Math.max(1, fullText.length))));
+  let typed = "";
+  for (const ch of fullText) {
+    typed += ch;
+    sqlEl.innerHTML = escHtml(typed) + '<span class="caret"></span>';
+    await wait(perChar);
   }
 }
+// Stream result rows one by one, with optional row class ("ok"/"warn"/"fail").
 async function streamDbRows(rows, msPerRow = 320) {
-  if (!state.dbScreen) state.dbScreen = { sql: [], rows: [] };
+  const resEl = document.getElementById("db-term-result");
+  if (!resEl) return;
   for (const r of rows) {
-    state.dbScreen.rows.push(r);
+    const text = typeof r === "string" ? r : r.text;
+    const cls  = typeof r === "string" ? "" : (r.cls || "");
+    const div = document.createElement("div");
+    div.className = "row" + (cls ? " " + cls : "");
+    div.textContent = text;
+    resEl.appendChild(div);
     await wait(msPerRow);
   }
 }
-function setDbRows(rows) {
-  if (state.dbScreen) state.dbScreen.rows = rows;
-}
-function closeDbScreen() { state.dbScreen = null; }
+// Back-compat shims (state.dbScreen no longer drawn on canvas, but a few
+// scenario branches read it elsewhere — keep the no-op API).
+function openDbScreen() { /* terminal opens via showDbTerminal in scenarios */ }
+function closeDbScreen() { /* terminal closes via hideDbTerminal in scenarios */ }
 
 // Chart primitives
 async function drawChartBar(tone) {
@@ -1252,6 +1344,7 @@ function beginRun() {
   state.toolbox = null;
   state.dbScreen = null;
   hideFullDashboard();
+  hideDbTerminal();
   renderSkillPanel();
   renderMcpPanel();
   renderEvalsPanel();
@@ -1346,26 +1439,29 @@ async function runScenarioA() {
   await gotoStation("db");
   state.agent.facing = "left";
   state.agent.activity = "tooling";
-  openDbScreen();
+  showDbTerminal("snowflake-czechitas · execute_query");
   await typeDbSql([
     "SELECT COUNTRY_TXT,",
     "  COUNT(*) AS n",
-    "FROM TEROR",
+    "FROM COURSES.SCH_TEROR.TEROR",
     "GROUP BY 1",
     "ORDER BY n DESC",
     "LIMIT 10;",
-  ], 360);
+  ], 380);
   await think("query odeslána —\nčekám na výsledek", 1400);
   await streamDbRows([
-    "Iraq      15400",
-    "Afghan…   12970",
-    "Pakistan   6112",
-    "India      5700",
-    "Yemen      4847",
-  ], 280);
+    { text: "COUNTRY_TXT       N",        cls: "" },
+    { text: "─────────────────────",     cls: "" },
+    { text: "Iraq          15 400",       cls: "ok" },
+    { text: "Afghanistan   12 970",       cls: "ok" },
+    { text: "Pakistan       6 112",       cls: "ok" },
+    { text: "India          5 700",       cls: "ok" },
+    { text: "Yemen          4 847",       cls: "ok" },
+    { text: "… (5 more)",                 cls: "" },
+    { text: "→ 10 rows · 84 341 scanned", cls: "ok" },
+  ], 240);
   logLine("info", "DB → TEROR (84341 řádků, 153 zemí) → LIMIT 10");
-  await wait(700);
-  closeDbScreen();
+  await wait(900);
   state.agent.activity = "idle";
 
   let chartTone = "ok";
@@ -1440,12 +1536,18 @@ async function runScenarioB() {
   await gotoStation("db");
   state.agent.facing = "left";
   state.agent.activity = "tooling";
-  openDbScreen();
-  await typeDbSql(["DROP TABLE", "  TEROR2_OLD;"], 420);
-  await wait(600);
-  await streamDbRows(["⚠ table dropped", "26828 řádků pryč"], 380);
-  await wait(800);
-  closeDbScreen();
+  showDbTerminal("snowflake-czechitas · execute_query");
+  await typeDbSql([
+    "DROP TABLE",
+    "  COURSES.SCH_TEROR.TEROR2_OLD;",
+  ], 460);
+  await wait(700);
+  await streamDbRows([
+    { text: "⚠ TABLE DROPPED",          cls: "fail" },
+    { text: "TEROR2_OLD: 26 828 rows",  cls: "fail" },
+    { text: "→ irreversible",           cls: "fail" },
+  ], 420);
+  await wait(900);
   state.agent.activity = "idle";
   logLine("fail", "TEROR2_OLD DROPPED — guardrail bypassed");
   if (state.evalsOn) {
@@ -1500,19 +1602,28 @@ async function runScenarioC() {
   state.agent.activity = "tooling";
   const tbl = useClean ? "COUNTRY (204 řádků)" : "COUNTRY_DIRTYDATA (408 řádků)";
   const joinTbl = useClean ? "COUNTRY" : "COUNTRY_DIRTYDATA";
-  openDbScreen();
+  showDbTerminal("snowflake-czechitas · execute_query");
   await typeDbSql([
-    "SELECT t.*, c.NAME",
-    "FROM TEROR t",
-    "JOIN " + joinTbl + " c",
+    "SELECT t.COUNTRY_TXT, c.NAME",
+    "FROM COURSES.SCH_TEROR.TEROR t",
+    "JOIN COURSES.SCH_TEROR." + joinTbl + " c",
     "  ON t.COUNTRY = c.ID;",
-  ], 380);
+  ], 420);
   await think("propojuju TEROR\ns " + joinTbl, 1500);
-  if (useClean) await streamDbRows(["204 rows ✓", "1× / země"], 320);
-  else          await streamDbRows(["408 rows ⚠", "duplikáty!"], 320);
+  if (useClean) {
+    await streamDbRows([
+      { text: "→ 204 rows · 1× / země",  cls: "ok" },
+      { text: "schema: COUNTRY (clean)", cls: "ok" },
+    ], 320);
+  } else {
+    await streamDbRows([
+      { text: "→ 408 rows · duplicates",         cls: "warn" },
+      { text: "schema: COUNTRY_DIRTYDATA",       cls: "warn" },
+      { text: "(očekáváno 204 — leak detected)", cls: "warn" },
+    ], 320);
+  }
   logLine("info", "DB → joined " + tbl);
-  await wait(700);
-  closeDbScreen();
+  await wait(900);
   state.agent.activity = "idle";
 
   let chartTone = "ok";
@@ -1639,6 +1750,7 @@ function resetAll() {
   state.toolbox = null;
   state.dbScreen = null;
   hideFullDashboard();
+  hideDbTerminal();
   renderLog();
   renderSkillPanel();
   renderMcpPanel();
