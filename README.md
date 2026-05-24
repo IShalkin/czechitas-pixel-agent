@@ -10,15 +10,17 @@ Pixel-art demo for the Czechitas data-analysis workshop. Watch a tiny agent walk
 
 ## Why a pixel game
 
-Slide 3 of the workshop deck shows the five layers as a static table. The Stack Trace demo turns it into a click-through inspector. This one goes further: the agent is *embodied* — she walks, picks up tools, gets blocked at the skill shelf, watches the database refuse her DROP. Same simulation logic as Stack Trace, but tactile.
+Slide 3 of the workshop deck shows the five layers as a static table. The Stack Trace demo turns it into a click-through inspector. This one goes further: the agent is *embodied* — she walks the office, opens the MCP toolbox to pick a tool, gets blocked at the skill shelf, watches the whiteboard fill with bars at the end. Same simulation logic as Stack Trace, but tactile.
+
+The SKILL.md and MCP panels under the stage use **the exact Czech rule labels participants wrote in [Skill Builder](https://ishalkin.github.io/czechitas-skill-builder/)** — so the file they coloured in there is the same file the agent here actually consults.
 
 ## Scenarios
 
-1. **Top 10 zemí** — query succeeds, but evals catch a leak when `preferCountry` is OFF (`COUNTRY_DIRTYDATA` 408 ≠ 204)
-2. **Zkontroluj SQL** — broken query (`TEROR2_OLD`, `YEAR`, `victims`) gets blocked at the skill before MCP is called
-3. **Smaž TEROR2_OLD** — `DROP TABLE` blocked by the `refuseDrop` rule
+1. **Top 10 zemí (čistá)** — clean query; all 4 SKILL rules pass green, agent cycles through `list_tables → describe_table → execute_query`, dashboard ships
+2. **DROP TEROR2_OLD (composite)** — one SQL trips two rules at once (`no destructive` + `no _OLD tables`) — both light up red and SKILL blocks before MCP is even called
+3. **JOIN COUNTRY_DIRTYDATA** — `prefer COUNTRY` rewrites the query before it leaves SKILL; with the toggle off, evals catch the leak (408 ≠ 204) at the dashboard
 
-Toggles let participants turn off skill rules / MCP / evals and see the bad outcomes the slides warned about.
+Toggles let participants turn off individual skill rules / the whole skill layer / MCP / evals and watch the bad outcomes the slides warned about.
 
 ## Local development
 
@@ -31,7 +33,9 @@ python -m http.server 8000
 
 ## Architecture
 
-Single `index.html`. Pure simulation: each scenario is a sequence of awaitable steps (`gotoStation`, `say`, `activity`, `logLine`) that read from `state` and react to it. No network, no LLM, no real database.
+Single `index.html`. Pure simulation: each scenario is a sequence of awaitable steps (`gotoStation`, `say`, `activity`, `walkSkillStation`, `useTool`, `drawChartBar`) that read from `state` and react to it. No network, no LLM, no real database.
+
+The office (background, agent sprite, chest, whiteboard, speech bubbles) is drawn on a 480×280 pixel canvas. The two side panels — **SKILL.md** (4 rules) and **MCP server** (3 tools) — are plain HTML rendered live from `state.ruleStatus` and `state.mcpTool`. Canvas is for atmosphere; HTML is for anything you actually need to read.
 
 ## Credits
 
