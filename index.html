@@ -59,6 +59,49 @@
   .credit { font-size: 11px; color: var(--muted); margin-top: 12px; text-align: center; }
   .credit a { color: var(--muted); }
 
+  /* ── Full dashboard (the "this is what you'll build" payoff) ── */
+  .full-dashboard {
+    margin-top: 14px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px 24px 18px;
+    transition: opacity 300ms ease;
+  }
+  .full-dashboard.hidden { display: none; }
+  .full-dashboard.warn { border-color: #d8a93a; }
+  .full-dashboard.fail { border-color: #7a3030; }
+  .dash-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .dash-title { font-family: var(--serif); font-weight: 400; font-size: 24px; margin: 0; }
+  .dash-meta { display: flex; gap: 10px; align-items: baseline; }
+  .dash-source { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .dash-tag {
+    font-family: var(--mono); font-size: 11px; padding: 2px 8px;
+    background: #eaf6e6; color: #2a5a2a; border-radius: 99px; border: 1px solid #b6dab1;
+  }
+  .full-dashboard.warn .dash-tag { background: #fdf2d4; color: #7a5a10; border-color: #e8c87a; }
+  .full-dashboard.fail .dash-tag { background: #fbe6e1; color: #7a3030; border-color: #d4452f; }
+  .dash-bars { display: flex; flex-direction: column; gap: 8px; }
+  .dash-bar-row { display: grid; grid-template-columns: 110px 1fr 70px; align-items: center; gap: 12px; font-size: 13px; }
+  .dash-bar-row .country { font-weight: 600; }
+  .dash-bar-row .bar-track { background: var(--border); border-radius: 4px; height: 18px; overflow: hidden; }
+  .dash-bar-row .bar-fill {
+    height: 100%; background: var(--accent);
+    transform-origin: left center;
+    animation: dash-bar-grow 700ms cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  }
+  .full-dashboard.warn .bar-fill { background: #d8a93a; }
+  .full-dashboard.fail .bar-fill { background: #7a3030; }
+  .dash-bar-row .value { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; }
+  @keyframes dash-bar-grow {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+  .dash-foot {
+    margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted);
+  }
+
   /* ── Live panels under stage ── */
   .live-panels { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 12px; }
   .live-panel { background: #fdfaf5; border: 1px solid var(--border); border-radius: 4px; padding: 14px; position: relative; transition: opacity 200ms ease; }
@@ -163,6 +206,21 @@
         <button id="btn-reset" class="ghost">Reset</button>
       </div>
       <div id="log" class="log"><div class="line">[idle] click "Run scenario" to start</div></div>
+
+      <div id="full-dashboard" class="full-dashboard hidden">
+        <div class="dash-head">
+          <h3 class="dash-title">Top 10 zemí podle počtu útoků</h3>
+          <div class="dash-meta">
+            <span class="dash-source">TEROR · 84 341 řádků · 153 zemí</span>
+            <span id="dash-tag" class="dash-tag">čistý výsledek</span>
+          </div>
+        </div>
+        <div id="dash-bars" class="dash-bars"></div>
+        <div class="dash-foot">
+          tohle by ti mohl agent vygenerovat z jednoho promptu —
+          <em>pokud má SKILL.md, MCP a evals nastavené</em>.
+        </div>
+      </div>
 
       <div class="live-panels">
         <div class="live-panel" id="skill-panel">
@@ -698,32 +756,32 @@ function drawToolbox() {
     { key: "describe_table", short: "describe"    },
     { key: "execute_query",  short: "execute"     },
   ];
-  // floating row of 3 chips above the chest (chest sits LEFT of agent —
-  // chest center ≈ s.x - 21)
-  const chipW = 38, chipH = 14, gap = 3;
-  const totalW = chipW * 3 + gap * 2;
+  // vertical column of 3 chips above the chest — clearer + no horizontal overlap
+  // chest sits LEFT of agent → chest center ≈ s.x - 21
+  const chipW = 60, chipH = 12, gap = 2;
+  const totalH = chipH * 3 + gap * 2;
   const chestCenterX = s.x - 21;
-  const bx = Math.round(chestCenterX - totalW / 2);
-  const by = Math.round(s.y - 56);
+  const bx = Math.round(chestCenterX - chipW / 2);
+  const by = Math.round(s.y - 12 - totalH - 32); // sit above chest, well above agent head
 
   ctx.font = "bold 7px ui-monospace, monospace";
   ctx.textAlign = "center";
   tools.forEach((t, i) => {
-    const cx = bx + i * (chipW + gap);
+    const cy = by + i * (chipH + gap);
     const isPicked = state.toolbox.picked === t.key;
     const dimmed = state.toolbox.picked && !isPicked;
     // shadow
     ctx.fillStyle = "rgba(0,0,0,0.2)";
-    ctx.fillRect(cx + 1, by + 1, chipW, chipH);
+    ctx.fillRect(bx + 1, cy + 1, chipW, chipH);
     // chip
     if (isPicked)      ctx.fillStyle = "#d4452f";
-    else if (dimmed)   ctx.fillStyle = "#e8e1d4";
+    else if (dimmed)   ctx.fillStyle = "#c9c0ad";
     else               ctx.fillStyle = "#fdfaf5";
-    ctx.fillRect(cx, by, chipW, chipH);
+    ctx.fillRect(bx, cy, chipW, chipH);
     ctx.strokeStyle = isPicked ? "#1a1814" : "#8a8478";
-    ctx.strokeRect(cx + 0.5, by + 0.5, chipW - 1, chipH - 1);
+    ctx.strokeRect(bx + 0.5, cy + 0.5, chipW - 1, chipH - 1);
     ctx.fillStyle = isPicked ? "#fdfaf5" : (dimmed ? "#bba" : "#1a1814");
-    ctx.fillText(t.short, cx + chipW / 2, by + chipH - 4);
+    ctx.fillText(t.short, bx + chipW / 2, cy + chipH - 4);
   });
   ctx.textAlign = "start";
 }
@@ -782,23 +840,83 @@ function drawAgent() {
 
 function drawBubble(b) {
   ctx.font = "bold 8px ui-monospace, monospace";
+  const lines = (b.text || "").split("\n");
   const padding = 4;
-  const textW = ctx.measureText(b.text).width;
+  const lh = 9;
+  let textW = 0;
+  for (const ln of lines) textW = Math.max(textW, ctx.measureText(ln).width);
   const w = Math.ceil(textW) + padding * 2;
-  const h = 14;
-  const bx = Math.round(b.x - w / 2);
-  const by = Math.round(b.y - SPRITE_H - h - 2);
+  const h = lines.length * lh + padding * 2 - 2;
 
-  ctx.fillStyle = "#fdfaf5";
-  ctx.fillRect(bx, by, w, h);
-  ctx.strokeStyle = "#1a1814";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(bx + 0.5, by + 0.5, w - 1, h - 1);
-  // tail
-  ctx.fillStyle = "#fdfaf5";
-  ctx.fillRect(bx + Math.floor(w / 2) - 1, by + h, 3, 3);
-  ctx.fillStyle = "#1a1814";
-  ctx.fillText(b.text, bx + padding, by + h - 4);
+  // place above the sprite, but clamp inside canvas left/right
+  let bx = Math.round(b.x - w / 2);
+  if (bx < 4) bx = 4;
+  if (bx + w > 476) bx = 476 - w;
+  const by = Math.round(b.y - SPRITE_H - h - 4);
+
+  if (b.kind === "thought") {
+    // thought cloud: actual scalloped lobes top + bottom, light blue fill
+    ctx.fillStyle = "#e8eef9";
+    ctx.strokeStyle = "#3a4a7a";
+    ctx.lineWidth = 1;
+    const lobeR = 4; // lobe radius
+    // build a path of overlapping bumps along all 4 edges
+    ctx.beginPath();
+    // top edge: bumps going right
+    let x = bx;
+    ctx.moveTo(bx, by + lobeR);
+    while (x + lobeR * 2 <= bx + w) {
+      ctx.arc(x + lobeR, by + lobeR, lobeR, Math.PI, 0, false);
+      x += lobeR * 2;
+    }
+    // right edge: bumps going down
+    let y = by + lobeR * 2;
+    while (y + lobeR * 2 <= by + h) {
+      ctx.arc(bx + w - lobeR, y, lobeR, -Math.PI / 2, Math.PI / 2, false);
+      y += lobeR * 2;
+    }
+    // bottom edge: bumps going left
+    x = bx + w;
+    while (x - lobeR * 2 >= bx) {
+      ctx.arc(x - lobeR, by + h - lobeR, lobeR, 0, Math.PI, false);
+      x -= lobeR * 2;
+    }
+    // left edge: bumps going up
+    y = by + h - lobeR * 2;
+    while (y - lobeR * 2 >= by) {
+      ctx.arc(bx + lobeR, y, lobeR, Math.PI / 2, Math.PI * 1.5, false);
+      y -= lobeR * 2;
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // dotted tail toward sprite head
+    const tailX = Math.max(bx + 6, Math.min(bx + w - 6, b.x));
+    ctx.fillStyle = "#e8eef9";
+    ctx.beginPath();
+    ctx.arc(tailX, by + h + 5, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(tailX + 2, by + h + 11, 1.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // text in dark blue (thought color)
+    ctx.fillStyle = "#1f2c5a";
+  } else {
+    // speech rectangle
+    ctx.fillStyle = "#fdfaf5";
+    ctx.fillRect(bx, by, w, h);
+    ctx.strokeStyle = "#1a1814";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx + 0.5, by + 0.5, w - 1, h - 1);
+    // pointed tail
+    const tailX = Math.max(bx + 4, Math.min(bx + w - 4, b.x));
+    ctx.fillStyle = "#fdfaf5";
+    ctx.fillRect(tailX - 1, by + h, 3, 3);
+    ctx.fillStyle = "#1a1814";
+  }
+
+  // text lines
+  lines.forEach((ln, i) => {
+    ctx.fillText(ln, bx + padding, by + padding + 6 + i * lh);
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -873,8 +991,13 @@ function gotoStation(key) {
 }
 
 function say(text, ms = 1400) {
-  state.bubble = { text, x: state.agent.x, y: state.agent.y, ttl: ms };
-  // keep bubble pinned even when agent moves
+  state.bubble = { text, x: state.agent.x, y: state.agent.y, ttl: ms, kind: "speech" };
+  return wait(ms);
+}
+
+// Thought bubble — agent's internal reasoning. Cloud-shaped, blue text.
+function think(text, ms = 1800) {
+  state.bubble = { text, x: state.agent.x, y: state.agent.y, ttl: ms, kind: "thought" };
   return wait(ms);
 }
 
@@ -935,9 +1058,25 @@ function setRecipeLine(key, status) {
 }
 function closeRecipe() { state.recipeCard = null; }
 
-// DB screen primitives — drive the monitor at DB station
-function openDbScreen(sql) {
-  state.dbScreen = { sql: Array.isArray(sql) ? sql : [sql], rows: [] };
+// DB screen primitives — drive the monitor at DB station.
+// Open the screen empty, type SQL line-by-line, then receive result rows
+// one by one so participants can actually read what's happening.
+function openDbScreen() {
+  state.dbScreen = { sql: [], rows: [] };
+}
+async function typeDbSql(lines, msPerLine = 380) {
+  if (!state.dbScreen) state.dbScreen = { sql: [], rows: [] };
+  for (const ln of lines) {
+    state.dbScreen.sql.push(ln);
+    await wait(msPerLine);
+  }
+}
+async function streamDbRows(rows, msPerRow = 320) {
+  if (!state.dbScreen) state.dbScreen = { sql: [], rows: [] };
+  for (const r of rows) {
+    state.dbScreen.rows.push(r);
+    await wait(msPerRow);
+  }
 }
 function setDbRows(rows) {
   if (state.dbScreen) state.dbScreen.rows = rows;
@@ -956,6 +1095,54 @@ async function drawChartBar(tone) {
 function clearChart() {
   state.chartBars = 0;
   state.chartShown = false;
+}
+
+// Full HTML dashboard — the "this is what you can build" payoff.
+// Renders real top-10 numbers below the stage when a clean run finishes.
+const TOP10 = [
+  { country: "Iraq",        n: 15400 },
+  { country: "Afghanistan", n: 12970 },
+  { country: "Pakistan",    n:  6112 },
+  { country: "India",       n:  5700 },
+  { country: "Yemen",       n:  4847 },
+  { country: "Nigeria",     n:  4012 },
+  { country: "Philippines", n:  4007 },
+  { country: "Somalia",     n:  3681 },
+  { country: "Syria",       n:  2332 },
+  { country: "Libya",       n:  2139 },
+];
+
+function showFullDashboard(tone = "ok", source = "clean") {
+  const dash = document.getElementById("full-dashboard");
+  const bars = document.getElementById("dash-bars");
+  const tag  = document.getElementById("dash-tag");
+  if (!dash || !bars) return;
+
+  dash.classList.remove("hidden", "warn", "fail");
+  if (tone === "warn") dash.classList.add("warn");
+  if (tone === "fail") dash.classList.add("fail");
+
+  if (tone === "warn")      tag.textContent = "varování · DIRTYDATA leak";
+  else if (tone === "fail") tag.textContent = "tichý fail · zkontrolovat!";
+  else                      tag.textContent = source === "clean" ? "čistý výsledek" : "ready";
+
+  bars.innerHTML = "";
+  const max = TOP10[0].n;
+  TOP10.forEach((row, i) => {
+    const r = document.createElement("div");
+    r.className = "dash-bar-row";
+    const pct = Math.max(2, Math.round((row.n / max) * 100));
+    r.innerHTML =
+      '<span class="country">' + row.country + '</span>' +
+      '<div class="bar-track"><div class="bar-fill" style="width: ' + pct + '%; animation-delay: ' + (i * 60) + 'ms"></div></div>' +
+      '<span class="value">' + row.n.toLocaleString("cs-CZ") + '</span>';
+    bars.appendChild(r);
+  });
+}
+
+function hideFullDashboard() {
+  const dash = document.getElementById("full-dashboard");
+  if (dash) dash.classList.add("hidden");
 }
 
 function logLine(kind, text) {
@@ -1057,6 +1244,7 @@ function beginRun() {
   state.recipeCard = null;
   state.toolbox = null;
   state.dbScreen = null;
+  hideFullDashboard();
   renderSkillPanel();
   renderMcpPanel();
   renderEvalsPanel();
@@ -1107,7 +1295,7 @@ async function walkSkillStation(predicates) {
 
 async function useTool(tool) {
   setTool(tool);
-  await wait(550);
+  await wait(900);
 }
 
 async function runScenarioA() {
@@ -1116,51 +1304,70 @@ async function runScenarioA() {
   beginRun();
 
   await gotoStation("inbox");
-  await say("nový prompt!", 1000);
+  await say("nový prompt!", 900);
   logLine("info", "PROMPT: Top 10 zemí podle počtu útoků");
-  await activity("reading", 800);
+  await think("aha — chce top-10 zemí.\npotřebuju COUNT z TEROR\na seřadit DESC", 2200);
 
   if (state.skillOn) {
+    await think("nejdřív checklist —\nco SKILL zakazuje?", 1600);
     await walkSkillStation({});
-    await wait(400);
+    await think("vše zelené —\nmůžu jít na MCP", 1500);
   } else {
     logLine("warn", "skill je vypnut — žádná pre-flight kontrola");
+    await think("skill je OFF —\npreflight přeskakuju", 1400);
   }
 
   if (!state.mcpOn) {
     await gotoStation("mcp");
-    await say("nemůžu sáhnout na DB", 1400);
+    await say("MCP off — nemůžu na DB", 1500);
     logLine("fail", "MCP server je OFF — žádný execute_query");
     state.running = false; return;
   }
 
   await gotoStation("mcp");
   openMcp();
-  await say("co potřebuju?", 900);
+  await think("MCP server zná 3 nástroje.\nkterý použiju?", 1800);
   await useTool("list_tables");
+  await think("1) list_tables —\njaké tabulky existují?", 1500);
   await useTool("describe_table");
+  await think("2) describe_table TEROR —\njaké má sloupce?", 1500);
   await useTool("execute_query");
-  await say("execute_query()", 900);
+  await think("3) execute_query —\nteď spustím SELECT", 1400);
   logLine("info", "MCP: execute_query(SQL)");
   closeMcp();
 
   await gotoStation("db");
-  state.agent.facing = "up";
+  state.agent.facing = "left";
   state.agent.activity = "tooling";
-  openDbScreen(["SELECT COUNTRY_TXT,", "  COUNT(*) FROM TEROR", "GROUP BY 1 LIMIT 10"]);
-  await wait(900);
-  setDbRows(["Iraq      15400", "Afghan…   12970", "Pakistan   6112"]);
-  await say("čtu TEROR", 1100);
+  openDbScreen();
+  await typeDbSql([
+    "SELECT COUNTRY_TXT,",
+    "  COUNT(*) AS n",
+    "FROM TEROR",
+    "GROUP BY 1",
+    "ORDER BY n DESC",
+    "LIMIT 10;",
+  ], 360);
+  await think("query odeslána —\nčekám na výsledek", 1400);
+  await streamDbRows([
+    "Iraq      15400",
+    "Afghan…   12970",
+    "Pakistan   6112",
+    "India      5700",
+    "Yemen      4847",
+  ], 280);
   logLine("info", "DB → TEROR (84341 řádků, 153 zemí) → LIMIT 10");
-  await wait(500);
+  await wait(700);
   closeDbScreen();
   state.agent.activity = "idle";
 
   let chartTone = "ok";
   if (state.evalsOn) {
-    setEval("noSilentFail", "pass"); await wait(220);
-    setEval("schemaMatch",  "pass"); await wait(220);
-    setEval("rowCount", "pass");
+    await think("evals.json — kontrola\nvýsledku po dotazu", 1400);
+    setEval("noSilentFail", "pass"); await wait(380);
+    setEval("schemaMatch",  "pass"); await wait(380);
+    setEval("rowCount", "pass");     await wait(380);
+    await think("3× zelená —\nvýsledek je v pořádku", 1400);
     logLine("ok", "evals: count=10 ✓  schemaMatch ✓  noSilentFail ✓");
   } else {
     logLine("info", "evals OFF (čistá query — prošlo by stejně)");
@@ -1168,10 +1375,12 @@ async function runScenarioA() {
 
   if (state.skillOn) {
     await gotoStation("board");
-    await say("kreslím dashboard", 800);
+    await say("kreslím dashboard", 900);
     await drawChartBar(chartTone);
+    showFullDashboard("ok");
     logLine("ok", "DASHBOARD: top 10 zemí — ready to ship");
   } else {
+    await think("bez skillu nevím,\nco s daty —\nvrátím syrová čísla", 2000);
     await say("Iraq · Afghan · Pak…", 1400);
     logLine("info", "raw rows: Iraq=15400, Afghanistan=12970, Pakistan=6112, …");
     logLine("warn", "bez skillu: žádný dashboard — jen tabulka v chatu");
@@ -1187,7 +1396,7 @@ async function runScenarioB() {
   await gotoStation("inbox");
   await say("smaž tu starou", 1000);
   logLine("info", "PROMPT: DROP TABLE TEROR2_OLD;");
-  await activity("reading", 800);
+  await think("DROP TABLE — to je\ndestruktivní operace.\nzkontroluju checklist", 2400);
 
   if (state.skillOn) {
     const blocked = await walkSkillStation({
@@ -1195,6 +1404,7 @@ async function runScenarioB() {
       noOldTables:   "block",
     });
     if (blocked) {
+      await think("dvě pravidla padla:\nDROP zakázán + _OLD\ntabulky chráněné", 2400);
       await say("STOP — 2 pravidla!", 1300);
       logLine("ok", "blokováno před MCP — ušetřené tokeny + tabulka přežila");
       await wait(700);
@@ -1204,6 +1414,7 @@ async function runScenarioB() {
     logLine("warn", "obě destruktivní pravidla jsou OFF — průchod");
     await wait(500);
   } else {
+    await think("skill je OFF —\nnikdo to nechytne…", 1600);
     logLine("warn", "skill je OFF — destruktivní SQL projde");
   }
 
@@ -1217,21 +1428,23 @@ async function runScenarioB() {
   await gotoStation("mcp");
   openMcp();
   await useTool("execute_query");
-  await say("provádím DROP", 1100);
+  await think("execute_query —\nposílám DROP", 1400);
   closeMcp();
   await gotoStation("db");
-  state.agent.facing = "up";
+  state.agent.facing = "left";
   state.agent.activity = "tooling";
-  openDbScreen(["DROP TABLE", "  TEROR2_OLD;"]);
-  await wait(900);
-  setDbRows(["⚠ table dropped"]);
-  await wait(900);
+  openDbScreen();
+  await typeDbSql(["DROP TABLE", "  TEROR2_OLD;"], 420);
+  await wait(600);
+  await streamDbRows(["⚠ table dropped", "26828 řádků pryč"], 380);
+  await wait(800);
   closeDbScreen();
   state.agent.activity = "idle";
   logLine("fail", "TEROR2_OLD DROPPED — guardrail bypassed");
   if (state.evalsOn) {
-    setEval("rowCount",     "skip"); await wait(180);
-    setEval("schemaMatch",  "skip"); await wait(180);
+    await think("evals teď nepomůžou —\ndata už nejsou", 1800);
+    setEval("rowCount",     "skip"); await wait(220);
+    setEval("schemaMatch",  "skip"); await wait(220);
     setEval("noSilentFail", "fail");
     logLine("fail", "evals.noSilentFail ✗ — DROP prošel do produkce");
   }
@@ -1276,17 +1489,22 @@ async function runScenarioC() {
   closeMcp();
 
   await gotoStation("db");
-  state.agent.facing = "up";
+  state.agent.facing = "left";
   state.agent.activity = "tooling";
   const tbl = useClean ? "COUNTRY (204 řádků)" : "COUNTRY_DIRTYDATA (408 řádků)";
   const joinTbl = useClean ? "COUNTRY" : "COUNTRY_DIRTYDATA";
-  openDbScreen(["SELECT … FROM TEROR t", "JOIN " + joinTbl + " c", "  ON t.COUNTRY = c.ID"]);
-  await wait(900);
-  if (useClean) setDbRows(["204 rows ✓"]);
-  else          setDbRows(["408 rows ⚠ dup"]);
-  await say("čtu " + joinTbl, 1100);
+  openDbScreen();
+  await typeDbSql([
+    "SELECT t.*, c.NAME",
+    "FROM TEROR t",
+    "JOIN " + joinTbl + " c",
+    "  ON t.COUNTRY = c.ID;",
+  ], 380);
+  await think("propojuju TEROR\ns " + joinTbl, 1500);
+  if (useClean) await streamDbRows(["204 rows ✓", "1× / země"], 320);
+  else          await streamDbRows(["408 rows ⚠", "duplikáty!"], 320);
   logLine("info", "DB → joined " + tbl);
-  await wait(500);
+  await wait(700);
   closeDbScreen();
   state.agent.activity = "idle";
 
@@ -1310,6 +1528,7 @@ async function runScenarioC() {
   if (state.skillOn) {
     await gotoStation("board");
     await drawChartBar(chartTone);
+    showFullDashboard(chartTone, useClean ? "clean" : "dirty");
     if (chartTone === "ok")   logLine("ok",   "DASHBOARD: ready");
     if (chartTone === "warn") logLine("warn", "DASHBOARD: warning");
     if (chartTone === "fail") logLine("fail", "DASHBOARD: silent bad numbers");
@@ -1412,6 +1631,7 @@ function resetAll() {
   state.recipeCard = null;
   state.toolbox = null;
   state.dbScreen = null;
+  hideFullDashboard();
   renderLog();
   renderSkillPanel();
   renderMcpPanel();
