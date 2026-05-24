@@ -820,11 +820,16 @@ function drawDbScreen() {
 
 function drawAgent() {
   const a = state.agent;
+  // Always pick a directional sprite by facing — never the bundled-with-desk
+  // juliaPC spritesheet (it draws the agent welded into a workstation, which
+  // looks like a "spinning computer" at our small office stations).
   let sheet;
-  if (a.activity === "tooling" || a.activity === "drawing") {
-    sheet = images.juliaPC || images.juliaIdle;
-  } else if (a.activity === "reading" || a.activity === "idle" || !a.moving) {
-    sheet = images.juliaIdle;
+  if (!a.moving) {
+    // Standing still: use idle for front-facing, otherwise the directional sheet
+    if (a.facing === "up")         sheet = images.juliaUp;
+    else if (a.facing === "left")  sheet = images.juliaLeft;
+    else if (a.facing === "right") sheet = images.juliaRight;
+    else                           sheet = images.juliaIdle;
   } else if (a.facing === "up")    sheet = images.juliaUp;
     else if (a.facing === "left")  sheet = images.juliaLeft;
     else if (a.facing === "right") sheet = images.juliaRight;
