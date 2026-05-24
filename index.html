@@ -37,6 +37,16 @@
   .toggle-row label { flex: 1; cursor: pointer; }
   .toggle-row input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
   .stage-wrap { background: #2a2520; border-radius: 4px; padding: 16px; }
+  .stage-row {
+    display: grid;
+    grid-template-columns: minmax(0, 512px) minmax(0, 1fr);
+    gap: 14px;
+    align-items: stretch;
+  }
+  .stage-col { display: flex; flex-direction: column; gap: 10px; }
+  @media (max-width: 980px) {
+    .stage-row { grid-template-columns: 1fr; }
+  }
   canvas#stage { display: block; image-rendering: pixelated; image-rendering: crisp-edges;
     width: 100%; height: auto; max-width: 1440px; background: #000; }
   .log {
@@ -193,16 +203,20 @@
 
   /* ── DB terminal (the SQL/result console under the stage) ── */
   .db-terminal {
-    margin-top: 14px;
     background: #0e1822;
     color: #e8d8b8;
     border: 1px solid #1a2838;
     border-radius: 6px;
     font-family: var(--mono);
     overflow: hidden;
-    transition: opacity 200ms ease;
+    transition: border-color 200ms ease, opacity 200ms ease;
+    display: flex; flex-direction: column;
+    min-height: 312px;
   }
   .db-terminal.hidden { display: none; }
+  .db-terminal.idle .db-term-head .live-dot { background: #5a5040; animation: none; }
+  .db-terminal.idle .db-term-pane.sql,
+  .db-terminal.idle .db-term-pane.result { opacity: 0.55; }
   .db-term-head {
     display: flex; justify-content: space-between; align-items: center;
     padding: 8px 14px; background: #1a2838;
@@ -218,13 +232,13 @@
   @keyframes db-blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0.3; } }
   .db-term-body {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
     font-size: 13px;
     line-height: 1.55;
-    min-height: 150px;
+    flex: 1;
   }
-  .db-term-pane { padding: 12px 16px; }
-  .db-term-pane.sql    { color: #7adfd6; border-right: 1px solid #2a3848; }
+  .db-term-pane { padding: 10px 14px; min-height: 120px; }
+  .db-term-pane.sql    { color: #7adfd6; border-bottom: 1px solid #2a3848; }
   .db-term-pane.result { color: #e8d8b8; }
   .db-term-pane .pane-label {
     font-size: 10px; color: #8a8478; text-transform: uppercase;
@@ -248,8 +262,7 @@
   .db-term-pane .row.fail { color: #f4847a; }
   .db-term-pane .row.ok   { color: #92d18a; }
   @media (max-width: 800px) {
-    .db-term-body { grid-template-columns: 1fr; }
-    .db-term-pane.sql { border-right: 0; border-bottom: 1px solid #2a3848; }
+    .db-term-body { grid-template-rows: auto auto; }
   }
 
   /* ── Live panels under stage ── */
@@ -368,31 +381,36 @@
         </div>
       </div>
 
-      <div class="stage-wrap">
-        <canvas id="stage" width="480" height="280"></canvas>
-      </div>
-      <div class="controls">
-        <button id="btn-run">Run scenario</button>
-        <button id="btn-reset" class="ghost">Reset</button>
-      </div>
-      <div id="log" class="log"><div class="line">[idle] click "Run scenario" to start</div></div>
+      <div class="stage-row">
+        <div class="stage-col">
+          <div class="stage-wrap">
+            <canvas id="stage" width="480" height="280"></canvas>
+          </div>
+          <div class="controls">
+            <button id="btn-run">Run scenario</button>
+            <button id="btn-reset" class="ghost">Reset</button>
+          </div>
+        </div>
 
-      <div id="db-terminal" class="db-terminal hidden">
-        <div class="db-term-head">
-          <span><span id="db-term-tool">mcp-snowflake · execute_query</span></span>
-          <span class="right"><span class="live-dot"></span>live</span>
-        </div>
-        <div class="db-term-body">
-          <div class="db-term-pane sql">
-            <div class="pane-label">SQL</div>
-            <pre id="db-term-sql"></pre>
+        <div id="db-terminal" class="db-terminal idle">
+          <div class="db-term-head">
+            <span><span id="db-term-tool">mcp-snowflake · čeká</span></span>
+            <span class="right"><span class="live-dot"></span><span id="db-term-state">idle</span></span>
           </div>
-          <div class="db-term-pane result">
-            <div class="pane-label">Result</div>
-            <pre id="db-term-result"></pre>
+          <div class="db-term-body">
+            <div class="db-term-pane sql">
+              <div class="pane-label">SQL</div>
+              <pre id="db-term-sql"></pre>
+            </div>
+            <div class="db-term-pane result">
+              <div class="pane-label">Result</div>
+              <pre id="db-term-result"></pre>
+            </div>
           </div>
         </div>
       </div>
+
+      <div id="log" class="log"><div class="line">[idle] click "Run scenario" to start</div></div>
 
       <div id="full-dashboard" class="full-dashboard hidden">
         <div class="dash-head">
@@ -816,7 +834,8 @@ function drawDbMonitor() {
   // screen recess
   ctx.fillStyle = "#1a1814"; ctx.fillRect(bx + 2, by + 2, mw - 4, mh - 6);
   // screen — bright cyan when terminal is live, otherwise dim
-  const live = !document.getElementById("db-terminal")?.classList.contains("hidden");
+  const term = document.getElementById("db-terminal");
+  const live = !!term && !term.classList.contains("hidden") && !term.classList.contains("idle");
   ctx.fillStyle = live ? "#0e2838" : "#0e1822";
   ctx.fillRect(bx + 3, by + 3, mw - 6, mh - 8);
   // a few scanlines + blinking cursor when live to suggest activity
@@ -1273,19 +1292,25 @@ function showDbTerminal(toolLabel = "mcp-snowflake · execute_query") {
   const sqlEl = document.getElementById("db-term-sql");
   const resEl = document.getElementById("db-term-result");
   const tool  = document.getElementById("db-term-tool");
+  const stEl  = document.getElementById("db-term-state");
   if (!panel) return;
-  panel.classList.remove("hidden");
+  panel.classList.remove("hidden", "idle");
   if (sqlEl) sqlEl.innerHTML = '<span class="caret"></span>';
   if (resEl) resEl.textContent = "";
   if (tool)  tool.textContent = toolLabel;
+  if (stEl)  stEl.textContent = "live";
 }
 function hideDbTerminal() {
   const panel = document.getElementById("db-terminal");
   const sqlEl = document.getElementById("db-term-sql");
   const resEl = document.getElementById("db-term-result");
-  if (panel) panel.classList.add("hidden");
+  const tool  = document.getElementById("db-term-tool");
+  const stEl  = document.getElementById("db-term-state");
+  if (panel) { panel.classList.remove("hidden"); panel.classList.add("idle"); }
   if (sqlEl) sqlEl.innerHTML = "";
   if (resEl) resEl.innerHTML = "";
+  if (tool)  tool.textContent = "mcp-snowflake · čeká";
+  if (stEl)  stEl.textContent = "idle";
 }
 // Type SQL char-by-char with a blinking caret at the end.
 async function typeDbSql(lines, msPerLine = 380) {
