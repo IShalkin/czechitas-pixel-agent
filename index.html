@@ -240,18 +240,18 @@ function loadAll() {
  * canvas is 480×280; place stations along sensible spots
  * ═══════════════════════════════════════════════════════════════════ */
 
-// Stations anchored on actual office furniture, not a bottom-floor treadmill.
-// Path: door (low-left) → bookshelf SKILL (mid-left, far enough from bg PCs) →
-// chest MCP (centre on rug) → PC DB (mid-right) → whiteboard BOARD (high-right).
-// Y values chosen so floor-pill labels and over-station callouts don't collide
-// with the cluttered top strip of bg PCs (y < 90 in source bg).
+// Stations sit on the bottom walking lane of the office (y = 240) — clean
+// checkered floor below the conference desk and above the bottom shelves.
+// Furniture extends UP from the agent's feet so it stands clearly against
+// the floor instead of disappearing into background PCs.
+// x-coords spread evenly across width 480 with margin for plants in corners.
 const STATIONS = {
-  inbox:  { x:  44, y: 240, label: "INBOX"      },
-  skill:  { x:  80, y: 175, label: "SKILL.md"   },
-  mcp:    { x: 200, y: 200, label: "MCP toolbox"},
-  db:     { x: 330, y: 175, label: "DB"         },
-  board:  { x: 432, y: 175, label: "DASHBOARD"  },
-  start:  { x: 240, y: 250, label: ""           },
+  inbox:  { x:  64, y: 238, label: "INBOX"      },
+  skill:  { x: 150, y: 238, label: "SKILL.md"   },
+  mcp:    { x: 240, y: 238, label: "MCP toolbox"},
+  db:     { x: 330, y: 238, label: "DB"         },
+  board:  { x: 416, y: 238, label: "DASHBOARD"  },
+  start:  { x:  64, y: 238, label: ""           },
 };
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -394,13 +394,21 @@ function draw() {
     ctx.fillRect(0, 0, cnv.width, cnv.height);
   }
 
-  // station markers + labels (small floor pills below each station)
+  // furniture sits on the floor at every station; draw before labels so
+  // pills land on top
+  drawInboxTray();
+  drawBookshelf();
+  drawMcpChest();
+  drawDbMonitor();
+  drawWhiteboard();
+
+  // floor labels (one per station, pill below the station y baseline)
   ctx.font = "bold 7px ui-monospace, monospace";
   ctx.textAlign = "center";
   for (const [k, s] of Object.entries(STATIONS)) {
-    if (k === "start" || k === "inbox") continue;
+    if (k === "start") continue;
     const w = ctx.measureText(s.label).width + 6;
-    const py = s.y + 8;
+    const py = s.y + 14;
     ctx.fillStyle = "rgba(253, 250, 245, 0.95)";
     ctx.fillRect(s.x - w / 2, py, w, 9);
     ctx.strokeStyle = "rgba(212, 69, 47, 0.8)";
@@ -409,31 +417,7 @@ function draw() {
     ctx.fillStyle = "#1a1814";
     ctx.fillText(s.label, s.x, py + 7);
   }
-  // INBOX label sits above the door, not below
-  {
-    const s = STATIONS.inbox;
-    const w = ctx.measureText(s.label).width + 6;
-    const py = s.y - 16;
-    ctx.fillStyle = "rgba(253, 250, 245, 0.95)";
-    ctx.fillRect(s.x - w / 2, py, w, 9);
-    ctx.strokeStyle = "rgba(212, 69, 47, 0.8)";
-    ctx.strokeRect(s.x - w / 2 + 0.5, py + 0.5, w - 1, 8);
-    ctx.fillStyle = "#1a1814";
-    ctx.fillText(s.label, s.x, py + 7);
-  }
   ctx.textAlign = "start";
-
-  // SKILL bookshelf overlay (no real sprite — just a mini bookshelf icon)
-  drawBookshelf();
-
-  // MCP chest at MCP station (overrides marker visually)
-  drawMcpChest();
-
-  // DB monitor stand
-  drawDbMonitor();
-
-  // Whiteboard chart at BOARD station
-  drawWhiteboard();
 
   // ── Thinking visualizations (above stations) ──
   drawRecipeCard();
@@ -447,66 +431,155 @@ function draw() {
   if (state.bubble) drawBubble(state.bubble);
 }
 
+// Each station gets a chunky 30×40-ish piece of furniture sitting on the
+// clean checkered floor to the LEFT of the agent. Big enough to read at
+// canvas scale even with the busy office bg.
+
+// INBOX = wooden table with stacked papers + an arriving envelope.
+function drawInboxTray() {
+  const s = STATIONS.inbox;
+  const tw = 28, tableTop = 4, legH = 14;
+  const bx = Math.round(s.x - tw - 6);
+  const tabY = Math.round(s.y - 18);
+
+  // table top
+  ctx.fillStyle = "#7a5430"; ctx.fillRect(bx, tabY, tw, tableTop);
+  ctx.fillStyle = "#5a3e22"; ctx.fillRect(bx, tabY + tableTop, tw, 1);
+  // legs
+  ctx.fillStyle = "#5a3e22";
+  ctx.fillRect(bx + 1, tabY + tableTop, 2, legH);
+  ctx.fillRect(bx + tw - 3, tabY + tableTop, 2, legH);
+
+  // paper stack on table
+  const stackY = tabY - 7;
+  ctx.fillStyle = "#fdfaf5"; ctx.fillRect(bx + 4, stackY, tw - 8, 7);
+  ctx.strokeStyle = "#bba"; ctx.lineWidth = 1;
+  ctx.strokeRect(bx + 4.5, stackY + 0.5, tw - 9, 6);
+  ctx.fillStyle = "#bba";
+  ctx.fillRect(bx + 6, stackY + 2, tw - 12, 1);
+  ctx.fillRect(bx + 6, stackY + 4, tw - 12, 1);
+
+  // floating envelope above (like a fresh prompt arriving)
+  const ex = bx + tw / 2 - 6, ey = tabY - 18;
+  ctx.fillStyle = "rgba(0,0,0,0.2)";
+  ctx.fillRect(ex + 1, ey + 1, 12, 8);
+  ctx.fillStyle = "#fdfaf5"; ctx.fillRect(ex, ey, 12, 8);
+  ctx.strokeStyle = "#1a1814"; ctx.strokeRect(ex + 0.5, ey + 0.5, 11, 7);
+  ctx.beginPath();
+  ctx.moveTo(ex + 0.5, ey + 0.5);
+  ctx.lineTo(ex + 6, ey + 4.5);
+  ctx.lineTo(ex + 11.5, ey + 0.5);
+  ctx.stroke();
+  // red wax seal
+  ctx.fillStyle = "#d4452f";
+  ctx.fillRect(ex + 4, ey + 5, 4, 2);
+}
+
+// SKILL = tall wooden lectern with a big open recipe book on top.
+// 30 px wide, 40 px tall. Clearly a reading stand with an instruction.
 function drawBookshelf() {
   const s = STATIONS.skill;
-  const w = 22, h = 28;
-  // sit the bookshelf to the LEFT of the agent so it isn't covered by the sprite
-  const bx = Math.round(s.x - w / 2 - 18);
-  const by = Math.round(s.y - h);
-  // wood frame
-  ctx.fillStyle = "#6b4a2a";
-  ctx.fillRect(bx, by, w, h);
-  ctx.fillStyle = "#3a2818";
-  ctx.fillRect(bx, by, w, 1);
-  ctx.fillRect(bx, by + h - 1, w, 1);
-  // 3 shelves with book spines
-  const shelfYs = [by + 3, by + 12, by + 21];
-  const colors = ["#d4452f", "#3a7a3a", "#d8a93a", "#5a6fa8", "#8a4a8a"];
-  shelfYs.forEach(sy => {
-    for (let i = 0; i < 5; i++) {
-      ctx.fillStyle = colors[(i + sy) % colors.length];
-      ctx.fillRect(bx + 2 + i * 4, sy, 3, 6);
-    }
-  });
+  const fw = 30;
+  const bx = Math.round(s.x - fw - 6);
+  const baseY = Math.round(s.y - 4);  // floor where base sits
+
+  // base (splayed feet)
+  ctx.fillStyle = "#3a2818"; ctx.fillRect(bx + 2, baseY, fw - 4, 3);
+  ctx.fillStyle = "#5a3e22"; ctx.fillRect(bx + 6, baseY - 3, fw - 12, 3);
+
+  // post
+  ctx.fillStyle = "#6b4a2a"; ctx.fillRect(bx + fw / 2 - 2, baseY - 18, 4, 18);
+
+  // angled top tray
+  const trayY = baseY - 28, trayW = fw, trayH = 4;
+  ctx.fillStyle = "#7a5430"; ctx.fillRect(bx, trayY, trayW, trayH);
+  ctx.fillStyle = "#5a3e22"; ctx.fillRect(bx, trayY + trayH, trayW, 2);
+  ctx.fillStyle = "#3a2818"; ctx.fillRect(bx, trayY - 1, trayW, 1);
+
+  // big open book on tray
+  const bookY = trayY - 10, bookH = 10;
+  ctx.fillStyle = "#fdfaf5"; ctx.fillRect(bx + 1, bookY, trayW - 2, bookH);
+  ctx.strokeStyle = "#1a1814"; ctx.lineWidth = 1;
+  ctx.strokeRect(bx + 1.5, bookY + 0.5, trayW - 3, bookH - 1);
+  // spine
+  ctx.fillStyle = "#1a1814"; ctx.fillRect(bx + fw / 2 - 0.5, bookY, 1, bookH);
+  // header bands (red, like SKILL.md heading)
+  ctx.fillStyle = "#d4452f";
+  ctx.fillRect(bx + 3, bookY + 2, (fw / 2) - 4, 1);
+  ctx.fillRect(bx + fw / 2 + 2, bookY + 2, (fw / 2) - 4, 1);
+  // ruled lines
+  ctx.fillStyle = "#8a8478";
+  for (let i = 0; i < 3; i++) {
+    ctx.fillRect(bx + 3, bookY + 4 + i * 2, (fw / 2) - 4, 1);
+    ctx.fillRect(bx + fw / 2 + 2, bookY + 4 + i * 2, (fw / 2) - 4, 1);
+  }
 }
 
 function drawMcpChest() {
   const s = STATIONS.mcp;
   const sheet = state.mcpOpen ? images.chestOpen : images.chestClosed;
-  if (!sheet) return;
-  const w = 22, h = 22;
-  ctx.drawImage(sheet, 0, 0, sheet.width, sheet.height,
-    Math.round(s.x - w / 2), Math.round(s.y - h + 4), w, h);
+  const w = 30, h = 30;
+  const bx = Math.round(s.x - w - 6);
+  const by = Math.round(s.y - h + 6);
+  if (sheet) {
+    ctx.drawImage(sheet, 0, 0, sheet.width, sheet.height, bx, by, w, h);
+  } else {
+    ctx.fillStyle = "#6b4a2a"; ctx.fillRect(bx, by, w, h);
+  }
 }
 
+// DB = chunky standalone CRT monitor on the floor (no desk underneath).
+// Bezel + screen + neck + wide base. ~30 wide, ~36 tall total.
 function drawDbMonitor() {
   const s = STATIONS.db;
-  const w = 26, h = 20;
-  // monitor to the RIGHT of agent so sprite doesn't cover the screen
-  const bx = Math.round(s.x - w / 2 + 18);
-  const by = Math.round(s.y - h);
-  // monitor body
-  ctx.fillStyle = "#1a1814";
-  ctx.fillRect(bx, by, w, h);
-  // stand
+  const mw = 30, mh = 24;
+  const bx = Math.round(s.x - mw - 6);
+  const by = Math.round(s.y - mh - 6);
+
+  // wide base on the floor
+  const baseW = 22, baseH = 4;
   ctx.fillStyle = "#3a2818";
-  ctx.fillRect(bx + w/2 - 3, by + h, 6, 3);
-  ctx.fillRect(bx + w/2 - 6, by + h + 3, 12, 2);
-  // dim screen by default (filled by drawDbScreen when active)
-  ctx.fillStyle = "#2a3540";
-  ctx.fillRect(bx + 1, by + 1, w - 2, h - 2);
+  ctx.fillRect(bx + mw / 2 - baseW / 2, by + mh + 5, baseW, baseH);
+  ctx.fillStyle = "#5a3e22";
+  ctx.fillRect(bx + mw / 2 - baseW / 2 + 1, by + mh + 5 + 1, baseW - 2, baseH - 2);
+  // neck
+  ctx.fillStyle = "#3a2818"; ctx.fillRect(bx + mw / 2 - 3, by + mh, 6, 5);
+
+  // monitor casing (cream/beige CRT vibe)
+  ctx.fillStyle = "#cbb89a"; ctx.fillRect(bx, by, mw, mh);
+  ctx.fillStyle = "#a89878"; ctx.fillRect(bx, by + mh - 2, mw, 2);
+  ctx.fillStyle = "#e8d8b8"; ctx.fillRect(bx, by, mw, 1);
+
+  // screen recess
+  ctx.fillStyle = "#1a1814"; ctx.fillRect(bx + 2, by + 2, mw - 4, mh - 6);
+  // dim default screen (drawDbScreen will override when active)
+  ctx.fillStyle = "#0e1822"; ctx.fillRect(bx + 3, by + 3, mw - 6, mh - 8);
+
+  // power LED
+  ctx.fillStyle = "#d4452f"; ctx.fillRect(bx + mw - 4, by + mh - 4, 2, 2);
 }
 
+// DASHBOARD = free-standing whiteboard on a tripod, planted on the floor
+// to the LEFT of the agent (same orientation as the other stations).
 function drawWhiteboard() {
   const s = STATIONS.board;
-  const w = 56, h = 40;
-  // place whiteboard ABOVE agent's head, slightly right
-  const bx = Math.round(s.x - w / 2 + 4);
+  const w = 50, h = 36;
+  const bx = Math.round(s.x - w - 6);
   const by = Math.round(s.y - h - 6);
+
+  // tripod legs (drawn first, behind board)
+  ctx.strokeStyle = "#3a2818";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(bx + 8, by + h);          ctx.lineTo(bx + 4, by + h + 8);
+  ctx.moveTo(bx + w - 8, by + h);      ctx.lineTo(bx + w - 4, by + h + 8);
+  ctx.moveTo(bx + w / 2, by + h);      ctx.lineTo(bx + w / 2, by + h + 8);
+  ctx.stroke();
+
   // tray
   ctx.fillStyle = "#5a4a30";
   ctx.fillRect(bx - 2, by + h - 2, w + 4, 3);
-  // board
+  // board (white) with thin frame
   ctx.fillStyle = "#fdfaf5";
   ctx.fillRect(bx, by, w, h);
   ctx.strokeStyle = "#1a1814";
@@ -517,14 +590,14 @@ function drawWhiteboard() {
   ctx.fillStyle = "#1a1814";
   ctx.font = "bold 6px ui-monospace, monospace";
   ctx.textAlign = "center";
-  ctx.fillText("TOP 10 ZEMÍ", bx + w/2, by + 7);
+  ctx.fillText("TOP 10 ZEMÍ", bx + w / 2, by + 7);
 
   // baseline
   const baseY = by + h - 5;
   ctx.fillStyle = "#1a1814";
   ctx.fillRect(bx + 4, baseY, w - 8, 1);
 
-  // bars (5 bars total, increasing height)
+  // bars (5 bars total, decreasing height left→right)
   const colors = { ok: "#d4452f", warn: "#d8a93a", fail: "#7a3030" };
   const bar = colors[state.chartTone] || colors.ok;
   const slot = Math.floor((w - 10) / 5);
@@ -544,45 +617,77 @@ function drawWhiteboard() {
  * (SKILL) is being checked, which tool (MCP) is being picked from the
  * box, what query went to the DB and what came back. */
 
+// Recipe card: floats above the lectern, drawn as a torn paper sheet
+// with a header band and numbered steps with checkboxes.
 function drawRecipeCard() {
   if (!state.recipeCard) return;
   const s = STATIONS.skill;
   const lines = state.recipeCard.lines;
-  const w = 110, lh = 9, headH = 12;
-  const h = headH + lines.length * lh + 4;
-  // anchor: above and to the right of agent, well clear of the bookshelf
-  const bx = Math.round(s.x + 8);
-  const by = Math.round(s.y - h - 6);
+  const w = 130, lh = 11, headH = 16, padTop = 4, padBot = 6;
+  const h = headH + padTop + lines.length * lh + padBot;
+  // float above and to the right of the lectern, clear of agent's head
+  const bx = Math.round(s.x - 8);
+  const by = Math.round(s.y - h - 22);
 
-  // card with shadow
-  ctx.fillStyle = "rgba(0,0,0,0.25)";
-  ctx.fillRect(bx + 1, by + 1, w, h);
-  ctx.fillStyle = "#fdfaf5";
+  // shadow
+  ctx.fillStyle = "rgba(0,0,0,0.28)";
+  ctx.fillRect(bx + 2, by + 2, w, h);
+  // paper
+  ctx.fillStyle = "#fbf3df";
   ctx.fillRect(bx, by, w, h);
   ctx.strokeStyle = "#1a1814";
   ctx.lineWidth = 1;
   ctx.strokeRect(bx + 0.5, by + 0.5, w - 1, h - 1);
+  // dog-ear top-right corner
+  ctx.fillStyle = "#e8dcc0";
+  ctx.beginPath();
+  ctx.moveTo(bx + w - 6, by);
+  ctx.lineTo(bx + w, by + 6);
+  ctx.lineTo(bx + w - 6, by + 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = "#bba";
+  ctx.beginPath();
+  ctx.moveTo(bx + w - 6, by);
+  ctx.lineTo(bx + w - 6, by + 6);
+  ctx.lineTo(bx + w, by + 6);
+  ctx.stroke();
 
-  // header
+  // header band (red)
   ctx.fillStyle = "#d4452f";
   ctx.fillRect(bx, by, w, headH);
   ctx.fillStyle = "#fdfaf5";
-  ctx.font = "bold 7px ui-monospace, monospace";
+  ctx.font = "bold 9px ui-monospace, monospace";
   ctx.textAlign = "left";
-  ctx.fillText("SKILL.md  recept", bx + 3, by + 8);
-
-  // lines
+  ctx.fillText("SKILL.md", bx + 4, by + 11);
   ctx.font = "7px ui-monospace, monospace";
+  ctx.fillText("instrukce / recept", bx + 56, by + 11);
+
+  // numbered step lines with [ ] checkboxes that fill in
+  ctx.font = "8px ui-monospace, monospace";
   lines.forEach((ln, i) => {
-    const ly = by + headH + 2 + i * lh;
-    let mark = "·"; let col = "#8a8478";
+    const ly = by + headH + padTop + i * lh;
+    // step number
+    ctx.fillStyle = "#8a8478";
+    ctx.fillText((i + 1) + ".", bx + 4, ly + 8);
+    // checkbox
+    const cx = bx + 16, cy = ly + 1;
+    ctx.fillStyle = "#fdfaf5";
+    ctx.fillRect(cx, cy, 8, 8);
+    ctx.strokeStyle = "#1a1814";
+    ctx.strokeRect(cx + 0.5, cy + 0.5, 7, 7);
+    // mark inside checkbox
+    let mark = "", col = "#1a1814";
     if      (ln.status === "pass") { mark = "✓"; col = "#3a7a3a"; }
     else if (ln.status === "fail") { mark = "✗"; col = "#d4452f"; }
     else if (ln.status === "skip") { mark = "–"; col = "#bba"; }
     ctx.fillStyle = col;
-    ctx.fillText(mark, bx + 3, ly + 6);
+    ctx.font = "bold 8px ui-monospace, monospace";
+    ctx.fillText(mark, cx + 1, cy + 7);
+    // label
+    ctx.font = "8px ui-monospace, monospace";
     ctx.fillStyle = (ln.status === "skip") ? "#bba" : "#1a1814";
-    ctx.fillText(ln.text, bx + 11, ly + 6);
+    ctx.fillText(ln.text, cx + 12, ly + 8);
   });
 }
 
@@ -590,15 +695,17 @@ function drawToolbox() {
   if (!state.toolbox) return;
   const s = STATIONS.mcp;
   const tools = [
-    { key: "list_tables",    short: "list" },
-    { key: "describe_table", short: "desc" },
-    { key: "execute_query",  short: "exec" },
+    { key: "list_tables",    short: "list_tables" },
+    { key: "describe_table", short: "describe"    },
+    { key: "execute_query",  short: "execute"     },
   ];
-  // floating row of 3 chips above the chest
-  const chipW = 26, chipH = 14, gap = 4;
+  // floating row of 3 chips above the chest (chest sits LEFT of agent —
+  // chest center ≈ s.x - 21)
+  const chipW = 38, chipH = 14, gap = 3;
   const totalW = chipW * 3 + gap * 2;
-  const bx = Math.round(s.x - totalW / 2);
-  const by = Math.round(s.y - 50);
+  const chestCenterX = s.x - 21;
+  const bx = Math.round(chestCenterX - totalW / 2);
+  const by = Math.round(s.y - 56);
 
   ctx.font = "bold 7px ui-monospace, monospace";
   ctx.textAlign = "center";
@@ -625,27 +732,32 @@ function drawToolbox() {
 function drawDbScreen() {
   if (!state.dbScreen) return;
   const s = STATIONS.db;
-  const w = 24, h = 18;
-  // align screen content with the offset monitor body (drawDbMonitor +18)
-  const bx = Math.round(s.x - w / 2 + 19);
-  const by = Math.round(s.y - h + 1);
+  // Match drawDbMonitor: monitor at (s.x - 30 - 6, s.y - 24 - 6)
+  // screen area inside casing: (bx+3, by+3) of 24×16
+  const mw = 30, mh = 24;
+  const monX = s.x - mw - 6;
+  const monY = s.y - mh - 6;
+  const bx = Math.round(monX + 3);
+  const by = Math.round(monY + 3);
+  const w = mw - 6, h = mh - 8;
+
   // illuminated screen
   ctx.fillStyle = "#0e1822";
   ctx.fillRect(bx, by, w, h);
 
   ctx.font = "5px ui-monospace, monospace";
   ctx.textAlign = "left";
-  // SQL on top (cyan-ish)
+  // SQL (cyan)
   ctx.fillStyle = "#7adfd6";
   const sqlLines = state.dbScreen.sql || [];
   sqlLines.forEach((ln, i) => {
-    ctx.fillText(ln, bx + 2, by + 6 + i * 5);
+    ctx.fillText(ln, bx + 1, by + 5 + i * 5);
   });
-  // result rows below (cream)
+  // result rows (cream)
   ctx.fillStyle = "#e8d8b8";
   const rows = state.dbScreen.rows || [];
   rows.forEach((r, i) => {
-    ctx.fillText(r, bx + 2, by + 6 + (sqlLines.length + i) * 5);
+    ctx.fillText(r, bx + 1, by + 5 + (sqlLines.length + i) * 5);
   });
 }
 
