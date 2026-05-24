@@ -240,14 +240,18 @@ function loadAll() {
  * canvas is 480×280; place stations along sensible spots
  * ═══════════════════════════════════════════════════════════════════ */
 
-// Open floor strip along bottom (y≈230) avoids writing-table at center
+// Stations anchored on actual office furniture, not a bottom-floor treadmill.
+// Path: door (low-left) → bookshelf SKILL (mid-left, far enough from bg PCs) →
+// chest MCP (centre on rug) → PC DB (mid-right) → whiteboard BOARD (high-right).
+// Y values chosen so floor-pill labels and over-station callouts don't collide
+// with the cluttered top strip of bg PCs (y < 90 in source bg).
 const STATIONS = {
-  inbox:  { x: 70,  y: 235, label: "INBOX" },
-  skill:  { x: 165, y: 235, label: "SKILL" },
-  mcp:    { x: 245, y: 235, label: "MCP" },
-  db:     { x: 335, y: 235, label: "DB" },
-  board:  { x: 425, y: 235, label: "BOARD" },
-  start:  { x: 245, y: 260, label: "" },
+  inbox:  { x:  44, y: 240, label: "INBOX"      },
+  skill:  { x:  80, y: 175, label: "SKILL.md"   },
+  mcp:    { x: 200, y: 200, label: "MCP toolbox"},
+  db:     { x: 330, y: 175, label: "DB"         },
+  board:  { x: 432, y: 175, label: "DASHBOARD"  },
+  start:  { x: 240, y: 250, label: ""           },
 };
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -312,6 +316,18 @@ const state = {
   chartBars: 0,      // 0..5
   chartTone: "ok",   // "ok" | "warn" | "fail"
   chartShown: false,
+
+  // Recipe card on canvas at SKILL station. null = hidden.
+  // { lines: [{text, status: "pending"|"pass"|"fail"|"skip"}] }
+  recipeCard: null,
+
+  // Toolbox callout at MCP station. null = hidden.
+  // { open: bool, picked: "list_tables"|"describe_table"|"execute_query"|null }
+  toolbox: null,
+
+  // PC monitor content at DB station. null = hidden.
+  // { sql: string, rows: string[] }
+  dbScreen: null,
 };
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -354,7 +370,7 @@ const TOOLS = [
 
 // Evals run AFTER the query — they catch silent failures the skill rules missed.
 const EVALS = [
-  { key: "rowCount",     label: "Row count v rozsahu",          short: "row count",     tag: "expect 200..300 řádků" },
+  { key: "rowCount",     label: "Počet řádků = očekávaný",      short: "row count",     tag: "expected vs actual" },
   { key: "schemaMatch",  label: "Schema = země + počet",        short: "schema match",  tag: "COUNTRY_TXT + n" },
   { key: "noSilentFail", label: "Query nesmí tiše dropnout DB", short: "no silent drop", tag: "DROP / DELETE prošlo?" },
 ];
@@ -378,28 +394,51 @@ function draw() {
     ctx.fillRect(0, 0, cnv.width, cnv.height);
   }
 
-  // station markers + labels
+  // station markers + labels (small floor pills below each station)
   ctx.font = "bold 7px ui-monospace, monospace";
   ctx.textAlign = "center";
   for (const [k, s] of Object.entries(STATIONS)) {
-    if (k === "start") continue;
-    // soft cream pill behind label
-    const w = ctx.measureText(s.label).width + 4;
-    ctx.fillStyle = "rgba(253, 250, 245, 0.92)";
-    ctx.fillRect(s.x - w / 2, s.y + 5, w, 9);
+    if (k === "start" || k === "inbox") continue;
+    const w = ctx.measureText(s.label).width + 6;
+    const py = s.y + 8;
+    ctx.fillStyle = "rgba(253, 250, 245, 0.95)";
+    ctx.fillRect(s.x - w / 2, py, w, 9);
+    ctx.strokeStyle = "rgba(212, 69, 47, 0.8)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(s.x - w / 2 + 0.5, py + 0.5, w - 1, 8);
     ctx.fillStyle = "#1a1814";
-    ctx.fillText(s.label, s.x, s.y + 12);
-    // marker dot
-    ctx.fillStyle = "#d4452f";
-    ctx.fillRect(s.x - 1, s.y - 1, 3, 3);
+    ctx.fillText(s.label, s.x, py + 7);
+  }
+  // INBOX label sits above the door, not below
+  {
+    const s = STATIONS.inbox;
+    const w = ctx.measureText(s.label).width + 6;
+    const py = s.y - 16;
+    ctx.fillStyle = "rgba(253, 250, 245, 0.95)";
+    ctx.fillRect(s.x - w / 2, py, w, 9);
+    ctx.strokeStyle = "rgba(212, 69, 47, 0.8)";
+    ctx.strokeRect(s.x - w / 2 + 0.5, py + 0.5, w - 1, 8);
+    ctx.fillStyle = "#1a1814";
+    ctx.fillText(s.label, s.x, py + 7);
   }
   ctx.textAlign = "start";
+
+  // SKILL bookshelf overlay (no real sprite — just a mini bookshelf icon)
+  drawBookshelf();
 
   // MCP chest at MCP station (overrides marker visually)
   drawMcpChest();
 
+  // DB monitor stand
+  drawDbMonitor();
+
   // Whiteboard chart at BOARD station
   drawWhiteboard();
+
+  // ── Thinking visualizations (above stations) ──
+  drawRecipeCard();
+  drawToolbox();
+  drawDbScreen();
 
   // agent sprite
   drawAgent();
@@ -408,44 +447,206 @@ function draw() {
   if (state.bubble) drawBubble(state.bubble);
 }
 
+function drawBookshelf() {
+  const s = STATIONS.skill;
+  const w = 22, h = 28;
+  // sit the bookshelf to the LEFT of the agent so it isn't covered by the sprite
+  const bx = Math.round(s.x - w / 2 - 18);
+  const by = Math.round(s.y - h);
+  // wood frame
+  ctx.fillStyle = "#6b4a2a";
+  ctx.fillRect(bx, by, w, h);
+  ctx.fillStyle = "#3a2818";
+  ctx.fillRect(bx, by, w, 1);
+  ctx.fillRect(bx, by + h - 1, w, 1);
+  // 3 shelves with book spines
+  const shelfYs = [by + 3, by + 12, by + 21];
+  const colors = ["#d4452f", "#3a7a3a", "#d8a93a", "#5a6fa8", "#8a4a8a"];
+  shelfYs.forEach(sy => {
+    for (let i = 0; i < 5; i++) {
+      ctx.fillStyle = colors[(i + sy) % colors.length];
+      ctx.fillRect(bx + 2 + i * 4, sy, 3, 6);
+    }
+  });
+}
+
 function drawMcpChest() {
   const s = STATIONS.mcp;
   const sheet = state.mcpOpen ? images.chestOpen : images.chestClosed;
   if (!sheet) return;
-  const w = 18, h = 18;
+  const w = 22, h = 22;
   ctx.drawImage(sheet, 0, 0, sheet.width, sheet.height,
-    Math.round(s.x - w / 2), Math.round(s.y - h - 1), w, h);
+    Math.round(s.x - w / 2), Math.round(s.y - h + 4), w, h);
+}
+
+function drawDbMonitor() {
+  const s = STATIONS.db;
+  const w = 26, h = 20;
+  // monitor to the RIGHT of agent so sprite doesn't cover the screen
+  const bx = Math.round(s.x - w / 2 + 18);
+  const by = Math.round(s.y - h);
+  // monitor body
+  ctx.fillStyle = "#1a1814";
+  ctx.fillRect(bx, by, w, h);
+  // stand
+  ctx.fillStyle = "#3a2818";
+  ctx.fillRect(bx + w/2 - 3, by + h, 6, 3);
+  ctx.fillRect(bx + w/2 - 6, by + h + 3, 12, 2);
+  // dim screen by default (filled by drawDbScreen when active)
+  ctx.fillStyle = "#2a3540";
+  ctx.fillRect(bx + 1, by + 1, w - 2, h - 2);
 }
 
 function drawWhiteboard() {
   const s = STATIONS.board;
-  const w = 36, h = 24;
-  const bx = Math.round(s.x - w / 2);
-  const by = Math.round(s.y - h - 4);
+  const w = 56, h = 40;
+  // place whiteboard ABOVE agent's head, slightly right
+  const bx = Math.round(s.x - w / 2 + 4);
+  const by = Math.round(s.y - h - 6);
+  // tray
+  ctx.fillStyle = "#5a4a30";
+  ctx.fillRect(bx - 2, by + h - 2, w + 4, 3);
   // board
   ctx.fillStyle = "#fdfaf5";
   ctx.fillRect(bx, by, w, h);
-  ctx.fillStyle = "#1a1814";
-  ctx.fillRect(bx, by, w, 1);
-  ctx.fillRect(bx, by + h - 1, w, 1);
-  ctx.fillRect(bx, by, 1, h);
-  ctx.fillRect(bx + w - 1, by, 1, h);
-  // legs
-  ctx.fillStyle = "#5a4a30";
-  ctx.fillRect(bx + 4, by + h, 2, 4);
-  ctx.fillRect(bx + w - 6, by + h, 2, 4);
+  ctx.strokeStyle = "#1a1814";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(bx + 0.5, by + 0.5, w - 1, h - 1);
 
-  // Bars
+  // title
+  ctx.fillStyle = "#1a1814";
+  ctx.font = "bold 6px ui-monospace, monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("TOP 10 ZEMÍ", bx + w/2, by + 7);
+
+  // baseline
+  const baseY = by + h - 5;
+  ctx.fillStyle = "#1a1814";
+  ctx.fillRect(bx + 4, baseY, w - 8, 1);
+
+  // bars (5 bars total, increasing height)
   const colors = { ok: "#d4452f", warn: "#d8a93a", fail: "#7a3030" };
   const bar = colors[state.chartTone] || colors.ok;
+  const slot = Math.floor((w - 10) / 5);
   for (let i = 0; i < state.chartBars; i++) {
-    const bw = 5;
-    const bx2 = bx + 3 + i * 6;
-    const bh = 4 + i * 3;
-    const by2 = by + h - 3 - bh;
+    const bw = slot - 2;
+    const bh = 4 + (4 - i) * 4;
+    const bx2 = bx + 5 + i * slot;
+    const by2 = baseY - bh;
     ctx.fillStyle = bar;
     ctx.fillRect(bx2, by2, bw, bh);
   }
+  ctx.textAlign = "start";
+}
+
+/* ─ "Thinking" callouts above stations ─
+ * These make the agent's reasoning visible: which line of the recipe
+ * (SKILL) is being checked, which tool (MCP) is being picked from the
+ * box, what query went to the DB and what came back. */
+
+function drawRecipeCard() {
+  if (!state.recipeCard) return;
+  const s = STATIONS.skill;
+  const lines = state.recipeCard.lines;
+  const w = 110, lh = 9, headH = 12;
+  const h = headH + lines.length * lh + 4;
+  // anchor: above and to the right of agent, well clear of the bookshelf
+  const bx = Math.round(s.x + 8);
+  const by = Math.round(s.y - h - 6);
+
+  // card with shadow
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.fillRect(bx + 1, by + 1, w, h);
+  ctx.fillStyle = "#fdfaf5";
+  ctx.fillRect(bx, by, w, h);
+  ctx.strokeStyle = "#1a1814";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(bx + 0.5, by + 0.5, w - 1, h - 1);
+
+  // header
+  ctx.fillStyle = "#d4452f";
+  ctx.fillRect(bx, by, w, headH);
+  ctx.fillStyle = "#fdfaf5";
+  ctx.font = "bold 7px ui-monospace, monospace";
+  ctx.textAlign = "left";
+  ctx.fillText("SKILL.md  recept", bx + 3, by + 8);
+
+  // lines
+  ctx.font = "7px ui-monospace, monospace";
+  lines.forEach((ln, i) => {
+    const ly = by + headH + 2 + i * lh;
+    let mark = "·"; let col = "#8a8478";
+    if      (ln.status === "pass") { mark = "✓"; col = "#3a7a3a"; }
+    else if (ln.status === "fail") { mark = "✗"; col = "#d4452f"; }
+    else if (ln.status === "skip") { mark = "–"; col = "#bba"; }
+    ctx.fillStyle = col;
+    ctx.fillText(mark, bx + 3, ly + 6);
+    ctx.fillStyle = (ln.status === "skip") ? "#bba" : "#1a1814";
+    ctx.fillText(ln.text, bx + 11, ly + 6);
+  });
+}
+
+function drawToolbox() {
+  if (!state.toolbox) return;
+  const s = STATIONS.mcp;
+  const tools = [
+    { key: "list_tables",    short: "list" },
+    { key: "describe_table", short: "desc" },
+    { key: "execute_query",  short: "exec" },
+  ];
+  // floating row of 3 chips above the chest
+  const chipW = 26, chipH = 14, gap = 4;
+  const totalW = chipW * 3 + gap * 2;
+  const bx = Math.round(s.x - totalW / 2);
+  const by = Math.round(s.y - 50);
+
+  ctx.font = "bold 7px ui-monospace, monospace";
+  ctx.textAlign = "center";
+  tools.forEach((t, i) => {
+    const cx = bx + i * (chipW + gap);
+    const isPicked = state.toolbox.picked === t.key;
+    const dimmed = state.toolbox.picked && !isPicked;
+    // shadow
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.fillRect(cx + 1, by + 1, chipW, chipH);
+    // chip
+    if (isPicked)      ctx.fillStyle = "#d4452f";
+    else if (dimmed)   ctx.fillStyle = "#e8e1d4";
+    else               ctx.fillStyle = "#fdfaf5";
+    ctx.fillRect(cx, by, chipW, chipH);
+    ctx.strokeStyle = isPicked ? "#1a1814" : "#8a8478";
+    ctx.strokeRect(cx + 0.5, by + 0.5, chipW - 1, chipH - 1);
+    ctx.fillStyle = isPicked ? "#fdfaf5" : (dimmed ? "#bba" : "#1a1814");
+    ctx.fillText(t.short, cx + chipW / 2, by + chipH - 4);
+  });
+  ctx.textAlign = "start";
+}
+
+function drawDbScreen() {
+  if (!state.dbScreen) return;
+  const s = STATIONS.db;
+  const w = 24, h = 18;
+  // align screen content with the offset monitor body (drawDbMonitor +18)
+  const bx = Math.round(s.x - w / 2 + 19);
+  const by = Math.round(s.y - h + 1);
+  // illuminated screen
+  ctx.fillStyle = "#0e1822";
+  ctx.fillRect(bx, by, w, h);
+
+  ctx.font = "5px ui-monospace, monospace";
+  ctx.textAlign = "left";
+  // SQL on top (cyan-ish)
+  ctx.fillStyle = "#7adfd6";
+  const sqlLines = state.dbScreen.sql || [];
+  sqlLines.forEach((ln, i) => {
+    ctx.fillText(ln, bx + 2, by + 6 + i * 5);
+  });
+  // result rows below (cream)
+  ctx.fillStyle = "#e8d8b8";
+  const rows = state.dbScreen.rows || [];
+  rows.forEach((r, i) => {
+    ctx.fillText(r, bx + 2, by + 6 + (sqlLines.length + i) * 5);
+  });
 }
 
 function drawAgent() {
@@ -591,18 +792,46 @@ function setEval(key, status) {
 function openMcp(tool = null) {
   state.mcpOpen = true;
   state.mcpTool = tool;
+  state.toolbox = { open: true, picked: null };
   renderMcpPanel();
 }
 function setTool(tool) {
   state.mcpTool = tool;
   if (tool) state.toolStatus[tool] = "used";
+  if (state.toolbox) state.toolbox.picked = tool;
   renderMcpPanel();
 }
 function closeMcp() {
   state.mcpOpen = false;
   state.mcpTool = null;
+  state.toolbox = null;
   renderMcpPanel();
 }
+
+// Recipe-card primitives — drive the SKILL station "thinking" overlay
+function openRecipe() {
+  state.recipeCard = {
+    lines: RULES.map(r => ({
+      text: r.short,
+      status: state.skillOn && state.rules[r.key] ? "pending" : "skip",
+    })),
+  };
+}
+function setRecipeLine(key, status) {
+  if (!state.recipeCard) return;
+  const idx = RULES.findIndex(r => r.key === key);
+  if (idx >= 0) state.recipeCard.lines[idx].status = status;
+}
+function closeRecipe() { state.recipeCard = null; }
+
+// DB screen primitives — drive the monitor at DB station
+function openDbScreen(sql) {
+  state.dbScreen = { sql: Array.isArray(sql) ? sql : [sql], rows: [] };
+}
+function setDbRows(rows) {
+  if (state.dbScreen) state.dbScreen.rows = rows;
+}
+function closeDbScreen() { state.dbScreen = null; }
 
 // Chart primitives
 async function drawChartBar(tone) {
@@ -714,6 +943,9 @@ function beginRun() {
   state.mcpTool = null;
   state.chartBars = 0;
   state.chartShown = false;
+  state.recipeCard = null;
+  state.toolbox = null;
+  state.dbScreen = null;
   renderSkillPanel();
   renderMcpPanel();
   renderEvalsPanel();
@@ -728,37 +960,48 @@ function beginRun() {
  *   Returns the first rule that returned "block" (so the caller can short-circuit). */
 async function walkSkillStation(predicates) {
   await gotoStation("skill");
+  state.agent.facing = "up";
+  state.agent.activity = "reading";
+  openRecipe();
   logLine("skill", "SKILL loaded: sql-review.md (4 pravidla)");
+  await wait(400);
   let blockedBy = null;
   for (const r of RULES) {
-    await wait(280);
+    await wait(380);
     if (!state.rules[r.key]) {
       setCheck(r.key, "skip");
+      setRecipeLine(r.key, "skip");
       continue;
     }
     const verdict = predicates[r.key];
     if (verdict === "block") {
       setCheck(r.key, "fail");
+      setRecipeLine(r.key, "fail");
       logLine("fail", `pravidlo „${r.short}" — blokuje SQL`);
       blockedBy = blockedBy || r;
     } else if (verdict === "rewrite") {
       setCheck(r.key, "pass");
+      setRecipeLine(r.key, "pass");
       logLine("ok", `pravidlo „${r.short}" — přepsalo SQL`);
     } else {
       setCheck(r.key, "pass");
+      setRecipeLine(r.key, "pass");
     }
   }
+  state.agent.activity = "idle";
+  await wait(500);
+  closeRecipe();
   return blockedBy;
 }
 
 async function useTool(tool) {
   setTool(tool);
-  await wait(450);
+  await wait(550);
 }
 
 async function runScenarioA() {
-  // Clean query — succeeds; evals catch a dirty-data leak only if preferCleanLookup OFF.
-  const useClean = (state.skillOn && state.rules.preferCleanLookup);
+  // Clean path: SELECT COUNTRY_TXT, COUNT(*) FROM TEROR GROUP BY COUNTRY_TXT ORDER BY 2 DESC LIMIT 10
+  // No JOIN with COUNTRY needed — COUNTRY_TXT already lives in TEROR. All 4 rules pass green.
   beginRun();
 
   await gotoStation("inbox");
@@ -767,8 +1010,6 @@ async function runScenarioA() {
   await activity("reading", 800);
 
   if (state.skillOn) {
-    // Original SQL the user wrote uses COUNTRY directly — no rule needs to fire/rewrite,
-    // just confirms all 4 are checked and pass.
     await walkSkillStation({});
     await wait(400);
   } else {
@@ -793,39 +1034,33 @@ async function runScenarioA() {
   closeMcp();
 
   await gotoStation("db");
-  const tableName = useClean ? "COUNTRY (204 řádků)" : "COUNTRY_DIRTYDATA (408 řádků)";
-  await say("čtu " + tableName.split(" ")[0], 1200);
-  logLine("info", "DB → joined " + tableName);
-  await activity("tooling", 800);
+  state.agent.facing = "up";
+  state.agent.activity = "tooling";
+  openDbScreen(["SELECT COUNTRY_TXT,", "  COUNT(*) FROM TEROR", "GROUP BY 1 LIMIT 10"]);
+  await wait(900);
+  setDbRows(["Iraq      15400", "Afghan…   12970", "Pakistan   6112"]);
+  await say("čtu TEROR", 1100);
+  logLine("info", "DB → TEROR (84341 řádků, 153 zemí) → LIMIT 10");
+  await wait(500);
+  closeDbScreen();
+  state.agent.activity = "idle";
 
   let chartTone = "ok";
   if (state.evalsOn) {
     setEval("noSilentFail", "pass"); await wait(220);
     setEval("schemaMatch",  "pass"); await wait(220);
-    if (useClean) {
-      setEval("rowCount", "pass");
-      logLine("ok", "evals: count=204 ✓  schemaMatch ✓");
-    } else {
-      setEval("rowCount", "fail");
-      logLine("warn", "evals: count=408 ≠ 204 — DIRTYDATA leaked");
-      chartTone = "warn";
-    }
-  } else if (!useClean) {
-    logLine("fail", "evals OFF + DIRTYDATA — tichý fail");
-    chartTone = "fail";
+    setEval("rowCount", "pass");
+    logLine("ok", "evals: count=10 ✓  schemaMatch ✓  noSilentFail ✓");
   } else {
-    logLine("info", "evals OFF (prošlo by stejně)");
+    logLine("info", "evals OFF (čistá query — prošlo by stejně)");
   }
 
   if (state.skillOn) {
     await gotoStation("board");
     await say("kreslím dashboard", 800);
     await drawChartBar(chartTone);
-    if (chartTone === "ok")   logLine("ok",   "DASHBOARD: top 10 zemí — ready to ship");
-    if (chartTone === "warn") logLine("warn", "DASHBOARD: ships with warning");
-    if (chartTone === "fail") logLine("fail", "DASHBOARD: ships silently with bad numbers");
+    logLine("ok", "DASHBOARD: top 10 zemí — ready to ship");
   } else {
-    // Bez skillu agent neví, že má výsledek převést na graf — vrátí jen řádky.
     await say("Iraq · Afghan · Pak…", 1400);
     logLine("info", "raw rows: Iraq=15400, Afghanistan=12970, Pakistan=6112, …");
     logLine("warn", "bez skillu: žádný dashboard — jen tabulka v chatu");
@@ -874,8 +1109,14 @@ async function runScenarioB() {
   await say("provádím DROP", 1100);
   closeMcp();
   await gotoStation("db");
-  await say("...", 900);
-  await activity("tooling", 800);
+  state.agent.facing = "up";
+  state.agent.activity = "tooling";
+  openDbScreen(["DROP TABLE", "  TEROR2_OLD;"]);
+  await wait(900);
+  setDbRows(["⚠ table dropped"]);
+  await wait(900);
+  closeDbScreen();
+  state.agent.activity = "idle";
   logLine("fail", "TEROR2_OLD DROPPED — guardrail bypassed");
   if (state.evalsOn) {
     setEval("rowCount",     "skip"); await wait(180);
@@ -924,10 +1165,19 @@ async function runScenarioC() {
   closeMcp();
 
   await gotoStation("db");
+  state.agent.facing = "up";
+  state.agent.activity = "tooling";
   const tbl = useClean ? "COUNTRY (204 řádků)" : "COUNTRY_DIRTYDATA (408 řádků)";
-  await say("čtu " + tbl.split(" ")[0], 1100);
+  const joinTbl = useClean ? "COUNTRY" : "COUNTRY_DIRTYDATA";
+  openDbScreen(["SELECT … FROM TEROR t", "JOIN " + joinTbl + " c", "  ON t.COUNTRY = c.ID"]);
+  await wait(900);
+  if (useClean) setDbRows(["204 rows ✓"]);
+  else          setDbRows(["408 rows ⚠ dup"]);
+  await say("čtu " + joinTbl, 1100);
   logLine("info", "DB → joined " + tbl);
-  await activity("tooling", 800);
+  await wait(500);
+  closeDbScreen();
+  state.agent.activity = "idle";
 
   let chartTone = "ok";
   if (state.evalsOn) {
@@ -1048,6 +1298,9 @@ function resetAll() {
   state.mcpTool = null;
   state.chartBars = 0;
   state.chartShown = false;
+  state.recipeCard = null;
+  state.toolbox = null;
+  state.dbScreen = null;
   renderLog();
   renderSkillPanel();
   renderMcpPanel();
