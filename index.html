@@ -355,7 +355,7 @@ const TOOLS = [
 // Evals run AFTER the query — they catch silent failures the skill rules missed.
 const EVALS = [
   { key: "rowCount",     label: "Row count v rozsahu",          short: "row count",     tag: "expect 200..300 řádků" },
-  { key: "schemaMatch",  label: "Schema = země + počet",        short: "schema match",  tag: "REGION_TXT + n" },
+  { key: "schemaMatch",  label: "Schema = země + počet",        short: "schema match",  tag: "COUNTRY_TXT + n" },
   { key: "noSilentFail", label: "Query nesmí tiše dropnout DB", short: "no silent drop", tag: "DROP / DELETE prošlo?" },
 ];
 
@@ -817,12 +817,19 @@ async function runScenarioA() {
     logLine("info", "evals OFF (prošlo by stejně)");
   }
 
-  await gotoStation("board");
-  await say("kreslím dashboard", 800);
-  await drawChartBar(chartTone);
-  if (chartTone === "ok")   logLine("ok",   "DASHBOARD: top 10 zemí — ready to ship");
-  if (chartTone === "warn") logLine("warn", "DASHBOARD: ships with warning");
-  if (chartTone === "fail") logLine("fail", "DASHBOARD: ships silently with bad numbers");
+  if (state.skillOn) {
+    await gotoStation("board");
+    await say("kreslím dashboard", 800);
+    await drawChartBar(chartTone);
+    if (chartTone === "ok")   logLine("ok",   "DASHBOARD: top 10 zemí — ready to ship");
+    if (chartTone === "warn") logLine("warn", "DASHBOARD: ships with warning");
+    if (chartTone === "fail") logLine("fail", "DASHBOARD: ships silently with bad numbers");
+  } else {
+    // Bez skillu agent neví, že má výsledek převést na graf — vrátí jen řádky.
+    await say("Iraq · Afghan · Pak…", 1400);
+    logLine("info", "raw rows: Iraq=15400, Afghanistan=12970, Pakistan=6112, …");
+    logLine("warn", "bez skillu: žádný dashboard — jen tabulka v chatu");
+  }
 
   await gotoStation("start");
   state.running = false;
@@ -939,11 +946,16 @@ async function runScenarioC() {
     chartTone = "fail";
   }
 
-  await gotoStation("board");
-  await drawChartBar(chartTone);
-  if (chartTone === "ok")   logLine("ok",   "DASHBOARD: ready");
-  if (chartTone === "warn") logLine("warn", "DASHBOARD: warning");
-  if (chartTone === "fail") logLine("fail", "DASHBOARD: silent bad numbers");
+  if (state.skillOn) {
+    await gotoStation("board");
+    await drawChartBar(chartTone);
+    if (chartTone === "ok")   logLine("ok",   "DASHBOARD: ready");
+    if (chartTone === "warn") logLine("warn", "DASHBOARD: warning");
+    if (chartTone === "fail") logLine("fail", "DASHBOARD: silent bad numbers");
+  } else {
+    await say("data hotová", 1200);
+    logLine("warn", "bez skillu: jen řádky v chatu — žádný dashboard");
+  }
 
   await gotoStation("start");
   state.running = false;
