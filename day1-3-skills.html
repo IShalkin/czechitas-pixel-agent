@@ -368,6 +368,90 @@ blockquote {
   align-items: start;
 }
 
+/* Interactive Slovníček ----------------------------------- */
+.vocab {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vocab-item {
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  transition: border-color 0.18s, background 0.18s;
+}
+.vocab-item[open] {
+  border-color: var(--amber);
+  background: var(--bg-3);
+}
+.vocab-item.cyan[open]  { border-color: var(--cyan); }
+.vocab-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: 180px 1fr 24px;
+  align-items: center;
+  gap: 18px;
+  user-select: none;
+}
+.vocab-item summary::-webkit-details-marker { display: none; }
+.vocab-item summary:hover { background: rgba(255,156,74,0.04); }
+.vocab-item .word {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--amber);
+  letter-spacing: 0.02em;
+}
+.vocab-item.cyan .word { color: var(--cyan); }
+.vocab-item .oneliner {
+  font-size: 19px;
+  color: var(--fg-2);
+  line-height: 1.4;
+}
+.vocab-item .oneliner em {
+  color: var(--fg);
+  font-style: normal;
+}
+.vocab-item .chev {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  color: var(--fg-3);
+  text-align: right;
+  transition: transform 0.18s, color 0.18s;
+}
+.vocab-item[open] .chev {
+  transform: rotate(90deg);
+  color: var(--amber);
+}
+.vocab-item.cyan[open] .chev { color: var(--cyan); }
+.vocab-body {
+  padding: 0 18px 18px 18px;
+  border-top: 1px dashed var(--border);
+  padding-top: 14px;
+  margin: 0 16px;
+  animation: vocab-fade 0.22s ease-out;
+}
+.vocab-body pre {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.vocab-body .prompt { color: var(--amber); font-weight: 700; }
+@keyframes vocab-fade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 900px) {
+  .vocab-item summary {
+    grid-template-columns: 1fr 24px;
+    grid-template-rows: auto auto;
+  }
+  .vocab-item .word { grid-row: 1; }
+  .vocab-item .chev { grid-row: 1; grid-column: 2; }
+  .vocab-item .oneliner { grid-row: 2; grid-column: 1 / -1; }
+}
+
 .two-col-pre h3 {
   margin-top: 0;
 }
@@ -667,37 +751,97 @@ body.speaker-mode #status-bar::after {
   <div class="slide-inner">
     <span class="kicker">📖 SLOVNÍČEK · KOTVA</span>
     <h2>Pět slov, která dnes uslyšíš.</h2>
-    <p class="lead">Když se v nich někdy ztratíš — vrať se sem.</p>
+    <p class="lead">Klikni na slovo — uvidíš, jak vypadá v praxi. Když se v nich někdy ztratíš, vrať se sem.</p>
 
-    <table style="margin-top: 20px;">
-      <thead>
-        <tr><th style="width: 22%;">Slovo</th><th>V jedné větě</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong style="color:var(--amber);">Agent</strong></td>
-          <td>Chatbot v terminálu, který vidí tvůj kód a umí ho měnit.</td>
-        </tr>
-        <tr>
-          <td><strong style="color:var(--amber);">AGENTS.md</strong></td>
-          <td>Návod o <em>projektu</em> — jeden soubor v repu, agent si ho vždycky přečte.</td>
-        </tr>
-        <tr>
-          <td><strong style="color:var(--cyan);">SKILL.md</strong></td>
-          <td>Návod na <em>opakující se úkol</em> — jeden Markdown soubor s pravidly.</td>
-        </tr>
-        <tr>
-          <td><strong style="color:var(--fg);">MCP</strong></td>
-          <td>Zásuvka, přes kterou agent sahá do <em>databáze, e-mailu, Slacku…</em> Zítra s Tánou.</td>
-        </tr>
-        <tr>
-          <td><strong style="color:var(--fg);">Eval</strong></td>
-          <td>Test, jestli to celé funguje. „Chytil neexistující sloupce? Ano/ne."</td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="vocab" style="margin-top: 20px;">
 
-    <div class="callout cyan" style="margin-top: 24px;">
+      <details class="vocab-item amber">
+        <summary>
+          <span class="word">Agent</span>
+          <span class="oneliner">Chatbot v terminálu, který vidí tvůj kód a umí ho měnit.</span>
+          <span class="chev">▸</span>
+        </summary>
+        <div class="vocab-body">
+<pre class="cyan-bar"><span class="c">$ opencode</span>
+<span class="prompt">▸</span> Najdi prázdné .md soubory a smaž je.
+
+<span class="c">// agent: vidí složku, čte git, edituje, commituje</span>
+<span class="c">→ smazáno: notes/old.md, drafts/wip.md</span>
+<span class="c">→ commit: "chore: remove empty notes"</span></pre>
+        </div>
+      </details>
+
+      <details class="vocab-item amber">
+        <summary>
+          <span class="word">AGENTS.md</span>
+          <span class="oneliner">Návod o <em>projektu</em> — jeden soubor v repu, agent ho vždycky přečte.</span>
+          <span class="chev">▸</span>
+        </summary>
+        <div class="vocab-body">
+<pre class="cyan-bar"><span class="heading"># Czechitas workshop</span>
+
+<span class="heading">## Stack</span>
+- Snowflake · DB COURSES · Schema SCH_TEROR
+
+<span class="heading">## Don't</span>
+- Žádné DROP / UPDATE bez schválení
+- Tabulky _OLD jsou archivy — nepoužívej</pre>
+        </div>
+      </details>
+
+      <details class="vocab-item cyan">
+        <summary>
+          <span class="word">SKILL.md</span>
+          <span class="oneliner">Návod na <em>opakující se úkol</em> — Markdown s pravidly, agent si ho načte podle popisku.</span>
+          <span class="chev">▸</span>
+        </summary>
+        <div class="vocab-body">
+<pre class="cyan-bar"><span class="meta-line">---</span>
+<span class="frontmatter-key">name</span>: <span class="frontmatter-val">sql-review</span>
+<span class="frontmatter-key">description</span>: <span class="frontmatter-val">Use when user asks for SQL.</span>
+<span class="meta-line">---</span>
+
+<span class="heading"># Pravidla</span>
+- Tabulky _OLD jsou archivy.
+- COUNTRY_DIRTYDATA je znečištěná kopie.
+- Hlavní fakta tabulka je TEROR2.</pre>
+        </div>
+      </details>
+
+      <details class="vocab-item">
+        <summary>
+          <span class="word">MCP</span>
+          <span class="oneliner">Zásuvka, přes kterou agent sahá do <em>databáze, e-mailu, Slacku…</em> Zítra s Tánou.</span>
+          <span class="chev">▸</span>
+        </summary>
+        <div class="vocab-body">
+<pre class="cyan-bar"><span class="c">// MCP server: snowflake-czechitas</span>
+<span class="c">// vystavuje 3 nástroje, které agent může volat</span>
+
+  list_tables(schema)        <span class="annotation">→ co je v DB</span>
+  describe_table(name)       <span class="annotation">→ jaké sloupce</span>
+  execute_query(sql)         <span class="annotation">→ pošli dotaz</span></pre>
+        </div>
+      </details>
+
+      <details class="vocab-item">
+        <summary>
+          <span class="word">Eval</span>
+          <span class="oneliner">Test, jestli to celé funguje. „Chytil neexistující sloupce? Ano/ne."</span>
+          <span class="chev">▸</span>
+        </summary>
+        <div class="vocab-body">
+<pre class="cyan-bar"><span class="c">// po každém běhu agenta — automatická kontrola</span>
+
+  expected_columns_present   <span style="color:var(--green);">✓ PASS</span>
+  no_old_table_used          <span style="color:var(--green);">✓ PASS</span>
+  no_dirty_data_used         <span style="color:var(--red);">✗ FAIL</span>  <span class="annotation">→ červená!</span></pre>
+        </div>
+      </details>
+
+    </div>
+
+    <div class="callout cyan" style="margin-top: 18px;">
       <strong>Dnes</strong> řešíme <code>SKILL.md</code> a kousek <code>AGENTS.md</code>. <strong>Zítra</strong> přidáme MCP a evals.
     </div>
   </div>
@@ -1144,6 +1288,7 @@ body.speaker-mode #status-bar::after {
       time: '00:30',
       opener: '„Než se pohneme — pět slov, která dnes uslyšíš. Když se v nich někdy ztratíš, vrať se na slide 02."',
       beats: [
+        'Klikni na slovo — rozbalí se konkrétní příklad. Použij to LIVE: rozbal Agent, pak SKILL.md, pak zavři.',
         'Rozdíl AGENTS.md (projekt) vs SKILL.md (úkol) — to je klíč celého bloku.',
         'MCP a Eval = teaser. Dnes je nepotřebujeme. Zítra s Tánou.',
         'Holkám řekni: „Toto je vaše záchranná síť — kdykoliv se ztratíte, jste na slide 02."'
