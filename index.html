@@ -686,18 +686,34 @@ const EVALS = [
  * ═══════════════════════════════════════════════════════════════════ */
 
 const cnv = document.getElementById("stage");
+// Logical (game) coordinates stay 480×280. Boost the backing store to 2× so
+// rasterized text and pixel-art labels get twice the resolution while CSS
+// still renders the canvas at its 480×280-derived display size. Sprites
+// drawn with imageSmoothingEnabled=false still look like crisp pixel art
+// (each source pixel becomes a 2×2 block instead of a stretched blur).
+const STAGE_DPR = 2;
+const STAGE_W = cnv.width;
+const STAGE_H = cnv.height;
+cnv.width  = STAGE_W * STAGE_DPR;
+cnv.height = STAGE_H * STAGE_DPR;
 const ctx = cnv.getContext("2d");
 ctx.imageSmoothingEnabled = false;
+ctx.scale(STAGE_DPR, STAGE_DPR);
+// Shadow `cnv.width` / `cnv.height` getters at the logical level so the
+// rest of the code (which reads cnv.width to position things at the right
+// edge) keeps working in 480×280 space.
+Object.defineProperty(cnv, "logicalW", { value: STAGE_W });
+Object.defineProperty(cnv, "logicalH", { value: STAGE_H });
 
 function draw() {
-  ctx.clearRect(0, 0, cnv.width, cnv.height);
+  ctx.clearRect(0, 0, STAGE_W, STAGE_H);
 
   // background office
   if (images.bg) {
-    ctx.drawImage(images.bg, 0, 0, cnv.width, cnv.height);
+    ctx.drawImage(images.bg, 0, 0, STAGE_W, STAGE_H);
   } else {
     ctx.fillStyle = "#3a2f25";
-    ctx.fillRect(0, 0, cnv.width, cnv.height);
+    ctx.fillRect(0, 0, STAGE_W, STAGE_H);
   }
 
   // furniture sits on the floor at every station; draw before labels so
@@ -1089,7 +1105,7 @@ function drawReportCard() {
   const h = headH + padTop + card.lines.length * lh + padBot;
   // anchor so the right edge of the card sits 6px from the canvas edge,
   // and the card floats above the dashboard (whiteboard top sits ~y-46)
-  const bx = Math.round(cnv.width - w - 6);
+  const bx = Math.round(STAGE_W - w - 6);
   const by = Math.round(s.y - h - 60);
 
   // shadow + paper
