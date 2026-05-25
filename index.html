@@ -591,6 +591,12 @@ const state = {
   // PC monitor content at DB station. null = hidden.
   // { sql: string, rows: string[] }
   dbScreen: null,
+
+  // Teacher / evaluator. Walks in from the right edge to the dashboard
+  // when evalsOn fires — holds expected.json on a clipboard, compares
+  // row-by-row, stamps the dashboard ✓ or ✗.
+  teacher: null, // { x, y, walking, frame, frameTime, holdingCard, verdict }
+  reportCard: null, // { lines: [{label, actual, expected, status}], tone }
 };
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -707,6 +713,8 @@ function draw() {
 
   // agent sprite
   drawAgent();
+  drawTeacher();
+  drawReportCard();
 
   // speech bubble (drawn last so it overlays everything)
   if (state.bubble) drawBubble(state.bubble);
@@ -904,6 +912,211 @@ function drawWhiteboard() {
     ctx.fillStyle = bar;
     ctx.fillRect(bx2, by2, bw, bh);
   }
+  ctx.textAlign = "start";
+}
+
+/* The teacher (evals.json). Procedural sprite, no spritesheet — drawn
+ * directly so we can avoid shipping another asset. She wears a navy
+ * blazer and carries a clipboard with the "expected" answer. Walks in
+ * from off-screen right when evalsOn fires after the agent ships data. */
+function drawTeacher() {
+  const t = state.teacher;
+  if (!t) return;
+  const x = Math.round(t.x), y = Math.round(t.y);
+  const w = 18, h = 34;
+  const bx = x - Math.floor(w / 2);
+  const by = y - h;
+  const bob = t.walking ? (Math.floor(t.frame) % 2) : 0;
+
+  // shadow
+  ctx.fillStyle = "rgba(0,0,0,0.3)";
+  ctx.fillRect(bx + 2, by + h, w - 4, 2);
+
+  // legs (navy slacks)
+  ctx.fillStyle = "#1a2840";
+  if (t.walking && bob === 0) {
+    ctx.fillRect(bx + 4, by + 24, 4, 9);
+    ctx.fillRect(bx + 10, by + 24, 4, 7);
+  } else if (t.walking) {
+    ctx.fillRect(bx + 4, by + 24, 4, 7);
+    ctx.fillRect(bx + 10, by + 24, 4, 9);
+  } else {
+    ctx.fillRect(bx + 4, by + 24, 4, 9);
+    ctx.fillRect(bx + 10, by + 24, 4, 9);
+  }
+  // shoes
+  ctx.fillStyle = "#1a1814";
+  ctx.fillRect(bx + 3, by + h - 2, 5, 2);
+  ctx.fillRect(bx + 10, by + h - 2, 5, 2);
+
+  // blazer body — navy
+  ctx.fillStyle = "#2a3858";
+  ctx.fillRect(bx + 2, by + 14, w - 4, 11);
+  // lapel V (lighter)
+  ctx.fillStyle = "#3a4868";
+  ctx.fillRect(bx + 7, by + 14, 4, 6);
+  // blazer red accent stripe
+  ctx.fillStyle = "#d4452f";
+  ctx.fillRect(bx + 8, by + 16, 2, 8);
+
+  // arms — same blazer color
+  ctx.fillStyle = "#2a3858";
+  ctx.fillRect(bx,        by + 15, 3, 8);
+  ctx.fillRect(bx + w - 3, by + 15, 3, 8);
+  // skin at wrist
+  ctx.fillStyle = "#e8b894";
+  ctx.fillRect(bx,        by + 22, 3, 2);
+  ctx.fillRect(bx + w - 3, by + 22, 3, 2);
+
+  // clipboard held in front (both arms wrap around)
+  if (t.holdingCard) {
+    const cbW = 11, cbH = 14;
+    const cbX = bx + Math.floor(w / 2) - Math.floor(cbW / 2);
+    const cbY = by + 17;
+    // shadow
+    ctx.fillStyle = "rgba(0,0,0,0.25)";
+    ctx.fillRect(cbX + 1, cbY + 1, cbW, cbH);
+    // paper
+    ctx.fillStyle = "#fdfaf5"; ctx.fillRect(cbX, cbY, cbW, cbH);
+    ctx.strokeStyle = "#1a1814"; ctx.lineWidth = 1;
+    ctx.strokeRect(cbX + 0.5, cbY + 0.5, cbW - 1, cbH - 1);
+    // brown clip at top
+    ctx.fillStyle = "#7a5430"; ctx.fillRect(cbX + 3, cbY - 2, cbW - 6, 3);
+    // ruled lines (the "expected" answers)
+    ctx.fillStyle = "#bba";
+    ctx.fillRect(cbX + 2, cbY + 3, cbW - 4, 1);
+    ctx.fillRect(cbX + 2, cbY + 6, cbW - 4, 1);
+    ctx.fillRect(cbX + 2, cbY + 9, cbW - 4, 1);
+    ctx.fillRect(cbX + 2, cbY + 12, cbW - 4, 1);
+  }
+
+  // neck
+  ctx.fillStyle = "#e8b894";
+  ctx.fillRect(bx + 7, by + 11, 4, 3);
+
+  // head — skin tone
+  ctx.fillStyle = "#e8b894";
+  ctx.fillRect(bx + 4, by + 2, 10, 10);
+  // hair (brown bob, distinct from Julia's blonde)
+  ctx.fillStyle = "#5a3818";
+  ctx.fillRect(bx + 4, by, 10, 5);
+  ctx.fillRect(bx + 3, by + 2, 1, 6);
+  ctx.fillRect(bx + 14, by + 2, 1, 6);
+  // glasses (round black frames + nose bridge)
+  ctx.fillStyle = "#1a1814";
+  ctx.fillRect(bx + 5, by + 6, 3, 2);
+  ctx.fillRect(bx + 10, by + 6, 3, 2);
+  ctx.fillRect(bx + 8, by + 7, 2, 1);
+  // eyes inside the lenses
+  ctx.fillStyle = "#fdfaf5";
+  ctx.fillRect(bx + 6, by + 7, 1, 1);
+  ctx.fillRect(bx + 11, by + 7, 1, 1);
+  // mouth shifts with verdict
+  ctx.fillStyle = "#7a3030";
+  if (t.verdict === "pass") {
+    ctx.fillRect(bx + 6, by + 10, 6, 1);
+    ctx.fillRect(bx + 5, by + 9, 1, 1);
+    ctx.fillRect(bx + 12, by + 9, 1, 1);
+  } else if (t.verdict === "fail") {
+    ctx.fillRect(bx + 6, by + 10, 6, 1);
+    ctx.fillRect(bx + 5, by + 11, 1, 1);
+    ctx.fillRect(bx + 12, by + 11, 1, 1);
+  } else {
+    ctx.fillRect(bx + 7, by + 10, 4, 1);
+  }
+
+  // verdict letter above head when she finishes grading
+  if (t.verdict) {
+    const vx = bx + Math.floor(w / 2);
+    const vy = by - 5;
+    ctx.font = "bold 16px ui-monospace, monospace";
+    ctx.textAlign = "center";
+    ctx.fillStyle = t.verdict === "pass" ? "#3a7a3a"
+                  : t.verdict === "warn" ? "#d8a93a"
+                  : "#d4452f";
+    ctx.fillText(t.verdict === "pass" ? "✓" : t.verdict === "warn" ? "≈" : "✗", vx, vy);
+    ctx.textAlign = "start";
+  }
+
+  // floor pill label "TEACHER"
+  ctx.font = "bold 7px ui-monospace, monospace";
+  ctx.textAlign = "center";
+  const lab = "evals.json";
+  const lw = ctx.measureText(lab).width + 6;
+  const ly = y + 14;
+  ctx.fillStyle = "#fdfaf5";
+  ctx.fillRect(x - lw / 2, ly - 6, lw, 9);
+  ctx.strokeStyle = "#2a3858";
+  ctx.strokeRect(x - lw / 2 + 0.5, ly - 5.5, lw - 1, 8);
+  ctx.fillStyle = "#2a3858";
+  ctx.fillText(lab, x, ly);
+  ctx.textAlign = "start";
+}
+
+// Report card: floats above the whiteboard while the teacher grades.
+// Two columns — actual (left, agent's number) vs expected (right, the
+// truth from the test fixture) — with row-level pass/fail markers.
+function drawReportCard() {
+  if (!state.reportCard) return;
+  const card = state.reportCard;
+  const s = STATIONS.board;
+  const w = 156, lh = 11, headH = 16, padTop = 4, padBot = 6;
+  const h = headH + padTop + card.lines.length * lh + padBot;
+  // anchor so the right edge of the card sits 6px from the canvas edge,
+  // and the card floats above the dashboard (whiteboard top sits ~y-46)
+  const bx = Math.round(cnv.width - w - 6);
+  const by = Math.round(s.y - h - 60);
+
+  // shadow + paper
+  ctx.fillStyle = "rgba(0,0,0,0.32)";
+  ctx.fillRect(bx + 2, by + 2, w, h);
+  ctx.fillStyle = "#fdfaf5";
+  ctx.fillRect(bx, by, w, h);
+  ctx.strokeStyle = "#1a1814";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(bx + 0.5, by + 0.5, w - 1, h - 1);
+
+  // header band — navy, like the teacher's blazer
+  ctx.fillStyle = "#2a3858";
+  ctx.fillRect(bx, by, w, headH);
+  ctx.fillStyle = "#fdfaf5";
+  ctx.font = "bold 9px ui-monospace, monospace";
+  ctx.textAlign = "left";
+  ctx.fillText("evals.json", bx + 4, by + 11);
+  ctx.font = "7px ui-monospace, monospace";
+  ctx.fillText("actual vs expected", bx + 64, by + 11);
+
+  // column headers
+  ctx.font = "7px ui-monospace, monospace";
+  ctx.fillStyle = "#8a8478";
+  ctx.fillText("ACTUAL",   bx + 60, by + headH + 3);
+  ctx.fillText("EXPECTED", bx + 110, by + headH + 3);
+
+  // rows
+  ctx.font = "8px ui-monospace, monospace";
+  card.lines.forEach((ln, i) => {
+    const ly = by + headH + padTop + i * lh + 4;
+    ctx.fillStyle = "#1a1814";
+    ctx.fillText(ln.label, bx + 4, ly + 4);
+    // actual
+    let col = "#1a1814";
+    if (ln.status === "fail") col = "#d4452f";
+    else if (ln.status === "pass") col = "#3a7a3a";
+    else if (ln.status === "skip") col = "#8a8478";
+    ctx.fillStyle = col;
+    ctx.fillText(ln.actual ?? "—", bx + 60, ly + 4);
+    ctx.fillStyle = "#1a1814";
+    ctx.fillText(ln.expected ?? "—", bx + 110, ly + 4);
+    // marker on far right
+    let mark = "·", mcol = "#bba";
+    if (ln.status === "pass") { mark = "✓"; mcol = "#3a7a3a"; }
+    else if (ln.status === "fail") { mark = "✗"; mcol = "#d4452f"; }
+    else if (ln.status === "skip") { mark = "–"; mcol = "#bba"; }
+    ctx.fillStyle = mcol;
+    ctx.font = "bold 9px ui-monospace, monospace";
+    ctx.fillText(mark, bx + w - 10, ly + 5);
+    ctx.font = "8px ui-monospace, monospace";
+  });
   ctx.textAlign = "start";
 }
 
@@ -1162,6 +1375,15 @@ function loop(t) {
     a.frame = (a.frame + 1) % FRAMES;
   }
 
+  // teacher walk cycle (own clock, slower)
+  if (state.teacher && state.teacher.walking) {
+    state.teacher.frameTime = (state.teacher.frameTime || 0) + dt;
+    if (state.teacher.frameTime > 180) {
+      state.teacher.frameTime = 0;
+      state.teacher.frame = (state.teacher.frame || 0) + 1;
+    }
+  }
+
   // bubble TTL
   if (state.bubble) {
     state.bubble.ttl -= dt;
@@ -1221,6 +1443,12 @@ function say(text, ms = 1400) {
   return wait(ms);
 }
 
+function teacherSay(text, ms = 1500) {
+  if (!state.teacher) return wait(ms);
+  state.bubble = { text, x: state.teacher.x, y: state.teacher.y, ttl: ms, kind: "speech" };
+  return wait(ms);
+}
+
 // Thought bubble — agent's internal reasoning. Cloud-shaped, blue text.
 function think(text, ms = 1800) {
   state.bubble = { text, x: state.agent.x, y: state.agent.y, ttl: ms, kind: "thought" };
@@ -1247,6 +1475,103 @@ function setEval(key, status) {
   state.evalStatus[key] = status;
   renderEvalsPanel();
 }
+
+/* Teacher (evals.json) primitives.
+ * She lives off-screen at the right edge until walkInTeacher pulls her
+ * over to the dashboard. The clipboard appears in her hands once she
+ * arrives — that's the "expected.json" reference she compares against. */
+
+const TEACHER_HOME_X = 478;     // off-canvas right (canvas is 480 wide)
+const TEACHER_GRADE_X = 380;    // standing position right of the whiteboard
+const TEACHER_Y = 218;          // same lane as the agent
+
+function spawnTeacher() {
+  state.teacher = {
+    x: TEACHER_HOME_X,
+    y: TEACHER_Y,
+    walking: false,
+    frame: 0,
+    frameTime: 0,
+    holdingCard: false,
+    verdict: null,
+  };
+}
+function despawnTeacher() {
+  state.teacher = null;
+  state.reportCard = null;
+}
+
+async function walkTeacherTo(targetX) {
+  if (!state.teacher) spawnTeacher();
+  state.teacher.walking = true;
+  return new Promise(resolve => {
+    state.stepCursor = (dt) => {
+      const t = state.teacher;
+      if (!t) { state.stepCursor = null; resolve(); return; }
+      const dx = targetX - t.x;
+      const speed = 0.06; // px per ms
+      const step = speed * dt;
+      if (Math.abs(dx) <= step) {
+        t.x = targetX;
+        t.walking = false;
+        state.stepCursor = null;
+        resolve();
+      } else {
+        t.x += Math.sign(dx) * step;
+      }
+    };
+  });
+}
+
+function openReportCard(rows) {
+  // rows: [{label, actual, expected}]
+  state.reportCard = {
+    lines: rows.map(r => ({ ...r, status: "pending" })),
+    tone: "ok",
+  };
+}
+function setReportRow(idx, status) {
+  if (!state.reportCard) return;
+  if (state.reportCard.lines[idx]) state.reportCard.lines[idx].status = status;
+}
+function closeReportCard() { state.reportCard = null; }
+
+/* Full eval scene: walk teacher in from the right, hold up the
+ * expected.json clipboard, grade row-by-row (also setting the legacy
+ * evals panel for the bottom rail), stamp final verdict, walk away.
+ * rows: [{key, label, actual, expected, verdict}]   (verdict per-row)
+ * opts.finalVerdict: "pass"|"warn"|"fail"
+ * opts.headline:     short Czech sentence she "says" at the end */
+async function runTeacherGrading(rows, opts = {}) {
+  spawnTeacher();
+  logLine("skill", "evals: učitelka přichází zkontrolovat výsledek");
+  await walkTeacherTo(TEACHER_GRADE_X);
+  state.teacher.holdingCard = true;
+  await wait(300);
+  openReportCard(rows.map(r => ({
+    label: r.label, actual: r.actual, expected: r.expected,
+  })));
+  await wait(700);
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    setReportRow(i, r.verdict);
+    setEval(r.key, r.verdict);
+    if (r.verdict === "fail")  logLine("fail", `eval[${r.label}]: actual=${r.actual} ≠ expected=${r.expected}`);
+    if (r.verdict === "pass")  logLine("ok",   `eval[${r.label}]: ${r.actual} ✓`);
+    if (r.verdict === "warn")  logLine("warn", `eval[${r.label}]: ${r.actual} ≈ ${r.expected}`);
+    await wait(620);
+  }
+  await wait(500);
+  state.teacher.verdict = opts.finalVerdict || "pass";
+  if (opts.headline) await teacherSay(opts.headline, 1500);
+  await wait(900);
+  // walk back off-stage
+  state.teacher.holdingCard = false;
+  closeReportCard();
+  await walkTeacherTo(TEACHER_HOME_X);
+  despawnTeacher();
+}
+
 
 // MCP panel primitives — drive the HTML panel + chest sprite on canvas
 function openMcp(tool = null) {
@@ -1508,6 +1833,8 @@ function beginRun() {
   state.recipeCard = null;
   state.toolbox = null;
   state.dbScreen = null;
+  state.teacher = null;
+  state.reportCard = null;
   hideFullDashboard();
   hideDbTerminal();
   renderSkillPanel();
@@ -1630,23 +1957,14 @@ async function runScenarioA() {
   state.agent.activity = "idle";
 
   let chartTone = "ok";
-  if (state.evalsOn) {
-    await think("evals.json — kontrola\nvýsledku po dotazu", 1400);
-    setEval("noSilentFail", "pass"); await wait(380);
-    setEval("schemaMatch",  "pass"); await wait(380);
-    setEval("rowCount", "pass");     await wait(380);
-    await think("3× zelená —\nvýsledek je v pořádku", 1400);
-    logLine("ok", "evals: count=10 ✓  schemaMatch ✓  noSilentFail ✓");
-  } else {
-    logLine("info", "evals OFF (čistá query — prošlo by stejně)");
-  }
-
+  let renderedChart = false;
   if (state.skillOn && state.rules.renderChart) {
     await gotoStation("board");
     await say("pravidlo RENDER_CHART —\nkreslím graf", 1200);
     await drawChartBar(chartTone);
     showFullDashboard("ok");
     logLine("ok", "DASHBOARD: top 10 zemí — ready to ship");
+    renderedChart = true;
   } else {
     const reason = !state.skillOn
       ? "bez skillu nevím,\nco s daty —\nvrátím syrová čísla"
@@ -1657,6 +1975,18 @@ async function runScenarioA() {
     logLine("warn", state.skillOn
       ? "bez RENDER_CHART pravidla: jen tabulka v chatu, žádný dashboard"
       : "bez skillu: žádný dashboard — jen tabulka v chatu");
+  }
+
+  if (state.evalsOn) {
+    await runTeacherGrading([
+      { key: "rowCount",     label: "row count", actual: "10",       expected: "10",       verdict: "pass" },
+      { key: "schemaMatch",  label: "schema",    actual: "ok",       expected: "ok",       verdict: "pass" },
+      { key: "noSilentFail", label: "no drop",   actual: "no drops", expected: "no drops", verdict: "pass" },
+    ], { headline: "perfekt!", finalVerdict: "pass" });
+  } else if (renderedChart) {
+    logLine("warn", "evals OFF — nikdo nezkontroloval, jestli to číslo je správné");
+  } else {
+    logLine("info", "evals OFF (čistá query — prošlo by stejně)");
   }
 
   await gotoStation("start");
@@ -1721,11 +2051,13 @@ async function runScenarioB() {
   state.agent.activity = "idle";
   logLine("fail", "TEROR2_OLD DROPPED — guardrail bypassed");
   if (state.evalsOn) {
-    await think("evals teď nepomůžou —\ndata už nejsou", 1800);
-    setEval("rowCount",     "skip"); await wait(220);
-    setEval("schemaMatch",  "skip"); await wait(220);
-    setEval("noSilentFail", "fail");
-    logLine("fail", "evals.noSilentFail ✗ — DROP prošel do produkce");
+    await runTeacherGrading([
+      { key: "rowCount",     label: "row count", actual: "n/a",   expected: "26 828",   verdict: "skip" },
+      { key: "schemaMatch",  label: "schema",    actual: "n/a",   expected: "n/a",      verdict: "skip" },
+      { key: "noSilentFail", label: "no drop",   actual: "DROP",  expected: "no drops", verdict: "fail" },
+    ], { headline: "tabulka je pryč.\nevals už nepomůžou.", finalVerdict: "fail" });
+  } else {
+    logLine("fail", "evals OFF — DROP prošel a nikdo to nezkontroloval");
   }
 
   await gotoStation("start");
@@ -1796,23 +2128,12 @@ async function runScenarioC() {
   await wait(900);
   state.agent.activity = "idle";
 
+  // Decide tone before drawing — dirty join + no eval rescue ⇒ silent fail
   let chartTone = "ok";
-  if (state.evalsOn) {
-    setEval("noSilentFail", "pass"); await wait(220);
-    setEval("schemaMatch",  "pass"); await wait(220);
-    if (useClean) {
-      setEval("rowCount", "pass");
-      logLine("ok", "evals: count=204 ✓");
-    } else {
-      setEval("rowCount", "fail");
-      logLine("warn", "evals: count=408 ≠ 204 — DIRTYDATA leaked");
-      chartTone = "warn";
-    }
-  } else if (!useClean) {
-    logLine("fail", "evals OFF + DIRTYDATA — tichý fail");
-    chartTone = "fail";
-  }
+  if (!useClean && !state.evalsOn) chartTone = "fail";
+  else if (!useClean && state.evalsOn) chartTone = "warn";
 
+  let renderedChart = false;
   if (state.skillOn && state.rules.renderChart) {
     await gotoStation("board");
     await drawChartBar(chartTone);
@@ -1820,11 +2141,30 @@ async function runScenarioC() {
     if (chartTone === "ok")   logLine("ok",   "DASHBOARD: ready");
     if (chartTone === "warn") logLine("warn", "DASHBOARD: warning");
     if (chartTone === "fail") logLine("fail", "DASHBOARD: silent bad numbers");
+    renderedChart = true;
   } else {
     await say("data hotová", 1200);
     logLine("warn", state.skillOn
       ? "bez RENDER_CHART pravidla: jen řádky v chatu, žádný dashboard"
       : "bez skillu: jen řádky v chatu — žádný dashboard");
+  }
+
+  if (state.evalsOn) {
+    if (useClean) {
+      await runTeacherGrading([
+        { key: "rowCount",     label: "row count", actual: "204",      expected: "204",      verdict: "pass" },
+        { key: "schemaMatch",  label: "schema",    actual: "ok",       expected: "ok",       verdict: "pass" },
+        { key: "noSilentFail", label: "no drop",   actual: "no drops", expected: "no drops", verdict: "pass" },
+      ], { headline: "čistý JOIN. ✓", finalVerdict: "pass" });
+    } else {
+      await runTeacherGrading([
+        { key: "rowCount",     label: "row count", actual: "408",      expected: "204",      verdict: "fail" },
+        { key: "schemaMatch",  label: "schema",    actual: "ok",       expected: "ok",       verdict: "pass" },
+        { key: "noSilentFail", label: "no drop",   actual: "no drops", expected: "no drops", verdict: "pass" },
+      ], { headline: "408 ≠ 204 —\nDIRTYDATA prosákla!", finalVerdict: "fail" });
+    }
+  } else if (!useClean && renderedChart) {
+    logLine("fail", "evals OFF + DIRTYDATA → tichý fail v dashboardu");
   }
 
   await gotoStation("start");
@@ -2023,6 +2363,8 @@ function resetAll() {
   state.recipeCard = null;
   state.toolbox = null;
   state.dbScreen = null;
+  state.teacher = null;
+  state.reportCard = null;
   hideFullDashboard();
   hideDbTerminal();
   renderLog();
