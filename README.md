@@ -22,6 +22,15 @@ The SKILL.md and MCP panels under the stage use **the exact Czech rule labels pa
 
 Toggles let participants turn off individual skill rules / the whole skill layer / MCP / evals and watch the bad outcomes the slides warned about.
 
+## Take the skill home
+
+The Skill Builder block at the top renders a real `SKILL.md` live as you toggle rules. **Stáhnout skill (.zip)** packages it as `sql-review/SKILL.md` plus a tiny README. Drop the folder into either:
+
+- `~/.claude/skills/sql-review/` — works globally across every project
+- `.claude/skills/sql-review/` — works inside a single repo
+
+Both **GitHub Copilot in VS Code** and **Claude Code** read the same paths, so the rules a participant clicks in the demo are the same rules her own agent will follow afterwards.
+
 ## Local development
 
 No build step. No dependencies. Just open the file:

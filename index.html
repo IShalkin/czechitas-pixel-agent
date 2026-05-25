@@ -204,6 +204,16 @@
   }
   .skill-builder .sb-actions .copied { color: #92d18a; font-size: 11px; align-self: center; opacity: 0; transition: opacity 200ms ease; }
   .skill-builder .sb-actions .copied.show { opacity: 1; }
+  .skill-builder .sb-install {
+    margin: 0; padding: 10px 12px 12px; background: #2a241c;
+    border-top: 1px solid #3a342a; color: #b8a890; font-size: 11px;
+    line-height: 1.5;
+  }
+  .skill-builder .sb-install code {
+    font-family: var(--mono); font-size: 11px;
+    background: #1a1814; color: #f4c674; padding: 1px 5px; border-radius: 2px;
+  }
+  .skill-builder .sb-install em { font-style: normal; color: #e8d8b8; }
   @media (max-width: 800px) {
     .skill-builder .sb-cols { grid-template-columns: 1fr; }
   }
@@ -380,10 +390,14 @@
             </div>
             <pre id="sb-preview" class="sb-preview"></pre>
             <div class="sb-actions">
-              <button id="sb-download">Stáhnout SKILL.md</button>
+              <button id="sb-download">Stáhnout skill (.zip)</button>
               <button id="sb-copy" class="ghost">Kopírovat</button>
               <span id="sb-copied" class="copied">zkopírováno ✓</span>
             </div>
+            <p class="sb-install">
+              Rozbal do <code>~/.claude/skills/</code> — Copilot v VS Code a Claude Code obě tu složku čtou.
+              Pak se v Copilot Chatu zeptej: <em>„Vyrob mi top 10 zemí podle počtu útoků jako graf."</em>
+            </p>
           </div>
         </div>
       </div>
@@ -2349,13 +2363,128 @@ function highlightSkillMd(md) {
   }).join("\n");
 }
 
+/* CRC-32 (IEEE 802.3 polynomial) — used by ZIP per-file checksums. */
+const CRC32_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC32_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+/* Minimal store-only ZIP writer. Files: [{name, data: Uint8Array}].
+ * Store-only (compression method 0) keeps the implementation under 60 lines —
+ * for a few KB of markdown the size penalty is negligible.
+ */
+function buildZip(files) {
+  const enc = new TextEncoder();
+  const localParts = [];
+  const central = [];
+  let offset = 0;
+  for (const f of files) {
+    const nameBytes = enc.encode(f.name);
+    const data = f.data;
+    const crc = crc32(data);
+    const size = data.length;
+    // local file header (30 bytes + name + data)
+    const lfh = new Uint8Array(30 + nameBytes.length);
+    const dv = new DataView(lfh.buffer);
+    dv.setUint32(0, 0x04034b50, true);   // signature
+    dv.setUint16(4, 20, true);           // version needed
+    dv.setUint16(6, 0, true);            // flags
+    dv.setUint16(8, 0, true);            // method = store
+    dv.setUint16(10, 0, true);           // mtime
+    dv.setUint16(12, 0, true);           // mdate
+    dv.setUint32(14, crc, true);
+    dv.setUint32(18, size, true);        // compressed size
+    dv.setUint32(22, size, true);        // uncompressed size
+    dv.setUint16(26, nameBytes.length, true);
+    dv.setUint16(28, 0, true);           // extra
+    lfh.set(nameBytes, 30);
+    localParts.push(lfh, data);
+
+    // central directory record (46 bytes + name)
+    const cdr = new Uint8Array(46 + nameBytes.length);
+    const cv = new DataView(cdr.buffer);
+    cv.setUint32(0, 0x02014b50, true);   // signature
+    cv.setUint16(4, 20, true);           // version made by
+    cv.setUint16(6, 20, true);           // version needed
+    cv.setUint16(8, 0, true);            // flags
+    cv.setUint16(10, 0, true);           // method
+    cv.setUint16(12, 0, true);           // mtime
+    cv.setUint16(14, 0, true);           // mdate
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, size, true);
+    cv.setUint32(24, size, true);
+    cv.setUint16(28, nameBytes.length, true);
+    cv.setUint16(30, 0, true);           // extra len
+    cv.setUint16(32, 0, true);           // comment len
+    cv.setUint16(34, 0, true);           // disk #
+    cv.setUint16(36, 0, true);           // internal attrs
+    cv.setUint32(38, 0, true);           // external attrs
+    cv.setUint32(42, offset, true);      // local header offset
+    cdr.set(nameBytes, 46);
+    central.push(cdr);
+    offset += lfh.length + data.length;
+  }
+  const centralStart = offset;
+  let centralSize = 0;
+  for (const c of central) centralSize += c.length;
+  // end-of-central-directory record (22 bytes)
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, files.length, true);
+  ev.setUint16(10, files.length, true);
+  ev.setUint32(12, centralSize, true);
+  ev.setUint32(16, centralStart, true);
+  return new Blob([...localParts, ...central, eocd], { type: "application/zip" });
+}
+
 function downloadSkillMd() {
   const md = generateSkillMarkdown();
-  const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+  const enc = new TextEncoder();
+  const readme = [
+    "# sql-review skill",
+    "",
+    "Tahle pravidla agent načte před každým SQL dotazem.",
+    "",
+    "## Instalace (Claude Code, GitHub Copilot v VS Code)",
+    "",
+    "Zkopíruj celou složku `sql-review/` do jednoho z těchto míst —",
+    "Copilot i Claude Code obě cesty čtou:",
+    "",
+    "- **Globálně** (funguje ve všech projektech): `~/.claude/skills/sql-review/`",
+    "- **Pro projekt**: `.claude/skills/sql-review/` v repu",
+    "",
+    "Pak ve VS Code otevři Copilot Chat a zeptej se třeba:",
+    "",
+    "> *Vyrob mi top 10 zemí podle počtu útoků jako graf.*",
+    "",
+    "Agent si pravidla z `SKILL.md` načte sám.",
+    "",
+    "## Co je uvnitř",
+    "",
+    "`sql-review/SKILL.md` — pět pravidel, která jste si zaškrtly v Czechitas Pixel Agent demu.",
+    "Každé pravidlo je jeden bullet — měň je, mažte, přidávejte vlastní.",
+    "",
+    "Vygenerováno z https://ishalkin.github.io/czechitas-pixel-agent/",
+  ].join("\n");
+  const blob = buildZip([
+    { name: "sql-review/SKILL.md", data: enc.encode(md) },
+    { name: "sql-review/README.md", data: enc.encode(readme) },
+  ]);
   const url  = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "SKILL.md";
+  a.download = "sql-review-skill.zip";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
