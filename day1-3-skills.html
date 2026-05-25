@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Czechitas · Den 1 · Blok 03 · Skills</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   PALANTIR / TACTICAL DARK THEME — sjednoceno s Kubovou prezentací
+   ============================================================ */
+
+:root {
+  --bg:        #0a0e14;
+  --bg-2:      #11161f;
+  --bg-3:      #1a212c;
+  --bg-code:   #050810;
+  --border:    #232c3a;
+  --border-2:  #2d3849;
+  --fg:        #eaf0f7;
+  --fg-2:      #b8c4d4;
+  --fg-3:      #7c8898;
+  --amber:     #ff9c4a;
+  --amber-d:   #663d1a;
+  --cyan:      #5bc0eb;
+  --green:     #4dd072;
+  --red:       #ff5252;
+  --yellow:    #ffd166;
+  --magenta:   #c77dff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 23px;
+  line-height: 1.55;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 50px;
+  border: 1px solid rgba(255,156,74,0.08);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#status-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 42px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border-2);
+  display: flex;
+  align-items: center;
+  padding: 0 26px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--fg);
+  z-index: 100;
+  gap: 26px;
+}
+#status-bar .brand    { color: var(--amber); font-weight: 700; }
+#status-bar .divider  { color: var(--fg-3); }
+#status-bar .right    { margin-left: auto; display: flex; gap: 18px; align-items: center; }
+#status-bar .counter  { color: var(--cyan); font-weight: 700; }
+#status-bar .dot      { width: 6px; height: 6px; background: var(--green); display: inline-block; border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+#deck {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  padding-top: 42px;
+  z-index: 2;
+}
+
+.slide {
+  position: absolute;
+  inset: 42px 0 0 0;
+  display: none;
+  padding: 50px 80px 80px;
+  overflow-y: auto;
+  animation: slidein 0.25s ease-out;
+}
+.slide.active {
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+}
+@keyframes slidein {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.slide-inner {
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.kicker {
+  display: block;
+  width: fit-content;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--amber);
+  margin-bottom: 20px;
+  padding: 4px 10px;
+  border: 1px solid var(--amber-d);
+  background: rgba(255,156,74,0.06);
+}
+.kicker.cyan { color: var(--cyan); border-color: rgba(91,192,235,0.4); background: rgba(91,192,235,0.06); }
+
+h1 {
+  font-size: 74px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-bottom: 16px;
+}
+h2 {
+  font-size: 51px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 28px;
+  color: var(--fg);
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--amber);
+  display: inline-block;
+}
+h3 {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 24px 0 10px;
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.01em;
+}
+.slide p {
+  font-size: 25px;
+  margin-bottom: 14px;
+  color: var(--fg-2);
+}
+.slide p.lead { font-size: 30px; color: var(--fg); }
+.slide ul, .slide ol {
+  font-size: 24px;
+  margin: 14px 0 14px 30px;
+  color: var(--fg-2);
+}
+.slide li { margin-bottom: 8px; }
+strong { color: var(--fg); font-weight: 700; }
+em { color: var(--cyan); font-style: italic; }
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg-3);
+  color: var(--amber);
+  padding: 2px 7px;
+  font-size: 0.88em;
+  border: 1px solid var(--border);
+}
+
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  padding: 18px 22px;
+  margin: 14px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--fg-2);
+  overflow-x: auto;
+  position: relative;
+}
+pre::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--amber);
+}
+pre.cyan-bar::before { background: var(--cyan); }
+pre.red-bar::before { background: var(--red); }
+pre.green-bar::before { background: var(--green); }
+pre code {
+  background: transparent;
+  color: inherit;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+pre .c { color: var(--fg-3); }
+pre .s { color: var(--green); }
+pre .k { color: var(--magenta); }
+pre .n { color: var(--yellow); }
+pre .t { color: var(--cyan); }
+pre .a { color: var(--amber); }
+
+blockquote {
+  border-left: 3px solid var(--amber);
+  padding: 14px 24px;
+  margin: 20px 0;
+  color: var(--fg-2);
+  font-style: italic;
+  background: rgba(255,156,74,0.05);
+  font-size: 23px;
+}
+
+.callout {
+  border: 1px solid var(--amber);
+  background: rgba(255,156,74,0.06);
+  padding: 18px 24px;
+  margin: 20px 0;
+  font-size: 25px;
+}
+.callout.cyan   { border-color: var(--cyan); background: rgba(91,192,235,0.06); }
+.callout.green  { border-color: var(--green); background: rgba(77,208,114,0.06); }
+.callout.red    { border-color: var(--red); background: rgba(255,82,82,0.06); }
+
+.danger {
+  border-left: 4px solid var(--red);
+  background: rgba(255,82,82,0.06);
+  padding: 12px 20px;
+  margin: 14px 0;
+  font-size: 21px;
+}
+.success {
+  border-left: 4px solid var(--green);
+  background: rgba(77,208,114,0.06);
+  padding: 12px 20px;
+  margin: 14px 0;
+  font-size: 21px;
+}
+.warning {
+  border-left: 4px solid var(--yellow);
+  background: rgba(255,209,102,0.06);
+  padding: 12px 20px;
+  margin: 14px 0;
+  font-size: 21px;
+}
+
+.slide.section { align-items: center; text-align: center; justify-content: center; }
+.slide.section .slide-inner { text-align: center; }
+.slide.section .act-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  letter-spacing: 0.4em;
+  color: var(--cyan);
+  margin-bottom: 24px;
+  text-transform: uppercase;
+}
+.slide.section h1 {
+  font-size: 115px;
+  color: var(--fg);
+  letter-spacing: -0.03em;
+}
+.slide.section .subtitle {
+  font-size: 28px;
+  color: var(--fg-3);
+  margin-top: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.1em;
+}
+
+.slide.title { justify-content: center; }
+.slide.title h1 { font-size: 101px; line-height: 1; margin-bottom: 32px; }
+.slide.title .subtitle {
+  font-size: 32px;
+  color: var(--cyan);
+  margin-bottom: 60px;
+  font-weight: 500;
+}
+.slide.title .meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  display: inline-block;
+  padding-right: 60px;
+}
+.slide.title .meta .author { color: var(--amber); font-weight: 600; }
+
+.flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 30px 0;
+  flex-wrap: wrap;
+}
+.flow-step {
+  border: 1px solid var(--border-2);
+  background: var(--bg-2);
+  padding: 14px 22px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 17px;
+  text-align: center;
+  min-width: 130px;
+  color: var(--fg);
+}
+.flow-step.amber { border-color: var(--amber); color: var(--amber); }
+.flow-step.cyan  { border-color: var(--cyan); color: var(--cyan); }
+.flow-step.green { border-color: var(--green); color: var(--green); }
+.flow-arrow {
+  color: var(--amber);
+  font-size: 28px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin: 22px 0;
+}
+.card {
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  padding: 18px 22px;
+}
+.card .label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--amber);
+  margin-bottom: 10px;
+}
+.card .value {
+  font-size: 22px;
+  color: var(--fg);
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.two-col-pre h3 {
+  margin-top: 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  margin: 18px 0;
+  font-size: 20px;
+  background: var(--bg-2);
+}
+th {
+  background: var(--bg-3);
+  border-bottom: 2px solid var(--amber);
+  padding: 14px 18px;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 14px;
+  color: var(--amber);
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+td {
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+  color: var(--fg-2);
+  vertical-align: top;
+}
+tr:hover td { background: rgba(255,156,74,0.04); }
+td code, th code { font-size: 0.95em; }
+
+.signoff {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--fg-3);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.signoff .name { font-size: 32px; color: var(--amber); margin-bottom: 12px; font-weight: 600; }
+
+#progress {
+  position: fixed;
+  bottom: 0; left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--amber), var(--cyan));
+  width: 0%;
+  transition: width 0.3s ease;
+  z-index: 100;
+}
+
+#nav-hint {
+  position: fixed;
+  bottom: 14px; right: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  z-index: 100;
+  pointer-events: none;
+}
+#nav-hint kbd {
+  display: inline-block;
+  border: 1px solid var(--border-2);
+  background: var(--bg-2);
+  padding: 2px 6px;
+  margin: 0 2px;
+  color: var(--amber);
+  font-size: 12px;
+}
+
+@media (max-width: 1024px) {
+  .slide { padding: 30px 40px 60px; }
+  h1 { font-size: 55px; }
+  h2 { font-size: 39px; }
+  .slide.section h1 { font-size: 69px; }
+  .slide.title h1 { font-size: 64px; }
+  .slide p, .slide ul, .slide ol { font-size: 21px; }
+  pre { font-size: 14px; }
+  .two-col { grid-template-columns: 1fr; }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-2); }
+::-webkit-scrollbar-thumb:hover { background: var(--amber); }
+
+/* WOW slide: side-by-side answers */
+.versus {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin-top: 18px;
+}
+.versus .col {
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  padding: 18px 20px;
+  min-height: 320px;
+}
+.versus .col.bad { border-color: rgba(255,82,82,0.5); }
+.versus .col.good { border-color: rgba(77,208,114,0.5); }
+.versus .col h3 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+.versus .col.bad h3 { color: var(--red); }
+.versus .col.good h3 { color: var(--green); }
+.versus .col pre {
+  margin: 10px 0;
+  font-size: 14px;
+  padding: 12px 14px;
+}
+.versus .col p { font-size: 19px; margin: 8px 0; }
+.versus .col ul { font-size: 18px; margin-left: 22px; }
+
+/* Anatomy callouts on SKILL.md */
+.anatomy {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  padding: 22px 28px;
+  margin: 18px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 17px;
+  line-height: 1.55;
+  position: relative;
+}
+.anatomy::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--cyan);
+}
+.anatomy .meta-line { color: var(--fg-3); }
+.anatomy .frontmatter-key { color: var(--cyan); }
+.anatomy .frontmatter-val { color: var(--green); }
+.anatomy .heading { color: var(--amber); }
+.anatomy .rule { color: var(--fg); }
+.anatomy .annotation {
+  display: inline-block;
+  margin-left: 14px;
+  padding: 1px 8px;
+  background: rgba(255,156,74,0.1);
+  border: 1px solid var(--amber-d);
+  color: var(--amber);
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.url-pill {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 17px;
+  background: var(--bg-2);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  padding: 6px 12px;
+  margin: 4px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- ============ STATUS BAR ============ -->
+<header id="status-bar">
+  <span class="brand">CZECHITAS</span>
+  <span class="divider">//</span>
+  <span>DEN 1 · BLOK 03</span>
+  <span class="divider">//</span>
+  <span>OPENCODE · SKILLS</span>
+  <div class="right">
+    <span class="dot"></span>
+    <span class="counter" id="counter">001 / 001</span>
+  </div>
+</header>
+
+<!-- ============ DECK ============ -->
+<main id="deck">
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 01 · Title
+     ───────────────────────────────────────────────────────── -->
+<section class="slide title">
+  <div class="slide-inner">
+    <span class="kicker">🛰️ TRANSMISSION 003 — HANDS-ON</span>
+    <h1>Skills</h1>
+    <div class="subtitle">stavební kostky pro tvého coding agenta</div>
+    <div class="meta">
+      <div class="author">Ilja Shalkin</div>
+      <div>Accenture · AI/Data</div>
+      <div>26. května 2026 · Den 1 · Blok 03</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 02 · WOW — bez skillu vs. se skillem
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker">⚡ COLD OPEN · SAME AGENT, SAME PROMPT</span>
+    <h2>Stejný agent. Stejný dotaz. Jiný výsledek.</h2>
+    <p style="font-size: 21px;"><strong>Prompt:</strong> "Spočítej oběti terorismu po regionech od roku 2018."</p>
+
+    <div class="versus">
+      <div class="col bad">
+        <h3>❌ BEZ SKILLU</h3>
+<pre class="red-bar"><span class="k">SELECT</span> region_txt, year,
+       <span class="t">COUNT</span>(*), <span class="t">SUM</span>(victims)
+<span class="k">FROM</span> teror2_old
+<span class="k">WHERE</span> year &gt;= <span class="n">2018</span>;</pre>
+        <ul>
+          <li>tabulka <code>_OLD</code> — neaktuální</li>
+          <li>chybí <code>GROUP BY</code> → SQL chyba</li>
+          <li>žádný <code>ORDER BY</code>, žádný <code>LIMIT</code></li>
+          <li>agent to klidně pošle do produkce</li>
+        </ul>
+      </div>
+
+      <div class="col good">
+        <h3>✅ SE SKILLEM <code>sql-review</code></h3>
+<pre class="green-bar"><span class="c">// agent ZASTAVÍ a řekne:</span>
+<span class="c">// "Tabulka _OLD je deprecated.</span>
+<span class="c">//  Použij TEROR2. Chybí GROUP BY.</span>
+<span class="c">//  Doplň ORDER BY victims DESC."</span>
+
+<span class="k">SELECT</span> region_txt,
+       <span class="t">SUM</span>(victims) <span class="k">AS</span> total
+<span class="k">FROM</span> teror2
+<span class="k">WHERE</span> year &gt;= <span class="n">2018</span>
+<span class="k">GROUP BY</span> region_txt
+<span class="k">ORDER BY</span> total <span class="k">DESC</span>;</pre>
+        <ul>
+          <li>kontroluje pravidla <em>před</em> spuštěním</li>
+          <li>vysvětlí <em>proč</em>, ne jen co</li>
+          <li>chytí chybu dřív, než se dostane do reportu</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout cyan">
+      <strong>Rozdíl:</strong> jeden Markdown soubor v <code>~/.claude/skills/sql-review/SKILL.md</code>.
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 03 · Co je skill?
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker">📐 ANATOMY</span>
+    <h2>Co je skill?</h2>
+    <p class="lead"><strong>Jeden Markdown soubor</strong> s instrukcemi, které agent načte automaticky.</p>
+
+    <div class="anatomy">
+<span class="meta-line">--- frontmatter ---</span>
+<span class="frontmatter-key">name</span>: <span class="frontmatter-val">sql-review</span>                          <span class="annotation">co to je</span>
+<span class="frontmatter-key">description</span>: <span class="frontmatter-val">Use when user asks for SQL.</span>   <span class="annotation">kdy použít</span>
+<span class="meta-line">---</span>
+
+<span class="heading"># SQL Review</span>
+
+<span class="heading">## Pravidla</span>                                     <span class="annotation">tělo</span>
+<span class="rule">- Nikdy nepoužívej tabulky končící na _OLD.</span>
+<span class="rule">- Vždy doplň GROUP BY ke každé agregaci.</span>
+<span class="rule">- Když SUM/COUNT, doplň ORDER BY a LIMIT.</span>
+
+<span class="heading">## Příklad</span>
+<span class="rule">- Před: SELECT ... FROM teror2_OLD ...</span>
+<span class="rule">- Po:   SELECT ... FROM teror2 GROUP BY ...</span>
+    </div>
+
+    <div class="two-col" style="margin-top: 20px;">
+      <div>
+        <h3>📄 frontmatter</h3>
+        <p style="font-size: 21px;">Říká agentovi <strong>kdy</strong> má skill načíst. <code>description</code> je <em>spouštěč</em> — pokud sedí na uživatelův dotaz, skill se aktivuje.</p>
+      </div>
+      <div>
+        <h3>📜 tělo</h3>
+        <p style="font-size: 21px;">Pravidla v lidské řeči. Žádné JSON, žádný kód. Agent je čte a aplikuje. Stejný formát jako <code>AGENTS.md</code>, jen <em>cílený</em>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 04 · One file, every agent
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker cyan">🔌 PORTABLE</span>
+    <h2>Jeden SKILL.md. Všichni agenti.</h2>
+
+    <div class="flow">
+      <div class="flow-step amber">SKILL.md</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step cyan">~/.claude/skills/</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step green">OpenCode</div>
+    </div>
+    <div class="flow" style="margin-top: -10px;">
+      <div class="flow-step green">Claude Code</div>
+      <div class="flow-step green">GitHub Copilot</div>
+      <div class="flow-step green">Cursor</div>
+    </div>
+
+    <div class="cards" style="margin-top: 30px;">
+      <div class="card">
+        <div class="label">📁 KAM</div>
+        <div class="value"><code>~/.claude/skills/&lt;name&gt;/SKILL.md</code></div>
+      </div>
+      <div class="card">
+        <div class="label">🎯 KDO HO ČTE</div>
+        <div class="value">Každý agent který sahá do <code>~/.claude/skills/</code> — to dnes umí všechny mainstream nástroje.</div>
+      </div>
+      <div class="card">
+        <div class="label">🔁 PROČ</div>
+        <div class="value">Změníš nástroj, skill jde s tebou. <strong>Zero migration.</strong></div>
+      </div>
+    </div>
+
+    <blockquote>
+      Žádný formát ti nikdo nedrží zamčený. Skill je obyčejný Markdown — Git ho verzuje, kolega ho přečte, Copilot ho použije.
+    </blockquote>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 05 · Hands-on plán
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker">🛠️ HANDS-ON · 25 MIN</span>
+    <h2>Postavíme skill společně</h2>
+
+    <table>
+      <thead><tr><th style="width:60px;">#</th><th>Krok</th><th>Nástroj</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:var(--amber);">1</strong></td>
+          <td>Otevři <strong>Skill Builder</strong> v prohlížeči — průvodce ti vygeneruje SKILL.md z přirozeného jazyka.</td>
+          <td><span class="url-pill">ishalkin.github.io/<wbr>czechitas-skill-builder</span></td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--amber);">2</strong></td>
+          <td>Stáhneš ZIP — uvnitř je <code>SKILL.md</code> + složka. Hotová struktura, žádný copy-paste.</td>
+          <td>prohlížeč → Stažené</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--amber);">3</strong></td>
+          <td>Rozbal do <code>~/.claude/skills/</code>. Tam ji najde i OpenCode, i Claude Code.</td>
+          <td>Finder / Explorer</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--amber);">4</strong></td>
+          <td>Spusť <code>opencode</code> ve stejném tématu (např. SQL review). Skill se aktivuje sám.</td>
+          <td>terminál</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--amber);">5</strong></td>
+          <td>Porovnej výsledek <strong>před/po</strong>. To je tvůj WOW moment.</td>
+          <td>tvoje oči</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout green">
+      <strong>Cíl:</strong> každý odejde s minimálně jedním vlastním skillem v <code>~/.claude/skills/</code>, který funguje napříč nástroji.
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 06 · Day 2 teaser
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker cyan">🔮 ZÍTRA · DEN 2</span>
+    <h2>Skills + MCP = report z přirozeného jazyka</h2>
+
+    <p class="lead">Dneska jsme dali agentovi <strong>pravidla</strong>. Zítra mu dáme <strong>data</strong>.</p>
+
+    <div class="flow" style="margin: 36px 0;">
+      <div class="flow-step amber">SKILL.md<br><span style="font-size:13px;color:var(--fg-3);">pravidla</span></div>
+      <div class="flow-arrow">+</div>
+      <div class="flow-step cyan">MCP<br><span style="font-size:13px;color:var(--fg-3);">přístup k datům</span></div>
+      <div class="flow-arrow">=</div>
+      <div class="flow-step green">"Dej mi report za Q2"<br><span style="font-size:13px;color:var(--fg-3);">v češtině, do Slacku</span></div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3>📦 Co si odneseš dnes</h3>
+        <ul>
+          <li>OpenCode + OpenRouter zapojený</li>
+          <li>vlastní skill v <code>~/.claude/skills/</code></li>
+          <li>pochopení rozdílu <em>před/po</em></li>
+        </ul>
+      </div>
+      <div>
+        <h3>🚀 Co tě čeká zítra</h3>
+        <ul>
+          <li>Snowflake MCP — agent sahá do tabulek</li>
+          <li>report z přirozeného jazyka</li>
+          <li>SQL Quality Judge — automatická kontrola</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>Domácí úkol</strong>: postav skill, který tě v práci nejvíc bolí. Zítra ho zapojíme do MCP.
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ PROGRESS BAR ============ -->
+<div id="progress"></div>
+
+<!-- ============ NAV HINT ============ -->
+<div id="nav-hint"><kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>F</kbd> fullscreen · <kbd>Home</kbd>/<kbd>End</kbd> jump</div>
+
+<!-- ============ JAVASCRIPT ============ -->
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const pad = n => String(n).padStart(3, '0');
+
+  let current = 0;
+
+  function show(i) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    counter.textContent = `${pad(i + 1)} / ${pad(slides.length)}`;
+    progress.style.width = `${((i + 1) / slides.length) * 100}%`;
+    location.hash = `#${i + 1}`;
+    current = i;
+  }
+
+  const initial = parseInt(location.hash.replace('#', ''), 10);
+  show(!isNaN(initial) && initial > 0 ? initial - 1 : 0);
+
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+      show(current + 1); e.preventDefault();
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      show(current - 1); e.preventDefault();
+    } else if (e.key === 'Home') {
+      show(0); e.preventDefault();
+    } else if (e.key === 'End') {
+      show(slides.length - 1); e.preventDefault();
+    } else if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+      e.preventDefault();
+    }
+  });
+
+  window.addEventListener('hashchange', () => {
+    const n = parseInt(location.hash.replace('#', ''), 10);
+    if (!isNaN(n) && n > 0 && n - 1 !== current) show(n - 1);
+  });
+})();
+</script>
+
+</body>
+</html>
