@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Czechitas · Den 2 · Blok 03 · Report z přirozeného jazyka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a0e14;
+  --bg-2:      #11161f;
+  --bg-3:      #1a212c;
+  --bg-code:   #050810;
+  --border:    #232c3a;
+  --border-2:  #2d3849;
+  --fg:        #eaf0f7;
+  --fg-2:      #b8c4d4;
+  --fg-3:      #7c8898;
+  --amber:     #ff9c4a;
+  --amber-d:   #663d1a;
+  --cyan:      #5bc0eb;
+  --green:     #4dd072;
+  --red:       #ff5252;
+  --yellow:    #ffd166;
+  --magenta:   #c77dff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 23px;
+  line-height: 1.55;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 1;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 50px;
+  border: 1px solid rgba(91,192,235,0.08);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#status-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 42px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border-2);
+  display: flex;
+  align-items: center;
+  padding: 0 26px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--fg);
+  z-index: 100;
+  gap: 26px;
+}
+#status-bar .brand    { color: var(--amber); font-weight: 700; }
+#status-bar .divider  { color: var(--fg-3); }
+#status-bar .right    { margin-left: auto; display: flex; gap: 18px; align-items: center; }
+#status-bar .counter  { color: var(--cyan); font-weight: 700; }
+#status-bar .dot      { width: 6px; height: 6px; background: var(--cyan); display: inline-block; border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+#deck {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  padding-top: 42px;
+  z-index: 2;
+}
+
+.slide {
+  position: absolute;
+  inset: 42px 0 0 0;
+  display: none;
+  padding: 50px 80px 80px;
+  overflow-y: auto;
+  animation: slidein 0.25s ease-out;
+}
+.slide.active { display: flex; flex-direction: column; justify-content: safe center; }
+@keyframes slidein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.slide-inner { max-width: 1180px; width: 100%; margin: 0 auto; }
+
+.kicker {
+  display: block;
+  width: fit-content;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--amber);
+  margin-bottom: 20px;
+  padding: 4px 10px;
+  border: 1px solid var(--amber-d);
+  background: rgba(255,156,74,0.06);
+}
+.kicker.cyan { color: var(--cyan); border-color: rgba(91,192,235,0.4); background: rgba(91,192,235,0.06); }
+.kicker.red  { color: var(--red); border-color: rgba(255,82,82,0.4); background: rgba(255,82,82,0.08); }
+.kicker.green { color: var(--green); border-color: rgba(77,208,114,0.4); background: rgba(77,208,114,0.06); }
+
+h1 { font-size: 74px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 16px; }
+h2 {
+  font-size: 51px; font-weight: 700; letter-spacing: -0.01em;
+  margin-bottom: 28px; color: var(--fg);
+  padding-bottom: 12px; border-bottom: 2px solid var(--cyan);
+  display: inline-block;
+}
+h3 {
+  font-size: 28px; font-weight: 600; margin: 24px 0 10px;
+  color: var(--cyan); font-family: 'JetBrains Mono', monospace; letter-spacing: -0.01em;
+}
+.slide p { font-size: 25px; margin-bottom: 14px; color: var(--fg-2); }
+.slide p.lead { font-size: 30px; color: var(--fg); }
+.slide ul, .slide ol { font-size: 24px; margin: 14px 0 14px 30px; color: var(--fg-2); }
+.slide li { margin-bottom: 8px; }
+strong { color: var(--fg); font-weight: 700; }
+em { color: var(--cyan); font-style: italic; }
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg-3);
+  color: var(--amber);
+  padding: 2px 7px; font-size: 0.88em; border: 1px solid var(--border);
+}
+
+pre {
+  background: var(--bg-code); border: 1px solid var(--border);
+  padding: 18px 22px; margin: 14px 0;
+  font-family: 'JetBrains Mono', monospace; font-size: 16px; line-height: 1.5;
+  color: var(--fg-2); overflow-x: auto; position: relative;
+}
+pre::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--amber); }
+pre.cyan-bar::before { background: var(--cyan); }
+pre.green-bar::before { background: var(--green); }
+pre.red-bar::before { background: var(--red); }
+pre code { background: transparent; color: inherit; border: 0; padding: 0; font-size: inherit; }
+pre .c { color: var(--fg-3); }
+pre .s { color: var(--green); }
+pre .k { color: var(--magenta); }
+pre .n { color: var(--yellow); }
+pre .t { color: var(--cyan); }
+pre .a { color: var(--amber); }
+
+blockquote {
+  border-left: 3px solid var(--cyan);
+  padding: 14px 24px; margin: 20px 0;
+  color: var(--fg-2); font-style: italic;
+  background: rgba(91,192,235,0.05); font-size: 23px;
+}
+
+.callout {
+  border: 1px solid var(--amber);
+  background: rgba(255,156,74,0.06);
+  padding: 18px 24px; margin: 20px 0; font-size: 25px;
+}
+.callout.cyan   { border-color: var(--cyan); background: rgba(91,192,235,0.06); }
+.callout.green  { border-color: var(--green); background: rgba(77,208,114,0.06); }
+.callout.red    { border-color: var(--red); background: rgba(255,82,82,0.08); }
+
+.danger  { border-left: 4px solid var(--red);    background: rgba(255,82,82,0.06);  padding: 12px 20px; margin: 14px 0; font-size: 21px; }
+.success { border-left: 4px solid var(--green);  background: rgba(77,208,114,0.06); padding: 12px 20px; margin: 14px 0; font-size: 21px; }
+.warning { border-left: 4px solid var(--yellow); background: rgba(255,209,102,0.06);padding: 12px 20px; margin: 14px 0; font-size: 21px; }
+
+.slide.title { justify-content: center; }
+.slide.title h1 { font-size: 101px; line-height: 1; margin-bottom: 32px; }
+.slide.title .subtitle { font-size: 32px; color: var(--cyan); margin-bottom: 60px; font-weight: 500; }
+.slide.title .meta {
+  font-family: 'JetBrains Mono', monospace; font-size: 18px; color: var(--fg-3);
+  text-transform: uppercase; letter-spacing: 0.2em;
+  border-top: 1px solid var(--border); padding-top: 20px;
+  display: inline-block; padding-right: 60px;
+}
+.slide.title .meta .author { color: var(--amber); font-weight: 600; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin: 22px 0; }
+.card { border: 1px solid var(--border); background: var(--bg-2); padding: 18px 22px; }
+.card .label {
+  font-family: 'JetBrains Mono', monospace; font-size: 16px;
+  text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--amber); margin-bottom: 10px;
+}
+.card .value { font-size: 22px; color: var(--fg); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; }
+
+table {
+  width: 100%; border-collapse: collapse; border: 1px solid var(--border);
+  margin: 18px 0; font-size: 20px; background: var(--bg-2);
+}
+th {
+  background: var(--bg-3); border-bottom: 2px solid var(--cyan);
+  padding: 14px 18px; text-align: left;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  font-size: 14px; color: var(--cyan); font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+td { padding: 14px 18px; border-top: 1px solid var(--border); color: var(--fg-2); vertical-align: top; }
+tr:hover td { background: rgba(91,192,235,0.04); }
+td code, th code { font-size: 0.95em; }
+
+#progress {
+  position: fixed; bottom: 0; left: 0;
+  height: 3px; background: linear-gradient(90deg, var(--cyan), var(--green));
+  width: 0%; transition: width 0.3s ease; z-index: 100;
+}
+
+#nav-hint {
+  position: fixed; bottom: 14px; right: 24px;
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  color: var(--fg-3); text-transform: uppercase; letter-spacing: 0.2em;
+  z-index: 100; pointer-events: none;
+}
+#nav-hint kbd {
+  display: inline-block; border: 1px solid var(--border-2);
+  background: var(--bg-2); padding: 2px 6px; margin: 0 2px;
+  color: var(--amber); font-size: 12px;
+}
+
+@media (max-width: 1024px) {
+  .slide { padding: 30px 40px 60px; }
+  h1 { font-size: 55px; }
+  h2 { font-size: 39px; }
+  .slide.title h1 { font-size: 64px; }
+  .slide p, .slide ul, .slide ol { font-size: 21px; }
+  pre { font-size: 14px; }
+  .two-col { grid-template-columns: 1fr; }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-2); }
+::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+
+/* Pipeline diagram */
+.pipeline {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 14px;
+  margin: 28px 0 18px;
+  align-items: stretch;
+}
+.pipe-stage {
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  padding: 18px 18px 22px;
+  text-align: center;
+  position: relative;
+}
+.pipe-stage:nth-child(1) { border-top: 3px solid var(--cyan); }
+.pipe-stage:nth-child(2) { border-top: 3px solid var(--amber); }
+.pipe-stage:nth-child(3) { border-top: 3px solid var(--magenta); }
+.pipe-stage:nth-child(4) { border-top: 3px solid var(--green); }
+.pipe-stage::after {
+  content: '→';
+  position: absolute;
+  right: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--cyan);
+  font-size: 26px;
+  font-family: 'JetBrains Mono', monospace;
+  z-index: 2;
+}
+.pipe-stage:last-child::after { display: none; }
+.pipe-stage .pipe-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.pipe-stage .pipe-icon { font-size: 38px; line-height: 1; margin-bottom: 8px; }
+.pipe-stage h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 17px; color: var(--fg);
+  margin-bottom: 6px; letter-spacing: -0.01em;
+}
+.pipe-stage p { font-size: 16px !important; color: var(--fg-3); margin: 0 !important; }
+
+/* Trap reveal */
+.trap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin: 18px 0;
+}
+.trap .col {
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  padding: 18px 22px;
+}
+.trap .col.q { border-color: rgba(91,192,235,0.5); }
+.trap .col.a { border-color: rgba(255,82,82,0.5); }
+.trap .col h3 { margin: 0 0 8px; font-size: 21px; }
+.trap .col.q h3 { color: var(--cyan); }
+.trap .col.a h3 { color: var(--red); }
+.trap .col .big {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 64px;
+  font-weight: 700;
+  margin: 14px 0;
+  line-height: 1;
+}
+.trap .col.q .big { color: var(--cyan); }
+.trap .col.a .big { color: var(--red); }
+.trap .col p { font-size: 18px !important; color: var(--fg-2); }
+
+/* Demo URL bar */
+.demo-bar {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 22px 0;
+  align-items: stretch;
+}
+.demo-pill {
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  padding: 14px 18px;
+  flex: 1 1 280px;
+}
+.demo-pill .demo-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 6px;
+}
+.demo-pill h4 { font-size: 19px; color: var(--fg); margin-bottom: 4px; }
+.demo-pill .url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--cyan);
+  word-break: break-all;
+}
+</style>
+</head>
+<body>
+
+<header id="status-bar">
+  <span class="brand">CZECHITAS</span>
+  <span class="divider">//</span>
+  <span>DEN 2 · BLOK 03</span>
+  <span class="divider">//</span>
+  <span>REPORT · NL → SQL → HTML</span>
+  <div class="right">
+    <span class="dot"></span>
+    <span class="counter" id="counter">001 / 001</span>
+  </div>
+</header>
+
+<main id="deck">
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 01 · Title
+     ───────────────────────────────────────────────────────── -->
+<section class="slide title">
+  <div class="slide-inner">
+    <span class="kicker cyan">📊 TRANSMISSION 007 — DEMO</span>
+    <h1>Report z<br>přirozeného jazyka</h1>
+    <div class="subtitle">Skill + MCP + Snowflake → dashboard.html</div>
+    <div class="meta">
+      <div class="author">Ilja Shalkin</div>
+      <div>Accenture · AI/Data</div>
+      <div>27. května 2026 · Den 2 · Blok 03</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 02 · Recap + co teď
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker">🔁 KDE JSME</span>
+    <h2>Včera: pravidla. Před chvílí: data. Teď: oboje.</h2>
+
+    <div class="two-col">
+      <div>
+        <h3>📅 Den 1 — Skill</h3>
+        <ul>
+          <li>SKILL.md jako pravidla pro agenta</li>
+          <li>Před / po na <code>TEROR2_OLD</code> dotazu</li>
+          <li>Bezpečnost přímo ve skillu</li>
+        </ul>
+      </div>
+      <div>
+        <h3>📅 Dnes (před chvílí) — MCP</h3>
+        <ul>
+          <li>Tana ukázala <code>list_tables</code>, <code>describe_table</code>, <code>execute_query</code></li>
+          <li>Agent <em>umí mluvit</em> se Snowflake</li>
+          <li>Ale to je jen kostka. Stavíme dům.</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="lead" style="margin-top:24px;">Teď spojíme obě věci. <strong>Skill řekne agentovi <em>jak</em>, MCP mu dá <em>k čemu</em>.</strong> Z jednoho českého dotazu vyjde dashboard.</p>
+
+    <blockquote>
+      „Vygeneruj mi report o dataset <code>COURSES.SCH_TEROR</code>. Audience: junior analyst, který tu databázi vidí poprvé. Chci jeden HTML soubor, který otevřu v prohlížeči."
+    </blockquote>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 03 · Pipeline
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker cyan">🔧 POD KAPOTOU</span>
+    <h2>Co se za těch ~3 minut stane</h2>
+
+    <div class="pipeline">
+      <div class="pipe-stage">
+        <div class="pipe-num">01 · ČTEŠ</div>
+        <div class="pipe-icon">🗣️</div>
+        <h4>Český prompt</h4>
+        <p>Žádné SQL. Jen: „udělej report".</p>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-num">02 · SKILL</div>
+        <div class="pipe-icon">📜</div>
+        <h4>HTML report skill</h4>
+        <p>Agent najde návod a začne podle něj.</p>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-num">03 · MCP</div>
+        <div class="pipe-icon">🔌</div>
+        <h4>Snowflake calls</h4>
+        <p><code>list_tables</code> → <code>describe</code> → 6–8× <code>execute_query</code></p>
+      </div>
+      <div class="pipe-stage">
+        <div class="pipe-num">04 · OUTPUT</div>
+        <div class="pipe-icon">📈</div>
+        <h4>dashboard.html</h4>
+        <p>KPI, časová řada, top N, geo, data quality.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:18px;">Co skill agentovi <em>vynucuje</em></h3>
+<pre class="cyan-bar"><span class="c"># skill_html_report_generation.md (zkráceno)</span>
+
+<span class="a">## What to fetch first — vždy, před čímkoli</span>
+1. <span class="t">list_tables — co vůbec existuje?</span>
+2. <span class="t">describe_table na každou kandidátní tabulku</span>
+3. <span class="t">SELECT COUNT(*), SELECT * LIMIT 3 — sanity check</span>
+
+<span class="a">## Reject</span>
+- <span class="t">tabulky končící na _OLD, _LEGACY, _BACKUP, _V1</span>
+- <span class="t">"dirty" duplicates: COUNTRY vs COUNTRY_DIRTYDATA → preferuj COUNTRY</span>
+
+<span class="a">## Safety rules — never break these</span>
+- <span class="t">Read-only. Žádný INSERT / UPDATE / DELETE / DROP / TRUNCATE.</span>
+- <span class="t">Žádné vymyšlené sloupce — co není v describe, neexistuje.</span></pre>
+
+    <p style="font-size:21px;color:var(--fg-3);">Žádná magie. Skill je <strong>30 řádků markdownu</strong>. Stejný formát jako včera.</p>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 04 · Live demo · prompt
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker green">⚡ LIVE · 2–4 MIN</span>
+    <h2>Sledujte agenta. Komentář k tomu.</h2>
+
+    <p style="font-size:21px;">Sdílíme terminál. Pošlu prompt. Pak ticho — necháme agenta pracovat.</p>
+
+<pre class="green-bar"><span class="c">// OpenCode chat · čistý kontext · Snowflake MCP enabled</span>
+
+<span class="t">Vygeneruj mi report o dataset COURSES.SCH_TEROR.</span>
+<span class="t">Audience: junior analyst v Czechitas, který tu databázi</span>
+<span class="t">vidí poprvé. Chci 1 self-contained HTML soubor, který</span>
+<span class="t">otevřu v prohlížeči. Použij ten skill, co máme načtený.</span></pre>
+
+    <h3>Co budu komentovat nahlas</h3>
+    <table>
+      <thead><tr><th style="width:40%;">Kdy</th><th>Co řeknu</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>list_tables</code> proběhne</td>
+          <td>„Ten <code>list_tables</code> ho vynutil <em>skill</em>. Bez skillu by začal hádat sloupce z hlavy."</td>
+        </tr>
+        <tr>
+          <td>SQL queries letí</td>
+          <td>„Každý query je <em>konkrétní</em> — TOP 10, GROUP BY. Žádné <code>SELECT *</code>. To je taky pravidlo ze skillu."</td>
+        </tr>
+        <tr>
+          <td>Sahá na <code>COUNTRY</code> i <code>COUNTRY_DIRTYDATA</code></td>
+          <td>„Skill ho nutí porovnat dva zdroje. Hned uvidíme, proč."</td>
+        </tr>
+        <tr>
+          <td>Generuje HTML</td>
+          <td>„Píše soubor s reálnými čísly. Žádné placeholdery. To zase vynucuje skill — sekce <em>What you'll produce</em>."</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout cyan">
+      <strong>Backup:</strong> pokud agent zatuhne nebo MCP padne, otevřu <code>dashboard.html</code> z <code>czechitas-pixel-agent</code> a komentuju jako live. Princip stejný.
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 05 · Trap reveal
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker red">🪤 TRAP REVEAL</span>
+    <h2>Počkejte. Tohle číslo nesedí.</h2>
+
+    <p style="font-size:21px;">Otevřeme vygenerovaný <code>dashboard.html</code>. <strong>Pauza.</strong> Necháme všechny koukat 5 sekund. Pak:</p>
+
+    <div class="trap">
+      <div class="col q">
+        <h3>Kolik je na světě států?</h3>
+        <div class="big">~195</div>
+        <p>OSN: 193 členů + 2 pozorovatelé. Realita.</p>
+      </div>
+      <div class="col a">
+        <h3>Kolik říká náš report?</h3>
+        <div class="big">408</div>
+        <p>Z tabulky <code>COUNTRY_DIRTYDATA</code>. Duplikovaná. Ne <code>COUNTRY</code>.</p>
+      </div>
+    </div>
+
+    <div class="callout red">
+      <strong>To je rozdíl mezi „funguje" a „funguje pokaždé".</strong> Agent dnes vybral špatně. Skill na to <em>upozornil</em> v komentáři, ale výsledný HTML to neopravil. Nebo agent vybral správně — ale kdo garantuje, že to udělá zítra, na jiné databázi?
+    </div>
+
+    <h3 style="margin-top:18px;">Předávací věta pro Kubu</h3>
+    <blockquote>
+      „Skill je silný, <em>když funguje</em>. Otázka je: jak víme, že funguje pokaždé? Jak ověřit, že agent skutečně dělá to, co skill přikazuje? Odpověď: <strong>evals</strong>. Kuba."
+    </blockquote>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 06 · Resources / co si odnášíme
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker">📦 CO SI ODNÁŠÍŠ</span>
+    <h2>Tři demo stránky. Jeden princip.</h2>
+
+    <div class="demo-bar">
+      <div class="demo-pill">
+        <div class="demo-tag">⚛ DEMO 01</div>
+        <h4>Pixel Agent</h4>
+        <p style="font-size:17px;">Vizualizace toho, co se teď stalo — agent v sandboxu se skillem a MCP.</p>
+        <div class="url">ishalkin.github.io/<wbr>czechitas-pixel-agent</div>
+      </div>
+      <div class="demo-pill">
+        <div class="demo-tag">🩻 DEMO 02</div>
+        <h4>Stack Trace</h4>
+        <p style="font-size:17px;">5 vrstev kontextu při jednom dotazu — od SKILL.md po SQL response.</p>
+        <div class="url">ishalkin.github.io/<wbr>czechitas-stack-trace</div>
+      </div>
+      <div class="demo-pill">
+        <div class="demo-tag">🛠️ DEMO 03</div>
+        <h4>Skill Builder</h4>
+        <p style="font-size:17px;">Postav si svůj SKILL.md průvodcem. Stáhni ZIP. Drop do <code>~/.claude/skills/</code>.</p>
+        <div class="url">ishalkin.github.io/<wbr>czechitas-skill-builder</div>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top:18px;">
+      <div>
+        <h3>🎯 Po dnešku víš</h3>
+        <ul>
+          <li>jak skill <em>natlačí</em> agenta na MCP nástroje</li>
+          <li>jak NL → SQL → HTML projde 3 vrstvy</li>
+          <li>kdy nevěřit reportu (dirty data → 408 zemí)</li>
+        </ul>
+      </div>
+      <div>
+        <h3>🚀 Co jde za Kubou</h3>
+        <ul>
+          <li><strong>SQL Quality Judge</strong> — automaticky kontroluje, že agent ze skillu vyjel správný query</li>
+          <li>před / po se <strong>změří</strong>, ne jen ukáže</li>
+          <li>tvůj domácí skill + evaly = produkční pipeline</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout green">
+      <strong>Princip celého workshopu:</strong> API + Agent + MCP + Skill + Evals. Pět dílů, jeden loop. Holky odcházejí s vlastním skillem v <code>~/.claude/skills/</code> — a vědí, jak ho zítra v práci použít.
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div id="progress"></div>
+<div id="nav-hint"><kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>F</kbd> fullscreen · <kbd>Home</kbd>/<kbd>End</kbd> jump</div>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  const pad = n => String(n).padStart(3, '0');
+  let current = 0;
+
+  function show(i) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach((s, idx) => s.classList.toggle('active', idx === i));
+    counter.textContent = `${pad(i + 1)} / ${pad(slides.length)}`;
+    progress.style.width = `${((i + 1) / slides.length) * 100}%`;
+    location.hash = `#${i + 1}`;
+    current = i;
+  }
+
+  const initial = parseInt(location.hash.replace('#', ''), 10);
+  show(!isNaN(initial) && initial > 0 ? initial - 1 : 0);
+
+  document.addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { show(current + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(current - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { show(0); e.preventDefault(); }
+    else if (e.key === 'End') { show(slides.length - 1); e.preventDefault(); }
+    else if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+      e.preventDefault();
+    }
+  });
+
+  window.addEventListener('hashchange', () => {
+    const n = parseInt(location.hash.replace('#', ''), 10);
+    if (!isNaN(n) && n > 0 && n - 1 !== current) show(n - 1);
+  });
+})();
+</script>
+
+</body>
+</html>
