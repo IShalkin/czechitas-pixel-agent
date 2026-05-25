@@ -794,45 +794,47 @@ body.speaker-mode #status-bar::after {
     <span class="kicker">⚡ COLD OPEN · SAME AGENT, SAME PROMPT</span>
     <h2>Stejný agent. Stejný dotaz. Jiný výsledek.</h2>
     <p style="font-size: 21px;"><strong>Prompt:</strong> "Spočítej oběti terorismu po regionech od roku 2018."</p>
+    <p style="font-size: 18px; color: var(--fg-3); margin-top: -8px;">Schéma <code>COURSES.SCH_TEROR</code> — má 3 tabulky: <code>TEROR2</code>, <code>TEROR2_OLD</code>, <code>COUNTRY_DIRTYDATA</code>. Agent <em>neví</em>, která je která.</p>
 
     <div class="versus">
       <div class="col bad">
-        <h3>❌ BEZ SKILLU</h3>
-<pre class="red-bar"><span class="k">SELECT</span> region_txt, year,
-       <span class="t">COUNT</span>(*), <span class="t">SUM</span>(victims)
+        <h3>❌ BEZ SKILLU — agent hádá</h3>
+<pre class="red-bar"><span class="c">// vybere první tabulku co zní rozumně</span>
+<span class="k">SELECT</span> region_txt, <span class="t">SUM</span>(nkill) <span class="k">AS</span> total
 <span class="k">FROM</span> teror2_old
-<span class="k">WHERE</span> year &gt;= <span class="n">2018</span>;</pre>
+<span class="k">WHERE</span> iyear &gt;= <span class="n">2018</span>
+<span class="k">GROUP BY</span> region_txt
+<span class="k">ORDER BY</span> total <span class="k">DESC</span>;</pre>
         <ul>
-          <li>tabulka <code>_OLD</code> — neaktuální</li>
-          <li>chybí <code>GROUP BY</code> → SQL chyba</li>
-          <li>žádný <code>ORDER BY</code>, žádný <code>LIMIT</code></li>
-          <li>agent to klidně pošle do produkce</li>
+          <li>SQL je <em>syntakticky správné</em>, vrátí čísla</li>
+          <li>ale <code>_OLD</code> je archív z roku 2017 → data jsou <strong>o 30 % nižší</strong></li>
+          <li>agent neměl jak vědět — pošle graf do reportu</li>
+          <li>chyba se najde za týden, když si toho někdo všimne</li>
         </ul>
       </div>
 
       <div class="col good">
         <h3>✅ SE SKILLEM <code>sql-review</code></h3>
-<pre class="green-bar"><span class="c">// agent ZASTAVÍ a řekne:</span>
-<span class="c">// "Tabulka _OLD je deprecated.</span>
-<span class="c">//  Použij TEROR2. Chybí GROUP BY.</span>
-<span class="c">//  Doplň ORDER BY victims DESC."</span>
+<pre class="green-bar"><span class="c">// skill obsahuje firemní znalost:</span>
+<span class="c">// "Tabulky _OLD jsou archiv, nepoužívej."</span>
+<span class="c">// "COUNTRY_DIRTYDATA má znečištěná data."</span>
+<span class="c">// "Hlavní fakta tabulka je TEROR2."</span>
 
-<span class="k">SELECT</span> region_txt,
-       <span class="t">SUM</span>(victims) <span class="k">AS</span> total
+<span class="k">SELECT</span> region_txt, <span class="t">SUM</span>(nkill) <span class="k">AS</span> total
 <span class="k">FROM</span> teror2
-<span class="k">WHERE</span> year &gt;= <span class="n">2018</span>
+<span class="k">WHERE</span> iyear &gt;= <span class="n">2018</span>
 <span class="k">GROUP BY</span> region_txt
 <span class="k">ORDER BY</span> total <span class="k">DESC</span>;</pre>
         <ul>
-          <li>kontroluje pravidla <em>před</em> spuštěním</li>
-          <li>vysvětlí <em>proč</em>, ne jen co</li>
-          <li>chytí chybu dřív, než se dostane do reportu</li>
+          <li>agent <strong>ví, co neví</strong> — skill ho varuje</li>
+          <li>vybere správnou tabulku napoprvé</li>
+          <li>data sedí, report jde ven s důvěrou</li>
         </ul>
       </div>
     </div>
 
     <div class="callout cyan">
-      <strong>Rozdíl:</strong> jeden Markdown soubor v <code>~/.claude/skills/sql-review/SKILL.md</code>.
+      <strong>Pointa:</strong> skill = <em>firemní/projektová znalost</em>, kterou agent nemůže vědět z trénovacích dat. Naming konvence, deprecated tabulky, dirty kopie. Jeden Markdown soubor ji předá.
     </div>
   </div>
 </section>
@@ -1173,13 +1175,14 @@ body.speaker-mode #status-bar::after {
     },
     { // 05 WOW
       time: '03:30',
-      opener: '„Stejný agent. Stejný dotaz. Jiný výsledek. Pojďme se podívat proč."',
+      opener: '„Stejný agent. Stejný dotaz. Jiný výsledek. A zásadní: oba SQL fungují — rozdíl je, že jeden vrací správná čísla a druhý ne."',
       beats: [
-        'Levá strana = bez skillu. TEROR2_OLD je deprecated, sloupec `victims` neexistuje, chybí GROUP BY.',
-        'Pravá = se skillem sql-review. Agent ZASTAVÍ — vysvětlí proč ne.',
-        'Zdůrazni: skill nepřepisuje SQL. Skill kontroluje pravidla DŘÍV.'
+        'Klíč: agent zná SQL. Co NEZNÁ je, že _OLD je archiv a COUNTRY_DIRTYDATA je špinavá kopie. To je firemní znalost.',
+        'Bez skillu: agent hádá podle názvu, vybere první rozumně znějící tabulku. Vrátí čísla. Vypadá to v pořádku.',
+        'Se skillem: ta firemní znalost je zapsaná v Markdownu. Agent si ji načte a ví, co se nesmí.',
+        'Pointa: skill ≠ obecná SQL hygiena (tu by zvládl i bez skillu). Skill = něco, co agent NIJAK nemůže vědět.'
       ],
-      qa: { q: 'Kde se skill bere?', a: 'Píšeš ho ty (s pomocí Skill Builderu). Markdown soubor v ~/.claude/skills/.' },
+      qa: { q: 'Proč to nedat do promptu?', a: 'Můžeš — ale píšeš to znovu při každém dotazu. Skill se načítá automaticky podle description.' },
       nextUp: 'Anatomie SKILL.md — to nejtechničtější dnes.'
     },
     { // 06 Anatomie
