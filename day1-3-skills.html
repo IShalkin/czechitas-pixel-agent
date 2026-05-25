@@ -569,7 +569,50 @@ td code, th code { font-size: 0.95em; }
 </section>
 
 <!-- ─────────────────────────────────────────────────────────
-     SLIDE 02 · Coding agent v 60 sekundách (safety net)
+     SLIDE 02 · Slovníček — kotva pro pojmy
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker">📖 SLOVNÍČEK · KOTVA</span>
+    <h2>Pět slov, která dnes uslyšíš.</h2>
+    <p class="lead">Když se v nich někdy ztratíš — vrať se sem.</p>
+
+    <table style="margin-top: 20px;">
+      <thead>
+        <tr><th style="width: 22%;">Slovo</th><th>V jedné větě</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:var(--amber);">Agent</strong></td>
+          <td>Chatbot v terminálu, který vidí tvůj kód a umí ho měnit.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--amber);">AGENTS.md</strong></td>
+          <td>Návod o <em>projektu</em> — jeden soubor v repu, agent si ho vždycky přečte.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--cyan);">SKILL.md</strong></td>
+          <td>Návod na <em>opakující se úkol</em> — jeden Markdown soubor s pravidly.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--fg);">MCP</strong></td>
+          <td>Zásuvka, přes kterou agent sahá do <em>databáze, e-mailu, Slacku…</em> Zítra s Tánou.</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--fg);">Eval</strong></td>
+          <td>Test, jestli to celé funguje. „Chytil neexistující sloupce? Ano/ne."</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout cyan" style="margin-top: 24px;">
+      <strong>Dnes</strong> řešíme <code>SKILL.md</code> a kousek <code>AGENTS.md</code>. <strong>Zítra</strong> přidáme MCP a evals.
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 03 · Coding agent v 60 sekundách (safety net)
      ───────────────────────────────────────────────────────── -->
 <section class="slide">
   <div class="slide-inner">
@@ -753,39 +796,44 @@ td code, th code { font-size: 0.95em; }
 
     <table>
       <thead>
-        <tr><th style="width:18%;">Vrstva</th><th>Co dělá</th><th>Příklad</th></tr>
+        <tr><th style="width:16%;">Vrstva</th><th>Co dělá</th><th>Příklad</th><th style="width:14%; text-align:center;">Kdy</th></tr>
       </thead>
       <tbody>
         <tr>
           <td><strong style="color:var(--amber);">Prompt</strong></td>
           <td>Co chci <em>teď</em>, jednorázově.</td>
           <td><code>"Zkontroluj tento SQL."</code></td>
+          <td style="text-align:center;"><span style="color:var(--green); font-family:'JetBrains Mono',monospace; font-size:14px;">● dnes</span></td>
         </tr>
         <tr>
           <td><strong style="color:var(--amber);">Config</strong></td>
           <td>Jak funguje prostředí. Dlouhodobá pravidla projektu.</td>
           <td><code>AGENTS.md</code> — „Pracujeme read-only."</td>
+          <td style="text-align:center;"><span style="color:var(--green); font-family:'JetBrains Mono',monospace; font-size:14px;">● dnes</span></td>
         </tr>
         <tr>
           <td><strong style="color:var(--cyan);">Skill</strong></td>
           <td>Jak dělat <em>opakující se typ práce</em>.</td>
           <td><code>SKILL.md</code> — „SQL review postup."</td>
+          <td style="text-align:center;"><span style="color:var(--green); font-family:'JetBrains Mono',monospace; font-size:14px;">● dnes</span></td>
         </tr>
         <tr>
-          <td><strong style="color:var(--fg);">MCP</strong></td>
+          <td><strong style="color:var(--fg-3);">MCP</strong></td>
           <td>Jaké nástroje má agent k dispozici.</td>
           <td><code>execute_query()</code>, <code>list_tables()</code></td>
+          <td style="text-align:center;"><span style="color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:14px;">○ zítra</span></td>
         </tr>
         <tr>
-          <td><strong style="color:var(--fg);">Evals</strong></td>
+          <td><strong style="color:var(--fg-3);">Evals</strong></td>
           <td>Jak ověříme, že výstup dává smysl.</td>
           <td>„Chytil neexistující sloupce?"</td>
+          <td style="text-align:center;"><span style="color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:14px;">○ zítra</span></td>
         </tr>
       </tbody>
     </table>
 
     <div class="callout">
-      <strong>Když mícháme vrstvy</strong>, vznikají promptí monstra na 600 řádků. <strong>Když je oddělíme</strong>, agent je přehlednější — a snazší na opravy.
+      <strong>Začátečnická chyba</strong>: všechno nazývat „prompt". <strong>V praxi</strong>: každá vrstva řeší jinou věc, a oddělené vrstvy = přehledný agent.
     </div>
   </div>
 </section>
@@ -795,41 +843,31 @@ td code, th code { font-size: 0.95em; }
      ───────────────────────────────────────────────────────── -->
 <section class="slide">
   <div class="slide-inner">
-    <span class="kicker cyan">🧩 CONTEXT ENGINEERING</span>
-    <h2>Co agent <em>vidí</em>.</h2>
-    <p class="lead">Agent odpovídá podle toho, co má v kontextu. <strong>Nic víc, nic míň.</strong></p>
+    <span class="kicker cyan">🧩 CO AGENT VIDÍ</span>
+    <h2>Agent vidí jen to, co mu položíš na stůl.</h2>
+    <p class="lead">Představ si nového kolegu první den. Co potřebuje, aby ti pomohl?</p>
 
-    <div class="two-col" style="margin-top: 24px;">
-      <div>
-        <h3>Pracovní stůl agenta</h3>
-        <ol style="font-size: 21px; line-height: 1.7;">
-          <li>Aktuální prompt</li>
-          <li>Pravidla projektu (<code>AGENTS.md</code>)</li>
-          <li>Schema dat</li>
-          <li>Příklady (golden cases)</li>
-          <li>Dostupné tools (MCP)</li>
-          <li>Tool outputs</li>
-          <li>Safety rules</li>
-          <li>Expected output format</li>
-        </ol>
+    <div class="cards" style="margin-top: 28px;">
+      <div class="card">
+        <div class="label">📋 ZADÁNÍ</div>
+        <div class="value">Tvůj <strong>prompt</strong> — co chceš teď.</div>
       </div>
-      <div>
-        <h3>Když něco chybí…</h3>
-        <ul style="font-size: 21px;">
-          <li>Bez <strong>schématu</strong> → hádá sloupce</li>
-          <li>Bez <strong>příkladů</strong> → odpoví pokaždé jinak</li>
-          <li>Bez <strong>safety rules</strong> → navrhne nebezpečný krok</li>
-          <li>Bez <strong>output formátu</strong> → nedá se parsovat</li>
-        </ul>
-
-        <div class="callout cyan" style="margin-top: 18px;">
-          Místo „jak ho napsat chytřeji" se ptej: <strong>co mu chybí na stole?</strong>
-        </div>
+      <div class="card">
+        <div class="label">🏠 PRAVIDLA PROJEKTU</div>
+        <div class="value"><strong>AGENTS.md</strong> — jak se tady pracuje.</div>
+      </div>
+      <div class="card">
+        <div class="label">📐 NÁVOD NA ÚKOL</div>
+        <div class="value"><strong>SKILL.md</strong> — jak děláme tenhle typ věci.</div>
+      </div>
+      <div class="card">
+        <div class="label">🔌 NÁSTROJE</div>
+        <div class="value"><strong>MCP</strong> — kam smí sahat. <em>Zítra.</em></div>
       </div>
     </div>
 
-    <blockquote>
-      Prompt engineering píše zadání. <em>Context engineering</em> připravuje agentovi pracovní stůl. Skill je jeden z osmi kousků na tom stole.
+    <blockquote style="margin-top: 28px;">
+      Většina problémů s agenty <strong>není „špatný model"</strong>. Je to <em>nedotažený kontext</em> — něco mu chybí na stole. Místo „jak ho napsat chytřeji" se ptej: <strong>co tam chybí?</strong>
     </blockquote>
   </div>
 </section>
