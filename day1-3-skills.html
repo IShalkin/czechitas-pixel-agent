@@ -737,7 +737,7 @@ body.speaker-mode #status-bar::after {
     <h1>Skills</h1>
     <div class="subtitle">stavební kostky pro tvého coding agenta</div>
     <div class="meta">
-      <div class="author">Ilja Shalkin</div>
+      <div class="author">Ilia Shalkin</div>
       <div>Accenture · AI/Data</div>
       <div>26. května 2026 · Den 1 · Blok 03</div>
     </div>
@@ -895,8 +895,8 @@ body.speaker-mode #status-bar::after {
 
     <div class="two-col">
       <div>
-        <h3>$ opencode → /init</h3>
-        <p style="font-size: 21px;">OpenCode si projde repo, navrhne <code>AGENTS.md</code>, ty schválíš. Hotovo za 30 sekund.</p>
+        <h3>V terminálu napíšeš <code>/init</code></h3>
+        <p style="font-size: 21px;">Spustíš OpenCode (jeden příkaz: <code>opencode</code>), pak v chatu napíšeš <code>/init</code>. Agent si projde repo, navrhne <code>AGENTS.md</code>, ty schválíš. Hotovo za 30 sekund.</p>
 <pre class="cyan-bar"><span class="c"># Czechitas workshop</span>
 <span class="c"># SQL analytics over Snowflake</span>
 
@@ -938,7 +938,7 @@ body.speaker-mode #status-bar::after {
     <span class="kicker">⚡ COLD OPEN · SAME AGENT, SAME PROMPT</span>
     <h2>Stejný agent. Stejný dotaz. Jiný výsledek.</h2>
     <p style="font-size: 21px;"><strong>Prompt:</strong> "Spočítej oběti terorismu po regionech od roku 2018."</p>
-    <p style="font-size: 18px; color: var(--fg-3); margin-top: -8px;">Schéma <code>COURSES.SCH_TEROR</code> — má 3 tabulky: <code>TEROR2</code>, <code>TEROR2_OLD</code>, <code>COUNTRY_DIRTYDATA</code>. Agent <em>neví</em>, která je která.</p>
+    <p style="font-size: 18px; color: var(--fg-3); margin-top: -8px;">Schéma <code>COURSES.SCH_TEROR</code> — má 3 tabulky: <code>TEROR2</code>, <code>TEROR2_OLD</code>, <code>COUNTRY_DIRTYDATA</code>. Agent <em>neví</em>, která je která. Sloupce <code>iyear</code> (rok), <code>nkill</code> (oběti), <code>region_txt</code> jsou skutečné názvy z datasetu — ne překlepy.</p>
 
     <div class="versus">
       <div class="col bad">
@@ -1014,6 +1014,7 @@ body.speaker-mode #status-bar::after {
       <div>
         <h3>📄 frontmatter</h3>
         <p style="font-size: 21px;">Říká agentovi <strong>kdy</strong> má skill načíst. <code>description</code> je <em>spouštěč</em> — pokud sedí na uživatelův dotaz, skill se aktivuje.</p>
+        <p style="font-size: 17px; color: var(--fg-3);"><em>Pozn.:</em> <code>description</code> se píše anglicky („Use when…") — to je konvence Anthropic. Tělo skillu klidně česky.</p>
       </div>
       <div>
         <h3>📜 tělo</h3>
@@ -1175,7 +1176,7 @@ body.speaker-mode #status-bar::after {
         </tr>
         <tr>
           <td><strong style="color:var(--amber);">3</strong></td>
-          <td>Rozbal do <code>~/.claude/skills/</code>. Tam ji najde i OpenCode, i Claude Code.</td>
+          <td>Rozbal do <code>~/.claude/skills/</code>. Tam ji najde i OpenCode, i Claude Code.<br><span style="font-size:16px;color:var(--fg-3);"><code>~</code> = tvoje domovská složka. Mac/Linux: <code>/Users/jmeno/</code>. Windows: <code>C:\Users\jmeno\</code>.</span></td>
           <td>Finder / Explorer</td>
         </tr>
         <tr>
