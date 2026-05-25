@@ -1490,19 +1490,19 @@ function gotoStation(key) {
   return moveTo(s.x, s.y);
 }
 
-function say(text, ms = 1400) {
+function say(text, ms = 2400) {
   state.bubble = { text, x: state.agent.x, y: state.agent.y, ttl: ms, kind: "speech" };
   return wait(ms);
 }
 
-function teacherSay(text, ms = 1500) {
+function teacherSay(text, ms = 2600) {
   if (!state.teacher) return wait(ms);
   state.bubble = { text, x: state.teacher.x, y: state.teacher.y, ttl: ms, kind: "speech" };
   return wait(ms);
 }
 
 // Thought bubble — agent's internal reasoning. Cloud-shaped, blue text.
-function think(text, ms = 1800) {
+function think(text, ms = 3000) {
   state.bubble = { text, x: state.agent.x, y: state.agent.y, ttl: ms, kind: "thought" };
   return wait(ms);
 }
@@ -1533,8 +1533,12 @@ function setEval(key, status) {
  * over to the dashboard. The clipboard appears in her hands once she
  * arrives — that's the "expected.json" reference she compares against. */
 
-const TEACHER_GRADE_X = 380;    // standing position right of the whiteboard
-const TEACHER_Y = 218;          // same lane as the agent
+// Teacher stands at the top-left of the room, in clear floor space
+// above the agent's walking lane. She's a separate, visibly distinct
+// character — not blocking the dashboard, the whiteboard report card,
+// the agent's stations, or the agent's path along the bottom lane.
+const TEACHER_GRADE_X = 86;
+const TEACHER_Y = 158;
 
 function spawnTeacher() {
   state.teacher = {
