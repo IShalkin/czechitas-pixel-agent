@@ -796,6 +796,7 @@ body.speaker-mode #status-bar::after {
           <span class="chev">▸</span>
         </summary>
         <div class="vocab-body">
+          <p style="font-size:16px; color:var(--fg-2); margin-bottom:12px;">📚 <strong>Mentální model:</strong> skill = <em>onboarding pro nového kolegu</em>. Napíšeš ho jednou, agent ho čte pokaždé.</p>
 <pre class="cyan-bar"><span class="meta-line">---</span>
 <span class="frontmatter-key">name</span>: <span class="frontmatter-val">sql-review</span>
 <span class="frontmatter-key">description</span>: <span class="frontmatter-val">Use when user asks for SQL.</span>
@@ -815,6 +816,7 @@ body.speaker-mode #status-bar::after {
           <span class="chev">▸</span>
         </summary>
         <div class="vocab-body">
+          <p style="font-size:16px; color:var(--fg-2); margin-bottom:12px;">🔌 <strong>3 kbelíky, co MCP přináší:</strong> <em>data</em> (Snowflake, Notion) · <em>nástroje</em> (pošli email, vytvoř issue) · <em>workflows</em> (vícekrokové recepty).</p>
 <pre class="cyan-bar"><span class="c">// MCP server: snowflake-czechitas</span>
 <span class="c">// vystavuje 3 nástroje, které agent může volat</span>
 
@@ -980,6 +982,9 @@ body.speaker-mode #status-bar::after {
     <div class="callout cyan">
       <strong>Pointa:</strong> skill = <em>firemní/projektová znalost</em>, kterou agent nemůže vědět z trénovacích dat. Naming konvence, deprecated tabulky, dirty kopie. Jeden Markdown soubor ji předá.
     </div>
+    <div class="callout amber" style="margin-top: 14px;">
+      <strong>Kdy psát skill?</strong> Když si <em>stejnou věc vysvětluješ agentovi potřetí</em>. To je signál — pravidlo se opakuje, patří do souboru, ne do chatu.
+    </div>
   </div>
 </section>
 
@@ -1015,6 +1020,7 @@ body.speaker-mode #status-bar::after {
         <h3>📄 frontmatter</h3>
         <p style="font-size: 21px;">Říká agentovi <strong>kdy</strong> má skill načíst. <code>description</code> je <em>spouštěč</em> — pokud sedí na uživatelův dotaz, skill se aktivuje.</p>
         <p style="font-size: 17px; color: var(--fg-3);"><em>Pozn.:</em> <code>description</code> se píše anglicky („Use when…") — to je konvence Anthropic. Tělo skillu klidně česky.</p>
+        <p style="font-size: 16px; color: var(--cyan); margin-top: 10px;">💡 Agent vidí <strong>jen</strong> <code>description</code> všech skillů. Tělo načte, až když si řekne „tohle se mi hodí". Proto musí být <code>description</code> přesný.</p>
       </div>
       <div>
         <h3>📜 tělo</h3>
