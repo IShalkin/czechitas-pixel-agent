@@ -569,7 +569,90 @@ td code, th code { font-size: 0.95em; }
 </section>
 
 <!-- ─────────────────────────────────────────────────────────
-     SLIDE 02 · WOW — bez skillu vs. se skillem
+     SLIDE 02 · Coding agent v 60 sekundách (safety net)
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker">🤖 ÚVOD · 60 SEKUND</span>
+    <h2>Coding agent — co to vlastně je?</h2>
+    <p class="lead"><strong>Chatbot v terminálu</strong>, který umí číst soubory, spouštět příkazy a editovat kód. Ne na webu — přímo u tvého projektu.</p>
+
+    <div class="cards" style="margin-top: 24px;">
+      <div class="card">
+        <div class="label">💬 CHATBOT</div>
+        <div class="value">Píšeš mu lidsky. Žádné API, žádný framework.</div>
+      </div>
+      <div class="card">
+        <div class="label">📂 VIDÍ TVŮJ KÓD</div>
+        <div class="value">Spuštěn ve složce projektu — má přístup k souborům, gitu, terminálu.</div>
+      </div>
+      <div class="card">
+        <div class="label">🛠️ DĚLÁ ZMĚNY</div>
+        <div class="value">Edituje, spouští testy, commituje. Ty schvaluješ.</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 32px;">Tři jména, stejný princip</h3>
+    <div class="flow">
+      <div class="flow-step amber">OpenCode<br><span style="font-size:13px;color:var(--fg-3);">open source · dnes</span></div>
+      <div class="flow-step cyan">Claude Code<br><span style="font-size:13px;color:var(--fg-3);">Anthropic</span></div>
+      <div class="flow-step green">GitHub Copilot CLI<br><span style="font-size:13px;color:var(--fg-3);">Microsoft</span></div>
+    </div>
+
+    <div class="callout cyan">
+      <strong>Proč OpenCode?</strong> Je zdarma, open source, a všichni si ho dnes nainstalujeme stejně. Skills, které napíšeš, fungují i v ostatních.
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 03 · AGENTS.md /init (safety net pro live demo)
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker">📋 PRVNÍ SOUBOR · AGENTS.md</span>
+    <h2>Než začneš — řekni agentovi, kdo jsi.</h2>
+    <p class="lead"><code>AGENTS.md</code> je <strong>návod o projektu</strong>, který si agent přečte při každém spuštění.</p>
+
+    <div class="two-col">
+      <div>
+        <h3>$ opencode → /init</h3>
+        <p style="font-size: 21px;">OpenCode si projde repo, navrhne <code>AGENTS.md</code>, ty schválíš. Hotovo za 30 sekund.</p>
+<pre class="cyan-bar"><span class="c"># Czechitas workshop</span>
+<span class="c"># SQL analytics over Snowflake</span>
+
+<span class="heading">## Stack</span>
+- Snowflake · DB <span class="s">COURSES</span>
+- Schema <span class="s">SCH_TEROR</span> (terror data)
+
+<span class="heading">## Defaults</span>
+- Always read-only first
+- Use TEROR2, never _OLD tables
+- Czech comments OK</pre>
+      </div>
+      <div>
+        <h3>Co tam patří</h3>
+        <ul>
+          <li><strong>Stack</strong> — jaký jazyk, jakou DB</li>
+          <li><strong>Defaults</strong> — read-only? jaký tón?</li>
+          <li><strong>Conventions</strong> — pojmenování, formát</li>
+          <li><strong>Don't</strong> — žádné <code>DROP</code>, žádné <code>UPDATE</code> bez schválení</li>
+        </ul>
+
+        <div class="callout">
+          <strong>Pravidlo:</strong> všechno, co bys řekla nováčkovi v týmu první den, patří do <code>AGENTS.md</code>.
+        </div>
+      </div>
+    </div>
+
+    <blockquote>
+      <code>AGENTS.md</code> = pravidla projektu (jak pracujeme tady). <code>SKILL.md</code> = pravidla úkolu (jak děláme SQL review). Doplňují se.
+    </blockquote>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 04 · WOW — bez skillu vs. se skillem
      ───────────────────────────────────────────────────────── -->
 <section class="slide">
   <div class="slide-inner">
@@ -660,7 +743,99 @@ td code, th code { font-size: 0.95em; }
 </section>
 
 <!-- ─────────────────────────────────────────────────────────
-     SLIDE 04 · One file, every agent
+     SLIDE 06 · Prompt, config, skill — nejsou totéž
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker">🧠 MENTÁLNÍ MODEL</span>
+    <h2>Prompt, config, skill — <em>nejsou totéž</em>.</h2>
+    <p class="lead">Začátečnická chyba: všechno nazývat „prompt". V agentních systémech máme <strong>vrstvy</strong>.</p>
+
+    <table>
+      <thead>
+        <tr><th style="width:18%;">Vrstva</th><th>Co dělá</th><th>Příklad</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong style="color:var(--amber);">Prompt</strong></td>
+          <td>Co chci <em>teď</em>, jednorázově.</td>
+          <td><code>"Zkontroluj tento SQL."</code></td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--amber);">Config</strong></td>
+          <td>Jak funguje prostředí. Dlouhodobá pravidla projektu.</td>
+          <td><code>AGENTS.md</code> — „Pracujeme read-only."</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--cyan);">Skill</strong></td>
+          <td>Jak dělat <em>opakující se typ práce</em>.</td>
+          <td><code>SKILL.md</code> — „SQL review postup."</td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--fg);">MCP</strong></td>
+          <td>Jaké nástroje má agent k dispozici.</td>
+          <td><code>execute_query()</code>, <code>list_tables()</code></td>
+        </tr>
+        <tr>
+          <td><strong style="color:var(--fg);">Evals</strong></td>
+          <td>Jak ověříme, že výstup dává smysl.</td>
+          <td>„Chytil neexistující sloupce?"</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <strong>Když mícháme vrstvy</strong>, vznikají promptí monstra na 600 řádků. <strong>Když je oddělíme</strong>, agent je přehlednější — a snazší na opravy.
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 07 · Context engineering
+     ───────────────────────────────────────────────────────── -->
+<section class="slide">
+  <div class="slide-inner">
+    <span class="kicker cyan">🧩 CONTEXT ENGINEERING</span>
+    <h2>Co agent <em>vidí</em>.</h2>
+    <p class="lead">Agent odpovídá podle toho, co má v kontextu. <strong>Nic víc, nic míň.</strong></p>
+
+    <div class="two-col" style="margin-top: 24px;">
+      <div>
+        <h3>Pracovní stůl agenta</h3>
+        <ol style="font-size: 21px; line-height: 1.7;">
+          <li>Aktuální prompt</li>
+          <li>Pravidla projektu (<code>AGENTS.md</code>)</li>
+          <li>Schema dat</li>
+          <li>Příklady (golden cases)</li>
+          <li>Dostupné tools (MCP)</li>
+          <li>Tool outputs</li>
+          <li>Safety rules</li>
+          <li>Expected output format</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Když něco chybí…</h3>
+        <ul style="font-size: 21px;">
+          <li>Bez <strong>schématu</strong> → hádá sloupce</li>
+          <li>Bez <strong>příkladů</strong> → odpoví pokaždé jinak</li>
+          <li>Bez <strong>safety rules</strong> → navrhne nebezpečný krok</li>
+          <li>Bez <strong>output formátu</strong> → nedá se parsovat</li>
+        </ul>
+
+        <div class="callout cyan" style="margin-top: 18px;">
+          Místo „jak ho napsat chytřeji" se ptej: <strong>co mu chybí na stole?</strong>
+        </div>
+      </div>
+    </div>
+
+    <blockquote>
+      Prompt engineering píše zadání. <em>Context engineering</em> připravuje agentovi pracovní stůl. Skill je jeden z osmi kousků na tom stole.
+    </blockquote>
+  </div>
+</section>
+
+<!-- ─────────────────────────────────────────────────────────
+     SLIDE 08 · One file, every agent
      ───────────────────────────────────────────────────────── -->
 <section class="slide">
   <div class="slide-inner">
