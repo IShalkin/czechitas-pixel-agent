@@ -38,8 +38,8 @@ html, body {
   background: var(--bg);
   color: var(--fg);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  font-size: 23px;
-  line-height: 1.55;
+  font-size: 19px;
+  line-height: 1.5;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
@@ -102,7 +102,7 @@ body::after {
   position: absolute;
   inset: 42px 0 0 0;
   display: none;
-  padding: 50px 80px 80px;
+  padding: 36px 64px 56px;
   overflow-y: auto;
   animation: slidein 0.25s ease-out;
 }
@@ -136,44 +136,46 @@ body::after {
   background: rgba(255,156,74,0.06);
 }
 .kicker.cyan { color: var(--cyan); border-color: rgba(91,192,235,0.4); background: rgba(91,192,235,0.06); }
+.kicker.red  { color: var(--red); border-color: rgba(255,82,82,0.4); background: rgba(255,82,82,0.08); }
 
 h1 {
-  font-size: 74px;
+  font-size: 60px;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.05;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 h2 {
-  font-size: 51px;
+  font-size: 40px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  margin-bottom: 28px;
+  margin-bottom: 20px;
   color: var(--fg);
-  padding-bottom: 12px;
+  padding-bottom: 10px;
   border-bottom: 2px solid var(--amber);
   display: inline-block;
 }
+h2.red-underline { border-bottom-color: var(--red); }
 h3 {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 600;
-  margin: 24px 0 10px;
+  margin: 18px 0 8px;
   color: var(--cyan);
   font-family: 'JetBrains Mono', monospace;
   letter-spacing: -0.01em;
 }
 .slide p {
-  font-size: 25px;
-  margin-bottom: 14px;
+  font-size: 20px;
+  margin-bottom: 10px;
   color: var(--fg-2);
 }
-.slide p.lead { font-size: 30px; color: var(--fg); }
+.slide p.lead { font-size: 24px; color: var(--fg); margin-bottom: 14px; }
 .slide ul, .slide ol {
-  font-size: 24px;
-  margin: 14px 0 14px 30px;
+  font-size: 19px;
+  margin: 10px 0 10px 26px;
   color: var(--fg-2);
 }
-.slide li { margin-bottom: 8px; }
+.slide li { margin-bottom: 6px; }
 strong { color: var(--fg); font-weight: 700; }
 em { color: var(--cyan); font-style: italic; }
 
@@ -189,11 +191,11 @@ code {
 pre {
   background: var(--bg-code);
   border: 1px solid var(--border);
-  padding: 18px 22px;
-  margin: 14px 0;
+  padding: 14px 18px;
+  margin: 10px 0;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.45;
   color: var(--fg-2);
   overflow-x: auto;
   position: relative;
@@ -225,20 +227,20 @@ pre .a { color: var(--amber); }
 
 blockquote {
   border-left: 3px solid var(--amber);
-  padding: 14px 24px;
-  margin: 20px 0;
+  padding: 10px 18px;
+  margin: 14px 0;
   color: var(--fg-2);
   font-style: italic;
   background: rgba(255,156,74,0.05);
-  font-size: 23px;
+  font-size: 18px;
 }
 
 .callout {
   border: 1px solid var(--amber);
   background: rgba(255,156,74,0.06);
-  padding: 18px 24px;
-  margin: 20px 0;
-  font-size: 25px;
+  padding: 14px 18px;
+  margin: 14px 0;
+  font-size: 19px;
 }
 .callout.cyan   { border-color: var(--cyan); background: rgba(91,192,235,0.06); }
 .callout.green  { border-color: var(--green); background: rgba(77,208,114,0.06); }
@@ -290,11 +292,11 @@ blockquote {
 }
 
 .slide.title { justify-content: center; }
-.slide.title h1 { font-size: 101px; line-height: 1; margin-bottom: 32px; }
+.slide.title h1 { font-size: 78px; line-height: 1; margin-bottom: 24px; }
 .slide.title .subtitle {
-  font-size: 32px;
+  font-size: 26px;
   color: var(--cyan);
-  margin-bottom: 60px;
+  margin-bottom: 44px;
   font-weight: 500;
 }
 .slide.title .meta {
@@ -387,25 +389,25 @@ blockquote {
 .vocab-item summary {
   list-style: none;
   cursor: pointer;
-  padding: 14px 18px;
+  padding: 10px 14px;
   display: grid;
-  grid-template-columns: 180px 1fr 24px;
+  grid-template-columns: 150px 1fr 20px;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
   user-select: none;
 }
 .vocab-item summary::-webkit-details-marker { display: none; }
 .vocab-item summary:hover { background: rgba(255,156,74,0.04); }
 .vocab-item .word {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--amber);
   letter-spacing: 0.02em;
 }
 .vocab-item.cyan .word { color: var(--cyan); }
 .vocab-item .oneliner {
-  font-size: 19px;
+  font-size: 16px;
   color: var(--fg-2);
   line-height: 1.4;
 }
@@ -460,24 +462,24 @@ table {
   width: 100%;
   border-collapse: collapse;
   border: 1px solid var(--border);
-  margin: 18px 0;
-  font-size: 20px;
+  margin: 14px 0;
+  font-size: 17px;
   background: var(--bg-2);
 }
 th {
   background: var(--bg-3);
   border-bottom: 2px solid var(--amber);
-  padding: 14px 18px;
+  padding: 10px 14px;
   text-align: left;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  font-size: 14px;
+  font-size: 12px;
   color: var(--amber);
   font-weight: 600;
   font-family: 'JetBrains Mono', monospace;
 }
 td {
-  padding: 14px 18px;
+  padding: 10px 14px;
   border-top: 1px solid var(--border);
   color: var(--fg-2);
   vertical-align: top;
@@ -541,6 +543,95 @@ td code, th code { font-size: 0.95em; }
 ::-webkit-scrollbar-thumb { background: var(--border-2); }
 ::-webkit-scrollbar-thumb:hover { background: var(--amber); }
 
+/* Lethal trifecta — three legs */
+.trifecta {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 18px;
+  margin: 18px 0 14px;
+}
+.leg {
+  border: 1px solid var(--red);
+  background: rgba(255,82,82,0.04);
+  padding: 16px 18px 18px;
+  text-align: center;
+  position: relative;
+}
+.leg .leg-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  color: var(--red);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.leg .leg-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.leg h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: var(--fg);
+  margin-bottom: 6px;
+}
+.leg p {
+  font-size: 15px !important;
+  color: var(--fg-3);
+  margin: 0;
+}
+.trifecta-result {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  color: var(--red);
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px dashed rgba(255,82,82,0.4);
+  background: rgba(255,82,82,0.04);
+}
+
+/* Safety checklist grid */
+.safety-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 14px 0;
+}
+.safety-row {
+  display: flex;
+  gap: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  padding: 12px 16px;
+  border-left-width: 3px;
+}
+.safety-row.ok   { border-left-color: var(--green); }
+.safety-row.no   { border-left-color: var(--red); }
+.safety-row.warn { border-left-color: var(--yellow); }
+.safety-row .icn {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 20px;
+  flex-shrink: 0;
+  width: 22px;
+}
+.safety-row.ok   .icn { color: var(--green); }
+.safety-row.no   .icn { color: var(--red); }
+.safety-row.warn .icn { color: var(--yellow); }
+.safety-row h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  color: var(--fg);
+  margin: 0 0 4px;
+}
+.safety-row p {
+  font-size: 15px !important;
+  color: var(--fg-3);
+  margin: 0 !important;
+}
+
 /* WOW slide: side-by-side answers */
 .versus {
   display: grid;
@@ -574,11 +665,11 @@ td code, th code { font-size: 0.95em; }
 .anatomy {
   background: var(--bg-code);
   border: 1px solid var(--border);
-  padding: 22px 28px;
-  margin: 18px 0;
+  padding: 16px 22px;
+  margin: 12px 0;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 17px;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.5;
   position: relative;
 }
 .anatomy::before {
@@ -753,7 +844,7 @@ body.speaker-mode #status-bar::after {
     <h2>Pět slov, která dnes uslyšíš.</h2>
     <p class="lead">Klikni na slovo — uvidíš, jak vypadá v praxi. Když se v nich někdy ztratíš, vrať se sem.</p>
 
-    <div class="vocab" style="margin-top: 20px;">
+    <div class="vocab" style="margin-top: 14px;">
 
       <details class="vocab-item amber">
         <summary>
