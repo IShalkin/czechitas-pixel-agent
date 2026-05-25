@@ -857,13 +857,13 @@ body.speaker-mode #status-bar::after {
 <span class="heading"># SQL Review</span>
 
 <span class="heading">## Pravidla</span>                                     <span class="annotation">tělo</span>
-<span class="rule">- Nikdy nepoužívej tabulky končící na _OLD.</span>
-<span class="rule">- Vždy doplň GROUP BY ke každé agregaci.</span>
-<span class="rule">- Když SUM/COUNT, doplň ORDER BY a LIMIT.</span>
+<span class="rule">- Tabulky končící na _OLD jsou archivy — nepoužívej.</span>
+<span class="rule">- COUNTRY_DIRTYDATA je znečištěná kopie — místo ní použij COUNTRY.</span>
+<span class="rule">- Hlavní fakta tabulka je TEROR2 (ne TEROR1 ani TEROR_BACKUP).</span>
 
 <span class="heading">## Příklad</span>
-<span class="rule">- Před: SELECT ... FROM teror2_OLD ...</span>
-<span class="rule">- Po:   SELECT ... FROM teror2 GROUP BY ...</span>
+<span class="rule">- Před: SELECT ... FROM teror2_OLD JOIN country_dirtydata ...</span>
+<span class="rule">- Po:   SELECT ... FROM teror2     JOIN country ...</span>
     </div>
 
     <div class="two-col" style="margin-top: 20px;">
