@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Czechitas · Příprava: OpenCode + OpenRouter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a0e14;
+  --bg-2:      #11161f;
+  --bg-3:      #1a212c;
+  --bg-code:   #050810;
+  --border:    #232c3a;
+  --border-2:  #2d3849;
+  --fg:        #eaf0f7;
+  --fg-2:      #b8c4d4;
+  --fg-3:      #7c8898;
+  --amber:     #ff9c4a;
+  --amber-d:   #663d1a;
+  --cyan:      #5bc0eb;
+  --green:     #4dd072;
+  --red:       #ff5252;
+  --yellow:    #ffd166;
+  --magenta:   #c77dff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 30px;
+  border: 1px solid rgba(255,156,74,0.08);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#status-bar {
+  position: sticky;
+  top: 0;
+  height: 42px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border-2);
+  display: flex;
+  align-items: center;
+  padding: 0 26px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--fg);
+  z-index: 100;
+  gap: 18px;
+}
+#status-bar .brand    { color: var(--amber); font-weight: 700; }
+#status-bar .divider  { color: var(--fg-3); }
+#status-bar .right    { margin-left: auto; display: flex; gap: 14px; align-items: center; }
+#status-bar .tag      { color: var(--cyan); font-weight: 700; }
+#status-bar .dot      { width: 6px; height: 6px; background: var(--green); display: inline-block; border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+main {
+  position: relative;
+  z-index: 2;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 50px 36px 120px;
+}
+
+.kicker {
+  display: block;
+  width: fit-content;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  color: var(--amber);
+  margin-bottom: 18px;
+  padding: 4px 10px;
+  border: 1px solid var(--amber-d);
+  background: rgba(255,156,74,0.06);
+}
+
+h1 {
+  font-size: 54px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-bottom: 14px;
+}
+
+.subtitle {
+  font-size: 21px;
+  color: var(--cyan);
+  margin-bottom: 38px;
+}
+
+h2 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 50px 0 22px;
+  color: var(--fg);
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--amber);
+  display: inline-block;
+}
+
+h3 {
+  font-size: 21px;
+  font-weight: 600;
+  margin: 28px 0 10px;
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.01em;
+}
+
+p { margin-bottom: 12px; color: var(--fg-2); }
+p.lead { font-size: 19px; color: var(--fg); }
+
+ul, ol { margin: 10px 0 14px 26px; color: var(--fg-2); }
+li { margin-bottom: 6px; }
+
+strong { color: var(--fg); font-weight: 700; }
+em { color: var(--cyan); font-style: italic; }
+a { color: var(--cyan); text-decoration: none; border-bottom: 1px dotted var(--cyan); }
+a:hover { color: var(--amber); border-color: var(--amber); }
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg-3);
+  color: var(--amber);
+  padding: 2px 7px;
+  font-size: 0.9em;
+  border: 1px solid var(--border);
+}
+
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  padding: 18px 22px;
+  margin: 14px 0 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--fg-2);
+  overflow-x: auto;
+  position: relative;
+}
+pre::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--amber);
+}
+pre code {
+  background: transparent;
+  color: inherit;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+pre .c { color: var(--fg-3); }
+pre .s { color: var(--green); }
+pre .k { color: var(--magenta); }
+pre .t { color: var(--cyan); }
+
+.copy-wrap {
+  position: relative;
+}
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-2);
+  color: var(--fg-2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 5px 10px;
+  cursor: pointer;
+  z-index: 2;
+  transition: all 0.15s;
+}
+.copy-btn:hover { color: var(--amber); border-color: var(--amber); }
+.copy-btn.ok { color: var(--green); border-color: var(--green); }
+
+.callout {
+  border: 1px solid var(--amber);
+  background: rgba(255,156,74,0.06);
+  padding: 14px 20px;
+  margin: 18px 0;
+  font-size: 17px;
+}
+.callout.cyan   { border-color: var(--cyan); background: rgba(91,192,235,0.06); }
+.callout.green  { border-color: var(--green); background: rgba(77,208,114,0.06); }
+.callout.red    { border-color: var(--red);   background: rgba(255,82,82,0.06); }
+
+.success {
+  border-left: 4px solid var(--green);
+  background: rgba(77,208,114,0.06);
+  padding: 12px 18px;
+  margin: 14px 0;
+}
+.warning {
+  border-left: 4px solid var(--yellow);
+  background: rgba(255,209,102,0.06);
+  padding: 12px 18px;
+  margin: 14px 0;
+}
+.danger {
+  border-left: 4px solid var(--red);
+  background: rgba(255,82,82,0.06);
+  padding: 12px 18px;
+  margin: 14px 0;
+}
+
+.os-tabs {
+  display: flex;
+  gap: 0;
+  margin: 18px 0 0;
+  border-bottom: 1px solid var(--border);
+}
+.os-tab {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  padding: 12px 22px;
+  background: transparent;
+  color: var(--fg-3);
+  border: 1px solid var(--border);
+  border-bottom: 0;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+.os-tab.active {
+  color: var(--amber);
+  background: var(--bg-2);
+  border-color: var(--amber);
+  border-bottom: 1px solid var(--bg-2);
+}
+.os-panel { display: none; padding-top: 4px; }
+.os-panel.active { display: block; }
+
+.steps {
+  counter-reset: step;
+  list-style: none;
+  margin-left: 0;
+  padding-left: 0;
+}
+.steps > li {
+  counter-increment: step;
+  position: relative;
+  padding: 4px 0 4px 52px;
+  margin-bottom: 12px;
+}
+.steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-2);
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.kbd {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-2);
+  color: var(--fg);
+  padding: 2px 7px;
+  border-radius: 2px;
+}
+
+footer {
+  margin-top: 60px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-2); }
+::-webkit-scrollbar-thumb:hover { background: var(--amber); }
+
+@media (max-width: 720px) {
+  main { padding: 30px 20px 80px; }
+  h1 { font-size: 38px; }
+  h2 { font-size: 26px; }
+  .subtitle { font-size: 17px; }
+  pre { font-size: 12px; padding: 14px 16px; }
+  .copy-btn { font-size: 10px; padding: 4px 7px; }
+  body::after { inset: 12px; }
+}
+</style>
+</head>
+<body>
+
+<header id="status-bar">
+  <span class="brand">CZECHITAS</span>
+  <span class="divider">//</span>
+  <span>WORKSHOP · DEN 1, BLOK 3</span>
+  <span class="divider">//</span>
+  <span>OPENCODE SETUP</span>
+  <div class="right">
+    <span class="dot"></span>
+    <span class="tag">PŘÍPRAVA · ~15 MIN</span>
+  </div>
+</header>
+
+<main>
+
+<span class="kicker">▌ PŘÍPRAVA PŘED WORKSHOPEM</span>
+<h1>OpenCode<br>+ OpenRouter</h1>
+<p class="subtitle">Nainstaluj si <strong>doma</strong>, ať na workshopu nemusíme řešit instalaci.</p>
+
+<p class="lead">Tenhle návod tě provede instalací <strong>OpenCode</strong> (AI coding agent v terminálu) a propojením s <strong>OpenRouter</strong> (jeden účet, stovky AI modelů). Trvá to ~15 minut.</p>
+
+<div class="callout cyan">
+  <strong>👉 Předpokládá:</strong> už máš hotové prerekvizity od Kuby — Python 3.10+, OpenRouter účet a API klíč. Pokud ne, dodělej nejdřív Kubův návod.
+</div>
+
+<h2>1. Nainstaluj OpenCode</h2>
+
+<p>Vyber svůj operační systém:</p>
+
+<div class="os-tabs">
+  <button class="os-tab active" data-os="mac">▌ macOS</button>
+  <button class="os-tab" data-os="win">▌ Windows</button>
+</div>
+
+<!-- ─────────── macOS ─────────── -->
+<div class="os-panel active" data-os="mac">
+
+  <p>Otevři <strong>Terminal</strong> (najdeš v Spotlight: <span class="kbd">⌘</span> + <span class="kbd">Space</span> → napiš <code>terminal</code>).</p>
+
+  <h3>Doporučeno: Homebrew</h3>
+  <p>Pokud ještě nemáš <a href="https://brew.sh" target="_blank">Homebrew</a>, nejdřív ho nainstaluj (jednorázově):</p>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy='/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'>COPY</button>
+    <pre><code><span class="k">/bin/bash</span> -c <span class="s">"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</span></code></pre>
+  </div>
+  <p>Po instalaci ti Homebrew může napsat dvě <strong>"Next steps"</strong> hlášky s příkazy začínajícími <code>echo …</code> a <code>eval …</code> — <strong>spusť je</strong>, jinak <code>brew</code> nebude fungovat.</p>
+
+  <p>Pak nainstaluj OpenCode:</p>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy="brew install anomalyco/tap/opencode">COPY</button>
+    <pre><code><span class="k">brew</span> install anomalyco/tap/opencode</code></pre>
+  </div>
+
+  <h3>Alternativa: instalační skript (curl)</h3>
+  <p>Pokud Homebrew nechceš, jeden řádek to vyřeší:</p>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy="curl -fsSL https://opencode.ai/install | bash">COPY</button>
+    <pre><code><span class="k">curl</span> -fsSL https://opencode.ai/install <span class="k">|</span> bash</code></pre>
+  </div>
+  <p>Skript stáhne binárku a uloží ji do <code>~/.opencode/bin/opencode</code> a přidá tuto cestu do PATH (přes <code>~/.zshrc</code> nebo <code>~/.bashrc</code>). <strong>Po instalaci zavři terminál a otevři nový</strong>, aby se PATH načetl.</p>
+
+  <h3>Alternativa: npm (potřebuješ Node.js 18+)</h3>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy="npm install -g opencode-ai@latest">COPY</button>
+    <pre><code><span class="k">npm</span> install -g opencode-ai@latest</code></pre>
+  </div>
+
+  <h3>Apple Silicon (M1/M2/M3) vs Intel</h3>
+  <p>Všechny tři způsoby výše fungují na obou. Homebrew sám pozná, jaký máš procesor a stáhne správnou variantu.</p>
+
+  <h3>Ověř, že to funguje</h3>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy="opencode --version">COPY</button>
+    <pre><code><span class="k">opencode</span> --version</code></pre>
+  </div>
+  <p>Měla bys vidět něco jako <code>opencode 0.x.x</code>. Pokud terminál říká <code>command not found: opencode</code>, viz <a href="#faq-path-mac">FAQ → command not found (Mac)</a>.</p>
+
+</div>
+
+<!-- ─────────── Windows ─────────── -->
+<div class="os-panel" data-os="win">
+
+  <p>Stiskni <span class="kbd">Win</span> + <span class="kbd">X</span> → vyber <strong>"Terminal"</strong> nebo <strong>"PowerShell"</strong>. Použij ten <strong>obyčejný</strong> (ne Admin), pokud návod neřekne jinak.</p>
+
+  <div class="warning">
+    <strong>Pozor:</strong> nepoužívej <em>Command Prompt</em> (cmd.exe) — některé příkazy níže fungují jen v PowerShellu.
+  </div>
+
+  <h3>Doporučeno: Scoop</h3>
+  <p><strong>1) Nainstaluj Scoop</strong> (pokud ho ještě nemáš):</p>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy='Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser; irm get.scoop.sh | iex'>COPY</button>
+    <pre><code><span class="k">Set-ExecutionPolicy</span> -ExecutionPolicy RemoteSigned -Scope CurrentUser
+<span class="k">irm</span> get.scoop.sh <span class="k">|</span> iex</code></pre>
+  </div>
+  <p>Pokud první řádek hodí dotaz <em>"Do you want to change the execution policy?"</em> — odpověz <code>Y</code>.</p>
+
+  <p><strong>2) Nainstaluj OpenCode</strong>:</p>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy="scoop install opencode">COPY</button>
+    <pre><code><span class="k">scoop</span> install opencode</code></pre>
+  </div>
+
+  <h3>Alternativa 1: winget (předinstalovaný na Win 10/11)</h3>
+  <p>Winget máš v moderních Windows už nainstalovaný:</p>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy="winget install anomalyco.opencode">COPY</button>
+    <pre><code><span class="k">winget</span> install anomalyco.opencode</code></pre>
+  </div>
+  <p>Pokud winget hlásí, že balíček nezná, použij Scoop výše.</p>
+
+  <h3>Alternativa 2: Chocolatey</h3>
+  <p>Pokud máš <a href="https://chocolatey.org" target="_blank">Chocolatey</a>, spusť PowerShell <strong>jako administrátor</strong> (pravým kliknutím → <em>Run as administrator</em>):</p>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy="choco install opencode -y">COPY</button>
+    <pre><code><span class="k">choco</span> install opencode -y</code></pre>
+  </div>
+
+  <h3>Alternativa 3: npm (potřebuješ Node.js 18+)</h3>
+  <p>Pokud nic z výše uvedeného nefunguje, nainstaluj <a href="https://nodejs.org" target="_blank">Node.js LTS</a> a pak:</p>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy="npm install -g opencode-ai@latest">COPY</button>
+    <pre><code><span class="k">npm</span> install -g opencode-ai@latest</code></pre>
+  </div>
+
+  <h3>Ověř, že to funguje</h3>
+  <div class="copy-wrap">
+    <button class="copy-btn" data-copy="opencode --version">COPY</button>
+    <pre><code><span class="k">opencode</span> --version</code></pre>
+  </div>
+  <p>Měla bys vidět něco jako <code>opencode 0.x.x</code>. Pokud PowerShell říká, že <code>opencode</code> nezná, zavři ho a otevři <strong>nové</strong> okno (PATH se musí načíst). Pokud to po restartu okna nepomohlo, viz <a href="#faq-path-win">FAQ → command not found (Windows)</a>.</p>
+
+  <div class="warning">
+    <strong>Antivirus / Defender:</strong> občas u <code>scoop</code> nebo <code>npm</code> instalace nahlásí false-positive (typicky <em>"Trojan:Script/Wacatac"</em>). Pokud Defender soubor zablokuje, klikni <em>Allow</em> a přidej výjimku ke složce <code>%USERPROFILE%\scoop</code> (Scoop) nebo <code>%APPDATA%\npm</code> (npm).
+  </div>
+
+</div>
+
+<h2>2. Připoj OpenRouter</h2>
+
+<p>Před prvním spuštěním přihlas svůj OpenRouter klíč přímo z terminálu/PowerShellu (jednorázově):</p>
+
+<div class="copy-wrap">
+  <button class="copy-btn" data-copy="opencode auth login">COPY</button>
+  <pre><code><span class="k">opencode</span> auth login</code></pre>
+</div>
+
+<ol class="steps">
+  <li>Šipkami nahoru/dolů vyber ze seznamu <strong>OpenRouter</strong> a stiskni <span class="kbd">Enter</span>.</li>
+  <li>OpenCode tě požádá o API klíč. Vlož ten, který už máš z <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a> (z Kubova návodu) a potvrď <span class="kbd">Enter</span>.</li>
+  <li>Klíč se uloží lokálně do <code>~/.local/share/opencode/auth.json</code> (Mac/Linux) nebo <code>%USERPROFILE%\AppData\Local\opencode\auth.json</code> (Windows). <strong>Nikdy ho neposílej dál</strong> — chová se jako heslo.</li>
+</ol>
+
+<p>Ověř, že přihlášení proběhlo:</p>
+
+<div class="copy-wrap">
+  <button class="copy-btn" data-copy="opencode auth list">COPY</button>
+  <pre><code><span class="k">opencode</span> auth list</code></pre>
+</div>
+
+<p>Měla bys vidět <code>openrouter</code> v seznamu.</p>
+
+<div class="callout cyan">
+  <strong>Alternativně</strong> můžeš přihlášení udělat <em>uvnitř</em> rozhraní OpenCode přes příkaz <code>/connect</code>. Výsledek je stejný — vyber si ten způsob, který ti přijde přirozenější.
+</div>
+
+<h2>3. Spusť OpenCode poprvé</h2>
+
+<p>Vytvoř si testovací složku a otevři v ní OpenCode:</p>
+
+<div class="copy-wrap">
+  <button class="copy-btn" data-copy="mkdir opencode-test &amp;&amp; cd opencode-test &amp;&amp; opencode">COPY</button>
+  <pre><code><span class="c"># macOS / Linux</span>
+<span class="k">mkdir</span> opencode-test
+<span class="k">cd</span> opencode-test
+<span class="k">opencode</span></code></pre>
+</div>
+
+<div class="copy-wrap">
+  <button class="copy-btn" data-copy="mkdir opencode-test; cd opencode-test; opencode">COPY</button>
+  <pre><code><span class="c"># Windows PowerShell</span>
+<span class="k">mkdir</span> opencode-test
+<span class="k">cd</span> opencode-test
+<span class="k">opencode</span></code></pre>
+</div>
+
+<p>Otevře se barevné rozhraní (TUI) v terminálu. Pokud jsi přeskočila krok 2, OpenCode tě teď donutí připojit providera.</p>
+
+<div class="callout">
+  <strong>Klávesy uvnitř OpenCode:</strong>
+  <ul style="margin-top:8px;">
+    <li><span class="kbd">Tab</span> — přepínání mezi <em>build</em> (full-access) a <em>plan</em> (read-only) agentem</li>
+    <li><span class="kbd">Ctrl</span> + <span class="kbd">C</span> (2×) nebo <code>/exit</code> — zavřít OpenCode</li>
+    <li><code>/help</code> — zobrazit všechny příkazy</li>
+  </ul>
+</div>
+
+<h3>Vyber model</h3>
+
+<p>Uvnitř OpenCode napiš:</p>
+
+<div class="copy-wrap">
+  <button class="copy-btn" data-copy="/models">COPY</button>
+  <pre><code><span class="k">/models</span></code></pre>
+</div>
+
+<p>Otevře se seznam dostupných modelů. <strong>Konkrétní model pro workshop ti řekne Kuba na začátku</strong> — pro teď stačí, že seznam vidíš a můžeš si v něm libovolný model vybrat.</p>
+
+<div class="callout cyan">
+  <strong>Tip:</strong> OpenRouter má i bezplatné modely (najdeš je v seznamu jako <code>:free</code>). Pro setup a smoke test úplně stačí.
+</div>
+
+<h2>4. Smoke test 🚦</h2>
+
+<p>Pořád v OpenCode (po <code>/connect</code> a <code>/models</code>), do hlavního chatu napiš:</p>
+
+<div class="copy-wrap">
+  <button class="copy-btn" data-copy="Napiš krátký Python skript, který spočítá kolik je 2+2 a vypíše výsledek.">COPY</button>
+  <pre><code>Napiš krátký Python skript, který spočítá kolik je 2+2 a vypíše výsledek.</code></pre>
+</div>
+
+<p>Pokud OpenCode:</p>
+
+<div class="success">
+  <strong>✅ Vytvořil <code>main.py</code></strong> a navrhl ti ho spustit — <strong>všechno funguje</strong>. Hotovo, můžeš zavřít okno.
+</div>
+
+<div class="danger">
+  <strong>❌ Hodil chybu</strong> — typicky <code>401 Unauthorized</code> (špatný klíč, znovu <code>opencode auth login</code>) nebo <code>402 / insufficient credits</code> (vybraný model není free, vyber jiný přes <code>/models</code>). Detaily v <a href="#faq-path-mac">FAQ</a>.
+</div>
+
+<h2>5. Co s tím dál?</h2>
+
+<p>Na workshopu (Den 1, blok 3 — <em>OpenCode hands-on, AGENTS.md, skills</em>) budeme:</p>
+
+<ul>
+  <li>Ukazovat, jak agent <strong>používá nástroje</strong> (čte soubory, spouští příkazy)</li>
+  <li>Stavět <strong>SKILL.md</strong> — soubor s pravidly, který agentovi řekne <em>"takhle pracuju já"</em></li>
+  <li>Stáhneš si svůj SKILL.md a uložíš do <code>~/.claude/skills/sql-review/</code> — <strong>OpenCode ho z téhle složky čte automaticky</strong> (kompatibilita s Claude Code)</li>
+</ul>
+
+<div class="callout green">
+  <strong>👍 Hotovo!</strong> Pokud máš <code>opencode --version</code>, propojený OpenRouter a smoke test prošel — jsi nachystaná. Uvidíme se 26.&nbsp;5. v 18:00.
+</div>
+
+<h2>FAQ — nejčastější problémy</h2>
+
+<h3 id="faq-path-mac">macOS: terminál říká <code>command not found: opencode</code></h3>
+<p>PATH nezná cestu k binárce. Tři kroky v pořadí:</p>
+<ol>
+  <li><strong>Zavři terminál a otevři nový.</strong> 90 % případů to vyřeší.</li>
+  <li>Pokud ne, zkontroluj kde binárka je:
+    <div class="copy-wrap">
+      <button class="copy-btn" data-copy="ls -la ~/.opencode/bin/opencode /opt/homebrew/bin/opencode /usr/local/bin/opencode 2>/dev/null">COPY</button>
+      <pre><code><span class="k">ls</span> -la ~/.opencode/bin/opencode /opt/homebrew/bin/opencode /usr/local/bin/opencode <span class="k">2&gt;</span>/dev/null</code></pre>
+    </div>
+    Aspoň jedna z těch cest by měla existovat.
+  </li>
+  <li>Přidej cestu ručně do shellu (zsh = default na moderních Macích):
+    <div class="copy-wrap">
+      <button class="copy-btn" data-copy='echo &apos;export PATH="$HOME/.opencode/bin:$PATH"&apos; >> ~/.zshrc &amp;&amp; source ~/.zshrc'>COPY</button>
+      <pre><code><span class="k">echo</span> <span class="s">'export PATH="$HOME/.opencode/bin:$PATH"'</span> <span class="k">&gt;&gt;</span> ~/.zshrc
+<span class="k">source</span> ~/.zshrc</code></pre>
+    </div>
+  </li>
+</ol>
+
+<h3 id="faq-path-win">Windows: PowerShell říká <code>opencode : The term … is not recognized</code></h3>
+<p>Stejný problém — PATH ještě neví, kde binárka leží. Postup:</p>
+<ol>
+  <li><strong>Zavři PowerShell, otevři nové okno.</strong></li>
+  <li>Pokud i tak nezná, najdi binárku:
+    <div class="copy-wrap">
+      <button class="copy-btn" data-copy="Get-ChildItem -Path $env:USERPROFILE -Filter opencode.exe -Recurse -ErrorAction SilentlyContinue | Select-Object FullName">COPY</button>
+      <pre><code><span class="k">Get-ChildItem</span> -Path <span class="t">$env:USERPROFILE</span> -Filter opencode.exe -Recurse <span class="k">-ErrorAction</span> SilentlyContinue <span class="k">|</span> <span class="k">Select-Object</span> FullName</code></pre>
+    </div>
+  </li>
+  <li>Když najdeš cestu (např. <code>C:\Users\Tvé Jméno\scoop\apps\opencode\current\opencode.exe</code>), přidej její složku do uživatelské PATH:
+    <p style="font-size:14px;color:var(--fg-3);"><em>Win+R → <code>sysdm.cpl</code> → Advanced → Environment Variables → User variables → vyber <strong>Path</strong> → Edit → New → vlož cestu (BEZ <code>opencode.exe</code> na konci) → OK ×3 → restart PowerShellu.</em></p>
+  </li>
+</ol>
+
+<h3>Windows: <code>scoop : The term 'scoop' is not recognized</code></h3>
+<p>Po instalaci Scoopu je potřeba zavřít a znovu otevřít PowerShell. Pokud ani potom Scoop nefunguje, pravděpodobně se neinstaloval — spusť instalační příkaz znovu a všimni si chybové hlášky.</p>
+
+<h3>Windows: PowerShell hlásí <code>running scripts is disabled</code></h3>
+<p>Spusť toto a odpověz <code>Y</code>:</p>
+<div class="copy-wrap">
+  <button class="copy-btn" data-copy="Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser">COPY</button>
+  <pre><code><span class="k">Set-ExecutionPolicy</span> -ExecutionPolicy RemoteSigned -Scope CurrentUser</code></pre>
+</div>
+
+<h3>Windows: Defender / antivirus zablokoval instalaci</h3>
+<p>OpenCode binárka občas spustí false-positive (nejčastěji <em>"Trojan:Script/Wacatac.B!ml"</em>). Postup:</p>
+<ol>
+  <li>Otevři Windows Security → Virus &amp; threat protection → Protection history</li>
+  <li>Najdi blokovaný soubor → <em>Actions</em> → <em>Allow</em></li>
+  <li>Pokud chceš preventivně: <em>Manage settings</em> → <em>Add or remove exclusions</em> → <em>Add an exclusion</em> → <em>Folder</em> → vyber <code>%USERPROFILE%\scoop</code></li>
+</ol>
+
+<h3>macOS: <code>"opencode" cannot be opened because the developer cannot be verified</code></h3>
+<p>Gatekeeper. Otevři <strong>System Settings</strong> → <strong>Privacy &amp; Security</strong>, scrolluj dolů, klikni <em>"Open Anyway"</em> u zablokovaného souboru. Pokud to dělá u OpenCode binárky stažené přes <code>curl</code>, alternativně:</p>
+<div class="copy-wrap">
+  <button class="copy-btn" data-copy="xattr -d com.apple.quarantine ~/.opencode/bin/opencode">COPY</button>
+  <pre><code><span class="k">xattr</span> -d com.apple.quarantine ~/.opencode/bin/opencode</code></pre>
+</div>
+
+<h3>Při přihlášení: <code>401 Unauthorized</code> nebo <code>Invalid API key</code></h3>
+<ul>
+  <li>Zkontroluj, že máš správný klíč z <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a> (začíná na <code>sk-or-v1-…</code>)</li>
+  <li>Klíč musí mít aspoň jednu povolenou kategorii v OpenRouter dashboardu</li>
+  <li>Zkus znovu: <code>opencode auth logout</code> → <code>opencode auth login</code></li>
+</ul>
+
+<h3>Při chatování: <code>402 Payment required</code> nebo <code>insufficient credits</code></h3>
+<p>Vybraný model není free. Otevři <code>/models</code> a vyber model označený <code>:free</code> — nebo se zeptej Kuby, který model na workshopu používáme.</p>
+
+<h3>Při chatování: <code>429 Too Many Requests</code></h3>
+<p>Hit rate limit free tieru. Počkej minutu a zkus znovu.</p>
+
+<h3>Při chatování: <code>This model is not available</code> / model error</h3>
+<p>OpenRouter dynamicky nabízí různé modely. Pokud zrovna není dostupný, otevři <code>/models</code> v OpenCode a vyber jiný free model.</p>
+
+<h3>Doma jsem za firemním proxy / VPN / Zscalerem</h3>
+<p>Pokud instalace selhává s chybou typu <code>self-signed certificate in certificate chain</code> nebo <code>SSL: CERTIFICATE_VERIFY_FAILED</code>, jsi pravděpodobně za firmemním firewallem.</p>
+<div class="danger">
+  <strong>Doporučení:</strong> na workshop přijď z <strong>osobního počítače</strong>, ne pracovního. Setup za korporátní sítí ti sebere víc času, než celý workshop.
+</div>
+<p>Pokud osobní počítač nemáš, zkus mobilní hotspot — instalace většinou potřebuje internet jen jednou.</p>
+
+<h3>Mám Windows 7 / 8 / Windows na ARM</h3>
+<p>Win 7/8 oficiálně nepodporujeme — nainstaluj si Win 10/11 (zdarma upgrade) nebo přijď s Macem. Windows na ARM (Surface Pro X) by měl fungovat, ale není testovaný.</p>
+
+<h3>Mám starý Mac (Intel, 10.14 nebo starší)</h3>
+<p>OpenCode potřebuje macOS 11+ (Big Sur). Starší verze updatuj, nebo pokud nejde, OpenCode prostě nepoběží.</p>
+
+<h3>Mám Linux</h3>
+<p>Funguje. Použij <code>curl</code> instalátor nebo (Arch) <code>sudo pacman -S opencode</code>. Pokud máš Ubuntu/Debian, nejjednodušší je curl.</p>
+
+<h3>Musím dobíjet kredit na OpenRouter?</h3>
+<p><strong>Ne</strong> — pro workshop budeme používat free modely (registrace přes Google/GitHub stačí, žádná karta). Free tier má rate limity, ale na workshop bohatě vystačí.</p>
+
+<h3>Můžu místo OpenCode použít Claude Code / Cursor / GitHub Copilot?</h3>
+<p>Pro samotný workshop je <strong>OpenCode doporučená volba</strong> (open-source, kompatibilní s OpenRouter). Skills, které postavíme (<code>~/.claude/skills/</code>), čte taky Claude Code i GitHub Copilot — takže to, co si odneseš domů, ti bude fungovat i jinde. Ale na workshop přijď s OpenCode, abychom byli na stejné vlně.</p>
+
+<h3>Můžu OpenCode používat bez OpenRouter?</h3>
+<p>Ano — OpenCode podporuje OpenAI, Anthropic, Google, Groq, lokální Ollama atd. Ale pro workshop budeme používat OpenRouter, protože ho nakonfiguroval Kuba a všichni budeme mít stejné prostředí.</p>
+
+<h3>Jak smažu OpenCode, když ho nebudu chtít</h3>
+<ul>
+  <li><strong>Mac (brew):</strong> <code>brew uninstall opencode</code></li>
+  <li><strong>Mac (curl):</strong> <code>opencode uninstall</code> nebo smaž <code>~/.opencode/</code></li>
+  <li><strong>Windows (Scoop):</strong> <code>scoop uninstall opencode</code></li>
+  <li><strong>Windows (npm):</strong> <code>npm uninstall -g opencode-ai</code></li>
+</ul>
+<p>Auth klíč smažeš příkazem <code>opencode auth logout</code> nebo ručně smazáním <code>~/.local/share/opencode/auth.json</code> (Mac) / <code>%USERPROFILE%\AppData\Local\opencode\auth.json</code> (Win).</p>
+
+<h3>Aktualizace OpenCode</h3>
+<div class="copy-wrap">
+  <button class="copy-btn" data-copy="opencode upgrade">COPY</button>
+  <pre><code><span class="k">opencode</span> upgrade</code></pre>
+</div>
+<p>Funguje pro <code>brew</code>, <code>curl</code> i <code>npm</code> instalace. Doporučujeme spustit <strong>tento týden</strong>, ať na workshopu máš nejnovější verzi.</p>
+
+<h3>Něco jiného se rozbilo</h3>
+<p>Napiš mi na <a href="mailto:ilia.shalkin@accenture.com">ilia.shalkin@accenture.com</a> s:</p>
+<ul>
+  <li>Operačním systémem (Mac M1/Intel/verze, Win 10/11)</li>
+  <li>Příkazem, který selhal</li>
+  <li>Chybovou hláškou (screenshot stačí)</li>
+</ul>
+<p>Vyřešíme to <strong>před</strong> začátkem, ne během. ⏰</p>
+
+<footer>
+  CZECHITAS · AI/MCP/EVALS WORKSHOP · 26–27 KVĚTNA 2026
+</footer>
+
+</main>
+
+<script>
+// OS tabs
+document.querySelectorAll('.os-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const os = btn.dataset.os;
+    document.querySelectorAll('.os-tab').forEach(b => b.classList.toggle('active', b.dataset.os === os));
+    document.querySelectorAll('.os-panel').forEach(p => p.classList.toggle('active', p.dataset.os === os));
+  });
+});
+
+// Auto-detect OS
+(function() {
+  const ua = navigator.userAgent;
+  if (/Windows/i.test(ua)) {
+    document.querySelector('.os-tab[data-os="win"]').click();
+  } else if (/Mac/i.test(ua)) {
+    document.querySelector('.os-tab[data-os="mac"]').click();
+  }
+})();
+
+// Copy buttons
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const text = btn.dataset.copy;
+    try {
+      await navigator.clipboard.writeText(text);
+      const orig = btn.textContent;
+      btn.textContent = 'COPIED ✓';
+      btn.classList.add('ok');
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.classList.remove('ok');
+      }, 1500);
+    } catch (e) {
+      btn.textContent = 'PRESS CTRL+C';
+    }
+  });
+});
+</script>
+
+</body>
+</html>
