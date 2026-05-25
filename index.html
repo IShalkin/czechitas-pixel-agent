@@ -36,7 +36,7 @@
   .toggle-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
   .toggle-row label { flex: 1; cursor: pointer; }
   .toggle-row input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
-  .stage-wrap { background: #2a2520; border-radius: 4px; padding: 6px; }
+  .stage-wrap { background: transparent; padding: 0; }
   .stage-row {
     display: grid;
     grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
@@ -48,7 +48,7 @@
     .stage-row { grid-template-columns: 1fr; }
   }
   canvas#stage { display: block; image-rendering: pixelated; image-rendering: crisp-edges;
-    width: 100%; height: auto; background: #000; }
+    width: 100%; height: auto; background: transparent; }
   .log {
     background: #1a1814; color: #e8d8b8; padding: 12px;
     font-family: var(--mono); font-size: 11px; border-radius: 4px;
@@ -725,19 +725,19 @@ function draw() {
   drawWhiteboard();
 
   // floor labels (one per station, pill below the station y baseline)
-  ctx.font = "bold 7px ui-monospace, monospace";
+  ctx.font = "bold 9px ui-monospace, monospace";
   ctx.textAlign = "center";
   for (const [k, s] of Object.entries(STATIONS)) {
     if (k === "start") continue;
-    const w = ctx.measureText(s.label).width + 6;
+    const w = Math.ceil(ctx.measureText(s.label).width) + 8;
     const py = s.y + 14;
     ctx.fillStyle = "rgba(253, 250, 245, 0.95)";
-    ctx.fillRect(s.x - w / 2, py, w, 9);
+    ctx.fillRect(s.x - w / 2, py, w, 12);
     ctx.strokeStyle = "rgba(212, 69, 47, 0.8)";
     ctx.lineWidth = 1;
-    ctx.strokeRect(s.x - w / 2 + 0.5, py + 0.5, w - 1, 8);
+    ctx.strokeRect(s.x - w / 2 + 0.5, py + 0.5, w - 1, 11);
     ctx.fillStyle = "#1a1814";
-    ctx.fillText(s.label, s.x, py + 7);
+    ctx.fillText(s.label, s.x, py + 9);
   }
   ctx.textAlign = "start";
 
@@ -902,7 +902,7 @@ function drawDbMonitor() {
 // to the LEFT of the agent (same orientation as the other stations).
 function drawWhiteboard() {
   const s = STATIONS.board;
-  const w = 50, h = 36;
+  const w = 58, h = 40;
   const bx = Math.round(s.x - w - 6);
   const by = Math.round(s.y - h - 6);
 
@@ -927,9 +927,9 @@ function drawWhiteboard() {
 
   // title
   ctx.fillStyle = "#1a1814";
-  ctx.font = "bold 6px ui-monospace, monospace";
+  ctx.font = "bold 8px ui-monospace, monospace";
   ctx.textAlign = "center";
-  ctx.fillText("DASHBOARD", bx + w / 2, by + 7);
+  ctx.fillText("DASHBOARD", bx + w / 2, by + 9);
 
   // baseline
   const baseY = by + h - 5;
@@ -1078,15 +1078,15 @@ function drawTeacher() {
   }
 
   // floor pill label "TEACHER"
-  ctx.font = "bold 7px ui-monospace, monospace";
+  ctx.font = "bold 9px ui-monospace, monospace";
   ctx.textAlign = "center";
   const lab = "evals.json";
-  const lw = ctx.measureText(lab).width + 6;
-  const ly = y + 14;
+  const lw = Math.ceil(ctx.measureText(lab).width) + 8;
+  const ly = y + 16;
   ctx.fillStyle = "#fdfaf5";
-  ctx.fillRect(x - lw / 2, ly - 6, lw, 9);
+  ctx.fillRect(x - lw / 2, ly - 8, lw, 12);
   ctx.strokeStyle = "#2a3858";
-  ctx.strokeRect(x - lw / 2 + 0.5, ly - 5.5, lw - 1, 8);
+  ctx.strokeRect(x - lw / 2 + 0.5, ly - 7.5, lw - 1, 11);
   ctx.fillStyle = "#2a3858";
   ctx.fillText(lab, x, ly);
   ctx.textAlign = "start";
@@ -1101,7 +1101,7 @@ function drawReportCard() {
   if (!state.reportCard) return;
   const card = state.reportCard;
   const s = STATIONS.board;
-  const w = 156, lh = 11, headH = 16, padTop = 4, padBot = 6;
+  const w = 184, lh = 13, headH = 19, padTop = 4, padBot = 6;
   const h = headH + padTop + card.lines.length * lh + padBot;
   // anchor so the right edge of the card sits 6px from the canvas edge,
   // and the card floats above the dashboard (whiteboard top sits ~y-46)
@@ -1121,42 +1121,42 @@ function drawReportCard() {
   ctx.fillStyle = "#2a3858";
   ctx.fillRect(bx, by, w, headH);
   ctx.fillStyle = "#fdfaf5";
-  ctx.font = "bold 9px ui-monospace, monospace";
+  ctx.font = "bold 10px ui-monospace, monospace";
   ctx.textAlign = "left";
-  ctx.fillText("evals.json", bx + 4, by + 11);
-  ctx.font = "7px ui-monospace, monospace";
-  ctx.fillText("actual vs expected", bx + 64, by + 11);
+  ctx.fillText("evals.json", bx + 5, by + 13);
+  ctx.font = "8px ui-monospace, monospace";
+  ctx.fillText("actual vs expected", bx + 76, by + 13);
 
   // column headers
-  ctx.font = "7px ui-monospace, monospace";
+  ctx.font = "8px ui-monospace, monospace";
   ctx.fillStyle = "#8a8478";
-  ctx.fillText("ACTUAL",   bx + 60, by + headH + 3);
-  ctx.fillText("EXPECTED", bx + 110, by + headH + 3);
+  ctx.fillText("ACTUAL",   bx + 70, by + headH + 4);
+  ctx.fillText("EXPECTED", bx + 128, by + headH + 4);
 
   // rows
-  ctx.font = "8px ui-monospace, monospace";
+  ctx.font = "9px ui-monospace, monospace";
   card.lines.forEach((ln, i) => {
     const ly = by + headH + padTop + i * lh + 4;
     ctx.fillStyle = "#1a1814";
-    ctx.fillText(ln.label, bx + 4, ly + 4);
+    ctx.fillText(ln.label, bx + 5, ly + 4);
     // actual
     let col = "#1a1814";
     if (ln.status === "fail") col = "#d4452f";
     else if (ln.status === "pass") col = "#3a7a3a";
     else if (ln.status === "skip") col = "#8a8478";
     ctx.fillStyle = col;
-    ctx.fillText(ln.actual ?? "—", bx + 60, ly + 4);
+    ctx.fillText(ln.actual ?? "—", bx + 70, ly + 4);
     ctx.fillStyle = "#1a1814";
-    ctx.fillText(ln.expected ?? "—", bx + 110, ly + 4);
+    ctx.fillText(ln.expected ?? "—", bx + 128, ly + 4);
     // marker on far right
     let mark = "·", mcol = "#bba";
     if (ln.status === "pass") { mark = "✓"; mcol = "#3a7a3a"; }
     else if (ln.status === "fail") { mark = "✗"; mcol = "#d4452f"; }
     else if (ln.status === "skip") { mark = "–"; mcol = "#bba"; }
     ctx.fillStyle = mcol;
-    ctx.font = "bold 9px ui-monospace, monospace";
-    ctx.fillText(mark, bx + w - 10, ly + 5);
-    ctx.font = "8px ui-monospace, monospace";
+    ctx.font = "bold 11px ui-monospace, monospace";
+    ctx.fillText(mark, bx + w - 12, ly + 5);
+    ctx.font = "9px ui-monospace, monospace";
   });
   ctx.textAlign = "start";
 }
@@ -1172,7 +1172,7 @@ function drawRecipeCard() {
   if (!state.recipeCard) return;
   const s = STATIONS.skill;
   const lines = state.recipeCard.lines;
-  const w = 130, lh = 11, headH = 16, padTop = 4, padBot = 6;
+  const w = 150, lh = 13, headH = 18, padTop = 4, padBot = 6;
   const h = headH + padTop + lines.length * lh + padBot;
   // float above and to the right of the lectern, clear of agent's head
   const bx = Math.round(s.x - 8);
@@ -1206,37 +1206,37 @@ function drawRecipeCard() {
   ctx.fillStyle = "#d4452f";
   ctx.fillRect(bx, by, w, headH);
   ctx.fillStyle = "#fdfaf5";
-  ctx.font = "bold 9px ui-monospace, monospace";
+  ctx.font = "bold 10px ui-monospace, monospace";
   ctx.textAlign = "left";
-  ctx.fillText("SKILL.md", bx + 4, by + 11);
-  ctx.font = "7px ui-monospace, monospace";
-  ctx.fillText("instrukce / recept", bx + 56, by + 11);
+  ctx.fillText("SKILL.md", bx + 5, by + 13);
+  ctx.font = "8px ui-monospace, monospace";
+  ctx.fillText("instrukce / recept", bx + 64, by + 13);
 
   // numbered step lines with [ ] checkboxes that fill in
-  ctx.font = "8px ui-monospace, monospace";
+  ctx.font = "9px ui-monospace, monospace";
   lines.forEach((ln, i) => {
     const ly = by + headH + padTop + i * lh;
     // step number
     ctx.fillStyle = "#8a8478";
-    ctx.fillText((i + 1) + ".", bx + 4, ly + 8);
+    ctx.fillText((i + 1) + ".", bx + 5, ly + 9);
     // checkbox
-    const cx = bx + 16, cy = ly + 1;
+    const cx = bx + 18, cy = ly + 1;
     ctx.fillStyle = "#fdfaf5";
-    ctx.fillRect(cx, cy, 8, 8);
+    ctx.fillRect(cx, cy, 9, 9);
     ctx.strokeStyle = "#1a1814";
-    ctx.strokeRect(cx + 0.5, cy + 0.5, 7, 7);
+    ctx.strokeRect(cx + 0.5, cy + 0.5, 8, 8);
     // mark inside checkbox
     let mark = "", col = "#1a1814";
     if      (ln.status === "pass") { mark = "✓"; col = "#3a7a3a"; }
     else if (ln.status === "fail") { mark = "✗"; col = "#d4452f"; }
     else if (ln.status === "skip") { mark = "–"; col = "#bba"; }
     ctx.fillStyle = col;
-    ctx.font = "bold 8px ui-monospace, monospace";
-    ctx.fillText(mark, cx + 1, cy + 7);
+    ctx.font = "bold 9px ui-monospace, monospace";
+    ctx.fillText(mark, cx + 1, cy + 8);
     // label
-    ctx.font = "8px ui-monospace, monospace";
+    ctx.font = "9px ui-monospace, monospace";
     ctx.fillStyle = (ln.status === "skip") ? "#bba" : "#1a1814";
-    ctx.fillText(ln.text, cx + 12, ly + 8);
+    ctx.fillText(ln.text, cx + 14, ly + 9);
   });
 }
 
@@ -1250,13 +1250,13 @@ function drawToolbox() {
   ];
   // vertical column of 3 chips above the chest — clearer + no horizontal overlap
   // chest sits LEFT of agent → chest center ≈ s.x - 21
-  const chipW = 60, chipH = 12, gap = 2;
+  const chipW = 78, chipH = 14, gap = 2;
   const totalH = chipH * 3 + gap * 2;
   const chestCenterX = s.x - 21;
   const bx = Math.round(chestCenterX - chipW / 2);
-  const by = Math.round(s.y - 12 - totalH - 32); // sit above chest, well above agent head
+  const by = Math.round(s.y - 12 - totalH - 34); // sit above chest, well above agent head
 
-  ctx.font = "bold 7px ui-monospace, monospace";
+  ctx.font = "bold 9px ui-monospace, monospace";
   ctx.textAlign = "center";
   tools.forEach((t, i) => {
     const cy = by + i * (chipH + gap);
@@ -1322,10 +1322,10 @@ function drawAgent() {
 }
 
 function drawBubble(b) {
-  ctx.font = "bold 8px ui-monospace, monospace";
+  ctx.font = "bold 10px ui-monospace, monospace";
   const lines = (b.text || "").split("\n");
-  const padding = 4;
-  const lh = 9;
+  const padding = 5;
+  const lh = 11;
   let textW = 0;
   for (const ln of lines) textW = Math.max(textW, ctx.measureText(ln).width);
   const w = Math.ceil(textW) + padding * 2;
