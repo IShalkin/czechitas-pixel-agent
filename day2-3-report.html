@@ -360,6 +360,63 @@ td code, th code { font-size: 0.95em; }
   color: var(--cyan);
   word-break: break-all;
 }
+
+/* SPEAKER MODE */
+#speaker-panel {
+  display: none;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 38vh;
+  background: rgba(5, 8, 16, 0.97);
+  border-top: 2px solid var(--cyan);
+  padding: 18px 36px 24px;
+  z-index: 200;
+  overflow-y: auto;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--fg-2);
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 -20px 40px rgba(0,0,0,0.5);
+}
+body.speaker-mode #speaker-panel { display: block; }
+#speaker-panel .sp-header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--cyan);
+  border-bottom: 1px solid var(--border-2);
+  padding-bottom: 10px;
+}
+#speaker-panel .sp-header .sp-time { margin-left: auto; color: var(--amber); }
+#speaker-panel .sp-content { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+#speaker-panel h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--amber); margin: 0 0 6px; font-weight: 600;
+}
+#speaker-panel .opener {
+  background: rgba(91,192,235,0.08);
+  border-left: 3px solid var(--cyan);
+  padding: 10px 14px; margin-bottom: 14px;
+  font-style: italic; color: var(--fg); font-size: 18px;
+}
+#speaker-panel ul { margin: 0 0 12px 18px; font-size: 16px; }
+#speaker-panel ul li { margin-bottom: 4px; }
+#speaker-panel .qa {
+  background: var(--bg-3); border: 1px solid var(--border);
+  padding: 10px 14px; font-size: 15px;
+}
+#speaker-panel .qa strong { color: var(--amber); }
+#speaker-panel .next-up {
+  background: rgba(255,156,74,0.05);
+  border: 1px solid var(--amber-d);
+  padding: 10px 14px; font-size: 15px; color: var(--fg-3);
+}
+#speaker-panel .next-up strong {
+  color: var(--amber); display: block; margin-bottom: 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em;
+}
 </style>
 </head>
 <body>
@@ -625,15 +682,114 @@ td code, th code { font-size: 0.95em; }
 </main>
 
 <div id="progress"></div>
-<div id="nav-hint"><kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>F</kbd> fullscreen · <kbd>Home</kbd>/<kbd>End</kbd> jump</div>
+<div id="nav-hint"><kbd>←</kbd> <kbd>→</kbd> · <kbd>F</kbd> fullscreen · <kbd>N</kbd> notes</div>
+
+<aside id="speaker-panel" aria-hidden="true">
+  <div class="sp-header">
+    <span>🎤 Speaker notes</span>
+    <span id="sp-slide-num">001 / 006</span>
+    <span class="sp-time" id="sp-time"></span>
+  </div>
+  <div class="sp-content" id="sp-content"></div>
+</aside>
 
 <script>
 (function () {
   const slides = Array.from(document.querySelectorAll('.slide'));
   const counter = document.getElementById('counter');
   const progress = document.getElementById('progress');
+  const spSlideNum = document.getElementById('sp-slide-num');
+  const spTime = document.getElementById('sp-time');
+  const spContent = document.getElementById('sp-content');
   const pad = n => String(n).padStart(3, '0');
+
+  // 6 slides: title, recap+seed, pipeline, live demo, trap reveal, resources
+  const notes = [
+    { // 01 Title
+      time: '00:00',
+      opener: '„Před chvílí jste s Tánou nainstalovaly MCP. Před 24 hodinami jsme měly skill. Teď to spojíme."',
+      beats: [
+        'Slot 30 min: 5 min recap → 5 min pipeline → 15 min live demo → 5 min trap → 5 min wrap-up.',
+        'Cíl: holky uvidí, že přirozený jazyk + skill + MCP = funkční dashboard.',
+        'NEslibuj „použijeme váš domácí skill" — žádný nemají.'
+      ],
+      qa: { q: 'Co když live demo padne?', a: 'Mám záložní HTML report v repo. Otevřu ho a projdu jak vznikl.' },
+      nextUp: 'Recap — kde jsme.'
+    },
+    { // 02 Recap + seed
+      time: '01:00',
+      opener: '„Včera pravidla. Před chvílí data. Teď oboje."',
+      beats: [
+        'Yellow callout: zaseje pochybnost o datech. Holky zbystří před demem.',
+        'Vyřkněte FRÁZI: „v reálných datech bývají pasti — sledujte čísla". Tím natáhnete past.',
+        'Reveal pak v slidu 5 — COUNTRY_DIRTYDATA = 408 zemí. Kontrast s pravdou (~195).'
+      ],
+      qa: { q: 'Co je dirty data?', a: 'Tabulka, kde má někdo náhodou nasypal duplicity nebo nesmysly. Realita každého data warehouse.' },
+      nextUp: 'Pipeline — co se za 3 minuty stane.'
+    },
+    { // 03 Pipeline
+      time: '03:00',
+      opener: '„Teď uvidíte 4 kroky, které se stanou mezi „Vygeneruj mi report" a HTML souborem."',
+      beats: [
+        'NL → skill → MCP → HTML. Holky to musí vidět ROZBALENÉ aspoň jednou.',
+        'Highlight: skill udává tón a strukturu. MCP udává data. Spolu = dashboard.',
+        'Skill_html_report_generation.md je reálný — odkaz dám v Discordu.'
+      ],
+      qa: { q: 'Tohle všechno musím psát ručně?', a: 'Ne. Skill napíšeš jednou. Pak stačí říct „udělej report" — agent všechno spojí.' },
+      nextUp: 'Live demo — pojďme do agenta.'
+    },
+    { // 04 Live demo
+      time: '07:00',
+      opener: '„Teď přejdu do OpenCode. Sledujte panel s notes — řeknu co se kde děje."',
+      beats: [
+        'Cribsheet je na slidu — kdyby agent nereagoval, čti pomalu.',
+        'Komentuj kroky NAHLAS. „Teď zavolal list_tables. Teď zvolil COUNTRY_DIRTYDATA — toho si všimnu později."',
+        'Když to padá: stříhni v 18. minutě, ukaž záložní HTML, jeď dál.'
+      ],
+      qa: { q: 'Můžu tohle dělat na Macu?', a: 'Ano. OpenCode je multiplatformní. Skill je obyčejný markdown.' },
+      nextUp: 'Trap reveal — pozorná oka uvidí 408 zemí.'
+    },
+    { // 05 Trap reveal
+      time: '22:00',
+      opener: '„Počkejte. Tady něco nesedí. 408 zemí — kolik jich na světě je?"',
+      beats: [
+        'Pauzu. Nech holky odpovědět („195"). Z auditoria.',
+        'COUNTRY_DIRTYDATA má duplicity. Skill tu past nezachytil — protože nemá eval.',
+        'To je most ke Kubovu bloku 2.4. „Skill = recept. Eval = ochutnávač."'
+      ],
+      qa: { q: 'Proč to skill nezachytil?', a: 'Protože je to RECEPT. Recept neochutnává. Eval ochutnává. Zítra to dělá Kuba.' },
+      nextUp: 'Resources — 3 demo URL pro doma.'
+    },
+    { // 06 Resources
+      time: '26:00',
+      opener: '„Tři demo URL. Otevři si je dneska večer před spaním."',
+      beats: [
+        '01 Pixel Agent — vizualizace toho co se právě stalo.',
+        '02 Stack Trace — 5 vrstev kontextu rozbalených.',
+        '03 Skill Builder — postav si svůj.',
+        'Všechno přístupné z hlavní landing: ishalkin.github.io/czechitas-pixel-agent.'
+      ],
+      qa: { q: 'Co když chci jít hloub?', a: 'Stack Trace ti ukáže, co všechno se děje pod kapotou. Po hodinách hraní s tím porozumíš celému stacku.' },
+      nextUp: 'Konec mé části. Předávám Kubovi (Evals).'
+    }
+  ];
+
   let current = 0;
+
+  function renderNotes(i) {
+    const n = notes[i] || {};
+    spSlideNum.textContent = `${pad(i + 1)} / ${pad(slides.length)}`;
+    spTime.textContent = n.time ? `⏱ ${n.time}` : '';
+    spContent.innerHTML = `
+      <div class="sp-main">
+        ${n.opener ? `<div class="opener">${n.opener}</div>` : ''}
+        ${n.beats && n.beats.length ? `<h4>Klíčové body</h4><ul>${n.beats.map(b => `<li>${b}</li>`).join('')}</ul>` : ''}
+        ${n.qa ? `<div class="qa"><strong>Q:</strong> ${n.qa.q}<br><strong>A:</strong> ${n.qa.a}</div>` : ''}
+      </div>
+      <div class="sp-side">
+        ${n.nextUp ? `<div class="next-up"><strong>↳ Dál</strong>${n.nextUp}</div>` : ''}
+      </div>`;
+  }
 
   function show(i) {
     i = Math.max(0, Math.min(slides.length - 1, i));
@@ -642,6 +798,7 @@ td code, th code { font-size: 0.95em; }
     progress.style.width = `${((i + 1) / slides.length) * 100}%`;
     location.hash = `#${i + 1}`;
     current = i;
+    renderNotes(i);
   }
 
   const initial = parseInt(location.hash.replace('#', ''), 10);
@@ -656,6 +813,9 @@ td code, th code { font-size: 0.95em; }
     else if (e.key === 'f' || e.key === 'F') {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
+      e.preventDefault();
+    } else if (e.key === 'n' || e.key === 'N') {
+      document.body.classList.toggle('speaker-mode');
       e.preventDefault();
     }
   });

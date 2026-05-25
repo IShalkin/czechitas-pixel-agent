@@ -532,6 +532,98 @@ td code, th code { font-size: 0.95em; }
   padding: 6px 12px;
   margin: 4px 0;
 }
+
+/* ============================================================
+   SPEAKER MODE — toggle with N key, popup with P key
+   ============================================================ */
+.speaker-notes { display: none; }
+
+#speaker-panel {
+  display: none;
+  position: fixed;
+  left: 0; right: 0;
+  bottom: 0;
+  height: 38vh;
+  background: rgba(5, 8, 16, 0.97);
+  border-top: 2px solid var(--cyan);
+  padding: 18px 36px 24px;
+  z-index: 200;
+  overflow-y: auto;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--fg-2);
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 -20px 40px rgba(0,0,0,0.5);
+}
+body.speaker-mode #speaker-panel { display: block; }
+body.speaker-mode #status-bar::after {
+  content: '🎤 SPEAKER MODE — press N to hide';
+  margin-left: auto;
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+}
+
+#speaker-panel .sp-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--cyan);
+  border-bottom: 1px solid var(--border-2);
+  padding-bottom: 10px;
+}
+#speaker-panel .sp-header .sp-time {
+  margin-left: auto;
+  color: var(--amber);
+}
+#speaker-panel .sp-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+#speaker-panel h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--amber);
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+#speaker-panel .opener {
+  background: rgba(91,192,235,0.08);
+  border-left: 3px solid var(--cyan);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-style: italic;
+  color: var(--fg);
+  font-size: 18px;
+}
+#speaker-panel ul {
+  margin: 0 0 12px 18px;
+  font-size: 16px;
+}
+#speaker-panel ul li { margin-bottom: 4px; }
+#speaker-panel .qa {
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  padding: 10px 14px;
+  font-size: 15px;
+}
+#speaker-panel .qa strong { color: var(--amber); }
+#speaker-panel .next-up {
+  background: rgba(255,156,74,0.05);
+  border: 1px solid var(--amber-d);
+  padding: 10px 14px;
+  font-size: 15px;
+  color: var(--fg-3);
+}
+#speaker-panel .next-up strong { color: var(--amber); display: block; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; }
 </style>
 </head>
 <body>
@@ -1008,7 +1100,17 @@ td code, th code { font-size: 0.95em; }
 <div id="progress"></div>
 
 <!-- ============ NAV HINT ============ -->
-<div id="nav-hint"><kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>F</kbd> fullscreen · <kbd>Home</kbd>/<kbd>End</kbd> jump</div>
+<div id="nav-hint"><kbd>←</kbd> <kbd>→</kbd> · <kbd>F</kbd> fullscreen · <kbd>N</kbd> notes</div>
+
+<!-- ============ SPEAKER PANEL ============ -->
+<aside id="speaker-panel" aria-hidden="true">
+  <div class="sp-header">
+    <span>🎤 Speaker notes</span>
+    <span id="sp-slide-num">001 / 011</span>
+    <span class="sp-time" id="sp-time"></span>
+  </div>
+  <div class="sp-content" id="sp-content"></div>
+</aside>
 
 <!-- ============ JAVASCRIPT ============ -->
 <script>
@@ -1016,9 +1118,154 @@ td code, th code { font-size: 0.95em; }
   const slides = Array.from(document.querySelectorAll('.slide'));
   const counter = document.getElementById('counter');
   const progress = document.getElementById('progress');
+  const spSlideNum = document.getElementById('sp-slide-num');
+  const spTime = document.getElementById('sp-time');
+  const spContent = document.getElementById('sp-content');
   const pad = n => String(n).padStart(3, '0');
 
+  // ============ SPEAKER NOTES ============
+  // 11 slides. Each: opener (literal first sentence), beats (2-4 talking points),
+  // qa (likely question + my answer), nextUp (segue to next slide), time (where on the clock)
+  const notes = [
+    { // 01 Title
+      time: '00:00',
+      opener: '„Tak — předtím Kuba ukázal, jak agent funguje. Teď uvidíš, jak ho přizpůsobit svým návykům."',
+      beats: [
+        'Klid. Žádný setup live. Setup byl domácí úkol z 1.2.',
+        'Slot 30 min: 5 slidů context, 25 min hands-on (Skill Builder).',
+        'Cíl: každá odejde s alespoň 1 vlastním skillem.'
+      ],
+      qa: { q: 'Co když jsem OpenCode neinstalovala?', a: 'Půjde to v párech. Skill Builder je v prohlížeči — zvládneš i bez OpenCode.' },
+      nextUp: 'Slovníček — 5 pojmů v 1 větě.'
+    },
+    { // 02 Slovníček
+      time: '00:30',
+      opener: '„Než se pohneme — pět slov, která dnes uslyšíš. Když se v nich někdy ztratíš, vrať se na slide 02."',
+      beats: [
+        'Rozdíl AGENTS.md (projekt) vs SKILL.md (úkol) — to je klíč celého bloku.',
+        'MCP a Eval = teaser. Dnes je nepotřebujeme. Zítra s Tánou.',
+        'Holkám řekni: „Toto je vaše záchranná síť — kdykoliv se ztratíte, jste na slide 02."'
+      ],
+      qa: { q: 'A co prompt? Není to taky skill?', a: 'Ne — prompt je co řekneš teď. Skill je co děláš pořád. Vrátíme se k tomu na slide 06.' },
+      nextUp: 'Coding agent v 60 s — pro lidi co Kubu měli mlhavě.'
+    },
+    { // 03 Coding agent v 60s
+      time: '01:30',
+      opener: '„Coding agent — chatbot v terminálu, který vidí tvůj kód a umí ho měnit. Nic víc."',
+      beats: [
+        'Tři jména stejný princip: OpenCode (dnes), Claude Code, Copilot CLI.',
+        'Klíč: NE webový chat. Spuštěn ve složce projektu, sahá do souborů.',
+        'Důvěra: ty schvaluješ změny. Nic se neděje samo.'
+      ],
+      qa: { q: 'Proč ne ChatGPT?', a: 'ChatGPT nevidí tvůj projekt. Coding agent ano. To je celý rozdíl.' },
+      nextUp: 'AGENTS.md — první soubor co napíšeš.'
+    },
+    { // 04 AGENTS.md
+      time: '02:30',
+      opener: '„Než začneš agentovi cokoliv zadávat — řekni mu, kdo jsi a kde je."',
+      beats: [
+        '/init = OpenCode si projde repo a navrhne AGENTS.md. Ty jen schválíš.',
+        'Píše se jednou, čte při každém spuštění.',
+        'Pravidlo: cokoliv bys řekla nováčkovi v týmu první den, patří sem.'
+      ],
+      qa: { q: 'Musím psát AGENTS.md ručně?', a: 'Ne. /init udělá draft za 30 sekund, ty ho upravíš.' },
+      nextUp: 'WOW — proč skill vůbec.'
+    },
+    { // 05 WOW
+      time: '03:30',
+      opener: '„Stejný agent. Stejný dotaz. Jiný výsledek. Pojďme se podívat proč."',
+      beats: [
+        'Levá strana = bez skillu. TEROR2_OLD je deprecated, sloupec `victims` neexistuje, chybí GROUP BY.',
+        'Pravá = se skillem sql-review. Agent ZASTAVÍ — vysvětlí proč ne.',
+        'Zdůrazni: skill nepřepisuje SQL. Skill kontroluje pravidla DŘÍV.'
+      ],
+      qa: { q: 'Kde se skill bere?', a: 'Píšeš ho ty (s pomocí Skill Builderu). Markdown soubor v ~/.claude/skills/.' },
+      nextUp: 'Anatomie SKILL.md — to nejtechničtější dnes.'
+    },
+    { // 06 Anatomie
+      time: '05:00',
+      opener: '„Toto je celý SKILL.md. Markdown — žádné JSON, žádný kód, žádný framework."',
+      beats: [
+        'Frontmatter (mezi ---) říká KDY. description je spouštěč.',
+        'Tělo říká JAK. Pravidla v lidské řeči.',
+        'Toto je jediná YAML věc dnes. Pamatuj si: name + description + ---. Zbytek je čeština.'
+      ],
+      qa: { q: 'Proč zrovna YAML?', a: 'Dohoda Anthropic. Ale píšeš to v Skill Builderu — generátor to udělá za tebe.' },
+      nextUp: 'Vrstvy — kam skill patří v ekosystému.'
+    },
+    { // 07 Vrstvy / prompt vs config vs skill
+      time: '07:00',
+      opener: '„Začátečnická chyba: všechno nazývat prompt. Ale máme vrstvy."',
+      beats: [
+        'Tabulka má sloupec „Kdy" — ● dnes / ○ zítra. Holky vidí scope.',
+        'Dnes řešíme 3 horní vrstvy. MCP a Evals jsou zítřejší.',
+        'Pointa: vrstvy se DOPLŇUJÍ. Skill ≠ lepší prompt. Skill je workflow.'
+      ],
+      qa: { q: 'Kde končí AGENTS.md a začíná SKILL.md?', a: 'AGENTS.md = pravidla projektu. SKILL.md = pravidla úkolu. Doplňují se.' },
+      nextUp: 'Context engineering — co agent vůbec vidí.'
+    },
+    { // 08 Context engineering
+      time: '09:00',
+      opener: '„Agent odpovídá podle toho, co má v kontextu. Nic víc, nic míň."',
+      beats: [
+        'Analogie: nový kolega první den. Dáš mu zadání, pravidla, návod, nástroje.',
+        'Skill je JEDNA z těch věcí. Ne všechno.',
+        'Takhle se dá debugovat: „Agent žvaní? Co mu chybí na stole?"'
+      ],
+      qa: { q: 'Proč nestačí dát mu jen prompt?', a: 'Protože pak hádá. Schema, pravidla, příklady — to vše je kontext.' },
+      nextUp: 'Portable napříč nástroji.'
+    },
+    { // 09 Portable
+      time: '11:00',
+      opener: '„Skill je obyčejný Markdown. Změníš nástroj — skill jde s tebou."',
+      beats: [
+        'Stejný soubor v ~/.claude/skills/ čte OpenCode, Claude Code, Copilot, Cursor.',
+        'Žádná migrace, žádný vendor lock.',
+        'Git ho verzuje, kolega přečte, AI použije.'
+      ],
+      qa: { q: 'Funguje to opravdu všude?', a: 'V mainstream nástrojích ano. Anthropic skill spec se de facto stal standardem.' },
+      nextUp: 'Hands-on — teď stavíme.'
+    },
+    { // 10 Hands-on
+      time: '12:00',
+      opener: '„Otevřete prohlížeč. ishalkin.github.io/czechitas-skill-builder. Tam to celé proběhne."',
+      beats: [
+        '5 kroků: Builder → ZIP → ~/.claude/skills/ → opencode → před/po.',
+        'Cca 25 min na všechno. Když někdo zaspí, soused pomůže.',
+        'Stříhej hands-on tvrdě v 28. minutě, jinak nestihneš Day 2 teaser.'
+      ],
+      qa: { q: 'Co když mi opencode padá?', a: 'Skill Builder ti vygeneruje SKILL.md i tak — uvidíš anatomii. OpenCode dořešíme po skupinkách.' },
+      nextUp: 'Wrap-up + ДЗ.'
+    },
+    { // 11 Day 2 teaser
+      time: '28:00',
+      opener: '„Dneska jsme dali agentovi pravidla. Zítra mu dáme data."',
+      beats: [
+        'NEslibuj „plug your homework skill into MCP" — holky nebudou mít skill na Day 2.',
+        'ДЗ je PASIVNÍ: čti, klikni, sepiš nápady. 20-30 min, ne víc.',
+        'Konkrétně: 2-3 věci k automatizaci, z práce I z domova. To dá Day 2 ownership.'
+      ],
+      qa: { q: 'Mám něco připravit do zítřka konkrétně?', a: 'Ne kód. Jen seznam co bys chtěla automatizovat. Z toho zítra vybereme.' },
+      nextUp: 'Q&A → handoff Tana (security 1.4).'
+    }
+  ];
+
   let current = 0;
+
+  function renderNotes(i) {
+    const n = notes[i] || {};
+    spSlideNum.textContent = `${pad(i + 1)} / ${pad(slides.length)}`;
+    spTime.textContent = n.time ? `⏱ ${n.time}` : '';
+    spContent.innerHTML = `
+      <div class="sp-main">
+        ${n.opener ? `<div class="opener">${n.opener}</div>` : ''}
+        ${n.beats && n.beats.length ? `<h4>Klíčové body</h4><ul>${n.beats.map(b => `<li>${b}</li>`).join('')}</ul>` : ''}
+        ${n.qa ? `<div class="qa"><strong>Q:</strong> ${n.qa.q}<br><strong>A:</strong> ${n.qa.a}</div>` : ''}
+      </div>
+      <div class="sp-side">
+        ${n.nextUp ? `<div class="next-up"><strong>↳ Dál</strong>${n.nextUp}</div>` : ''}
+      </div>`;
+  }
 
   function show(i) {
     i = Math.max(0, Math.min(slides.length - 1, i));
@@ -1027,6 +1274,7 @@ td code, th code { font-size: 0.95em; }
     progress.style.width = `${((i + 1) / slides.length) * 100}%`;
     location.hash = `#${i + 1}`;
     current = i;
+    renderNotes(i);
   }
 
   const initial = parseInt(location.hash.replace('#', ''), 10);
@@ -1045,6 +1293,9 @@ td code, th code { font-size: 0.95em; }
     } else if (e.key === 'f' || e.key === 'F') {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
+      e.preventDefault();
+    } else if (e.key === 'n' || e.key === 'N') {
+      document.body.classList.toggle('speaker-mode');
       e.preventDefault();
     }
   });

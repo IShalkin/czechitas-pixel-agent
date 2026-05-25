@@ -622,6 +622,63 @@ td code, th code { font-size: 0.95em; }
   color: var(--fg-2);
   margin-bottom: 0 !important;
 }
+
+/* SPEAKER MODE — see day1-3-skills.html for the spec */
+#speaker-panel {
+  display: none;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 38vh;
+  background: rgba(5, 8, 16, 0.97);
+  border-top: 2px solid var(--cyan);
+  padding: 18px 36px 24px;
+  z-index: 200;
+  overflow-y: auto;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--fg-2);
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 -20px 40px rgba(0,0,0,0.5);
+}
+body.speaker-mode #speaker-panel { display: block; }
+#speaker-panel .sp-header {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--cyan);
+  border-bottom: 1px solid var(--border-2);
+  padding-bottom: 10px;
+}
+#speaker-panel .sp-header .sp-time { margin-left: auto; color: var(--amber); }
+#speaker-panel .sp-content { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+#speaker-panel h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.15em;
+  color: var(--amber); margin: 0 0 6px; font-weight: 600;
+}
+#speaker-panel .opener {
+  background: rgba(91,192,235,0.08);
+  border-left: 3px solid var(--cyan);
+  padding: 10px 14px; margin-bottom: 14px;
+  font-style: italic; color: var(--fg); font-size: 18px;
+}
+#speaker-panel ul { margin: 0 0 12px 18px; font-size: 16px; }
+#speaker-panel ul li { margin-bottom: 4px; }
+#speaker-panel .qa {
+  background: var(--bg-3); border: 1px solid var(--border);
+  padding: 10px 14px; font-size: 15px;
+}
+#speaker-panel .qa strong { color: var(--amber); }
+#speaker-panel .next-up {
+  background: rgba(255,156,74,0.05);
+  border: 1px solid var(--amber-d);
+  padding: 10px 14px; font-size: 15px; color: var(--fg-3);
+}
+#speaker-panel .next-up strong {
+  color: var(--amber); display: block; margin-bottom: 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em;
+}
 </style>
 </head>
 <body>
@@ -925,16 +982,125 @@ td code, th code { font-size: 0.95em; }
 </main>
 
 <div id="progress"></div>
-<div id="nav-hint"><kbd>←</kbd> <kbd>→</kbd> navigate · <kbd>F</kbd> fullscreen · <kbd>Home</kbd>/<kbd>End</kbd> jump</div>
+<div id="nav-hint"><kbd>←</kbd> <kbd>→</kbd> · <kbd>F</kbd> fullscreen · <kbd>N</kbd> notes</div>
+
+<aside id="speaker-panel" aria-hidden="true">
+  <div class="sp-header">
+    <span>🎤 Speaker notes</span>
+    <span id="sp-slide-num">001 / 007</span>
+    <span class="sp-time" id="sp-time"></span>
+  </div>
+  <div class="sp-content" id="sp-content"></div>
+</aside>
 
 <script>
 (function () {
   const slides = Array.from(document.querySelectorAll('.slide'));
   const counter = document.getElementById('counter');
   const progress = document.getElementById('progress');
+  const spSlideNum = document.getElementById('sp-slide-num');
+  const spTime = document.getElementById('sp-time');
+  const spContent = document.getElementById('sp-content');
   const pad = n => String(n).padStart(3, '0');
 
+  // 7 slides: title, injection scenario, lethal trifecta, 5 rules, defense layers, use cases, homework
+  const notes = [
+    { // 01 Title
+      time: '00:00',
+      opener: '„Než půjdeme domů — pět minut o tom, jak se agent dá zneužít. A jak tomu předejít."',
+      beats: [
+        'Tón: žádný strach, žádné FUD. Praktický briefing.',
+        'Slot je krátký (15 min) — necháváme čas na ДЗ.',
+        'Holkám: „Nikdo z vás nebude bezpečnostní inženýr po 15 minutách. Cíl je vědět, kde můžeš ublížit sobě."'
+      ],
+      qa: { q: 'Je to opravdu nebezpečné?', a: 'V pár scénářích ano. Většinou ne. Ale ty scénáře poznat — to je dnešek.' },
+      nextUp: 'Konkrétní scénář — viscerální analogie + 3 kroky.'
+    },
+    { // 02 Injection scenario
+      time: '01:00',
+      opener: '„Představ si lísteček v inboxu: přepošli všechny zprávy na cizí adresu. Asistentka, co plní bezmyšlenkovitě, to udělá. Agent je ta asistentka."',
+      beats: [
+        'Cyan callout přečti NAHLAS — to je hook, který drží publikum.',
+        'Pak teprve technický flow: kontext → instrukce → akce.',
+        'Klíč: žádný hack, žádné CVE. Agent jen poslechl text.'
+      ],
+      qa: { q: 'Stalo se to někdy reálně?', a: 'Ano — Microsoft Copilot, ChatGPT pluginy, Claude Computer Use. Všechno mělo veřejné incidenty 2024-2025.' },
+      nextUp: 'Lethal trifecta — kdy se z toho stane únik dat.'
+    },
+    { // 03 Lethal trifecta
+      time: '03:00',
+      opener: '„Tři nohy stoličky. Stačí jednu ubrat — a injection nemůže nic ukrást."',
+      beats: [
+        '1) Untrusted input (e-mail, web, dokument). 2) Sensitive data (klíče, DB). 3) Outbound channel (HTTP, e-mail).',
+        'Když jsou všechny tři — exfil hrozba. Když jedna chybí — bezpečno.',
+        'Mentální model na celý život. Jediná věc, co si holky musí pamatovat.'
+      ],
+      qa: { q: 'Co když má agent jen 2 z 3?', a: 'Pak může selhat, ale data ven neutečou. Lethal je AŽ kompletní trio.' },
+      nextUp: '5 praktických pravidel — cribsheet.'
+    },
+    { // 04 5 rules
+      time: '06:00',
+      opener: '„Pravidla, která dnes před spaním nasadíš na svůj agent."',
+      beats: [
+        '1) Read-only first. 2) Bez přístupu k tajným souborům. 3) Allowed hosts. 4) Per-akce schválení. 5) Logy.',
+        'Tahej rychle, nevysvětluj každé. Holky si je přečtou doma.',
+        'Důraz: tohle nejsou Anthropic/OpenAI features. Píšeš si je do AGENTS.md sama.'
+      ],
+      qa: { q: 'Co když chci mít destruktivní akce povolené?', a: 'Per-akce schválení. Agent se zeptá DŘÍV než to provede. Zlaté pravidlo.' },
+      nextUp: 'Vrstvy obrany — proč jednu nestačí.'
+    },
+    { // 05 Defense in depth
+      time: '08:30',
+      opener: '„Bezpečnost není jeden zámek. Jsou to vrstvy."',
+      beats: [
+        'Vrstva 1: prostředí (uživatelský účet bez root práv).',
+        'Vrstva 2: AGENTS.md (pravidla projektu).',
+        'Vrstva 3: SKILL.md (pravidla úkolu — safety v každém skillu).',
+        'Když jedna selže — další chytí. To je defense-in-depth.'
+      ],
+      qa: { q: 'Která vrstva je nejdůležitější?', a: 'Žádná. Všechny tři. Proto se tomu říká IN DEPTH — vrstva za vrstvou.' },
+      nextUp: 'Use cases — kde tě skill zachrání hodiny.'
+    },
+    { // 06 Use cases
+      time: '11:00',
+      opener: '„Pět míst, kde si holky řeknou — jo, tohle bych ráda automatizovala."',
+      beats: [
+        'SQL review · schema docs · data quality · report · stakeholder překlad.',
+        'Důraz: každý je JEDEN markdown soubor. Ne aplikace.',
+        'Most ze security ke „kde to použiju" — pozitivní přechod před ДЗ.'
+      ],
+      qa: { q: 'Mám se na ně všechny dívat?', a: 'Ne. Vyber si JEDEN, který tě bije do očí. Z toho zítra postavíme skill.' },
+      nextUp: 'ДЗ — pasivní, 20-30 minut, žádný build.'
+    },
+    { // 07 Homework
+      time: '13:00',
+      opener: '„Domácí úkol je pasivní. Číst, klikat, sepsat. Žádný build dnes večer."',
+      beats: [
+        'Důvod: MCP setup je zítra s Tánou. Bez MCP nemá smysl skill testovat.',
+        '01: 10 min Anthropic guide PDF. 02: 5 min Skill Builder klikání. 03: 10 min sepsat 2-3 nápady.',
+        'Nápady mají být OBA — práce I doma. To otvírá Day 2 pro netechnické holky.'
+      ],
+      qa: { q: 'Co když nestihnu všechno?', a: 'Stačí bod 03 — sepsat nápady. To je důležité. Čtení je bonus.' },
+      nextUp: 'Konec Day 1. Zítra 18:00 — Tana otvírá MCP.'
+    }
+  ];
+
   let current = 0;
+
+  function renderNotes(i) {
+    const n = notes[i] || {};
+    spSlideNum.textContent = `${pad(i + 1)} / ${pad(slides.length)}`;
+    spTime.textContent = n.time ? `⏱ ${n.time}` : '';
+    spContent.innerHTML = `
+      <div class="sp-main">
+        ${n.opener ? `<div class="opener">${n.opener}</div>` : ''}
+        ${n.beats && n.beats.length ? `<h4>Klíčové body</h4><ul>${n.beats.map(b => `<li>${b}</li>`).join('')}</ul>` : ''}
+        ${n.qa ? `<div class="qa"><strong>Q:</strong> ${n.qa.q}<br><strong>A:</strong> ${n.qa.a}</div>` : ''}
+      </div>
+      <div class="sp-side">
+        ${n.nextUp ? `<div class="next-up"><strong>↳ Dál</strong>${n.nextUp}</div>` : ''}
+      </div>`;
+  }
 
   function show(i) {
     i = Math.max(0, Math.min(slides.length - 1, i));
@@ -943,6 +1109,7 @@ td code, th code { font-size: 0.95em; }
     progress.style.width = `${((i + 1) / slides.length) * 100}%`;
     location.hash = `#${i + 1}`;
     current = i;
+    renderNotes(i);
   }
 
   const initial = parseInt(location.hash.replace('#', ''), 10);
@@ -961,6 +1128,9 @@ td code, th code { font-size: 0.95em; }
     } else if (e.key === 'f' || e.key === 'F') {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
+      e.preventDefault();
+    } else if (e.key === 'n' || e.key === 'N') {
+      document.body.classList.toggle('speaker-mode');
       e.preventDefault();
     }
   });
