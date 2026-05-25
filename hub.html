@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Czechitas · Workshop AI agentů · Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a0e14;
+  --bg-2:      #11161f;
+  --bg-3:      #1a212c;
+  --border:    #232c3a;
+  --border-2:  #2d3849;
+  --fg:        #eaf0f7;
+  --fg-2:      #b8c4d4;
+  --fg-3:      #7c8898;
+  --amber:     #ff9c4a;
+  --cyan:      #5bc0eb;
+  --green:     #4dd072;
+  --red:       #ff5252;
+  --yellow:    #ffd166;
+  --magenta:   #c77dff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#status-bar {
+  position: sticky;
+  top: 0;
+  height: 42px;
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border-2);
+  display: flex;
+  align-items: center;
+  padding: 0 26px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--fg);
+  z-index: 100;
+  gap: 26px;
+}
+#status-bar .brand    { color: var(--amber); font-weight: 700; }
+#status-bar .divider  { color: var(--fg-3); }
+#status-bar .right    { margin-left: auto; display: flex; gap: 18px; align-items: center; color: var(--fg-3); }
+#status-bar .dot      { width: 6px; height: 6px; background: var(--green); display: inline-block; border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+main {
+  position: relative;
+  z-index: 2;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 60px 32px 100px;
+}
+
+.hero {
+  margin-bottom: 64px;
+}
+.hero .kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--amber);
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid var(--amber);
+  background: rgba(255, 156, 74, 0.08);
+  margin-bottom: 24px;
+}
+.hero h1 {
+  font-size: 56px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+.hero h1 em {
+  color: var(--cyan);
+  font-style: normal;
+}
+.hero .lead {
+  font-size: 21px;
+  color: var(--fg-2);
+  max-width: 760px;
+  line-height: 1.5;
+}
+
+.day {
+  margin-bottom: 72px;
+}
+.day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+  margin-bottom: 28px;
+}
+.day-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--bg);
+  background: var(--amber);
+  padding: 4px 12px;
+}
+.day h2 {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.day .when {
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.block-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 800px) { .block-grid { grid-template-columns: 1fr; } }
+
+.block {
+  display: block;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  padding: 22px 24px;
+  text-decoration: none;
+  color: var(--fg);
+  transition: border-color 0.18s, transform 0.18s;
+  position: relative;
+}
+.block:hover {
+  border-color: var(--amber);
+  transform: translateY(-2px);
+}
+.block.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.block .row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.block .id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--cyan);
+}
+.block .time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--fg-3);
+  margin-left: auto;
+}
+.block .owner {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--fg-3);
+}
+.block h3 {
+  font-size: 21px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  line-height: 1.25;
+}
+.block .desc {
+  font-size: 14px;
+  color: var(--fg-2);
+  line-height: 1.5;
+}
+.block .arrow {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  color: var(--fg-3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  transition: color 0.18s, transform 0.18s;
+}
+.block:hover .arrow {
+  color: var(--amber);
+  transform: translateX(4px);
+}
+.block.cyan .id    { color: var(--cyan); }
+.block.amber .id   { color: var(--amber); }
+.block.green .id   { color: var(--green); }
+.block.magenta .id { color: var(--magenta); }
+
+.demos {
+  margin-bottom: 72px;
+}
+.demos h2 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.demos .sub {
+  font-size: 15px;
+  color: var(--fg-3);
+  margin-bottom: 22px;
+}
+.demos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 900px) { .demos-grid { grid-template-columns: 1fr; } }
+
+.setup {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
+  padding: 26px 30px;
+}
+.setup h2 {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.setup p {
+  font-size: 15px;
+  color: var(--fg-2);
+  margin-bottom: 16px;
+}
+.setup a.btn {
+  display: inline-block;
+  background: var(--green);
+  color: var(--bg);
+  padding: 10px 22px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: transform 0.15s;
+}
+.setup a.btn:hover {
+  transform: translateY(-1px);
+}
+
+footer {
+  margin-top: 80px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--fg-3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+footer a { color: var(--cyan); text-decoration: none; }
+footer a:hover { color: var(--amber); }
+</style>
+</head>
+<body>
+
+<div id="status-bar">
+  <span class="brand">CZECHITAS</span>
+  <span class="divider">/</span>
+  <span>WORKSHOP AI AGENTŮ</span>
+  <span class="divider">/</span>
+  <span style="color: var(--cyan);">HUB</span>
+  <div class="right">
+    <span class="dot"></span>
+    <span>26–27 KVĚTNA 2026</span>
+  </div>
+</div>
+
+<main>
+
+  <div class="hero">
+    <span class="kicker">DVOUDENNÍ WORKSHOP</span>
+    <h1>Holky, agenti, <em>a jeden Markdown soubor</em>.</h1>
+    <p class="lead">
+      Všechny prezentace, dema a setup guide na jednom místě. Klikni na to, co zrovna potřebuješ — během workshopu nebo doma po něm.
+    </p>
+  </div>
+
+  <!-- DAY 1 -->
+  <section class="day">
+    <div class="day-head">
+      <span class="day-tag">DEN 1</span>
+      <h2>Úterý — od promptu ke skill-em</h2>
+      <span class="when">26. 5. 2026</span>
+    </div>
+
+    <div class="block-grid">
+      <a class="block cyan" href="#" style="opacity: 0.5; pointer-events: none;">
+        <span class="arrow">—</span>
+        <div class="row">
+          <span class="id">DEN 1 · BLOK 01</span>
+          <span class="time">09:00 → 10:30</span>
+        </div>
+        <h3>Úvod do AI agentů</h3>
+        <div class="desc">Co je agent, jak se liší od chatu, proč právě teď. <span class="owner">Vede: Kuba (Apify)</span></div>
+      </a>
+
+      <a class="block amber" href="#" style="opacity: 0.5; pointer-events: none;">
+        <span class="arrow">—</span>
+        <div class="row">
+          <span class="id">DEN 1 · BLOK 02</span>
+          <span class="time">11:00 → 12:30</span>
+        </div>
+        <h3>Coding agenti & Apify</h3>
+        <div class="desc">Coding agenti v praxi, ekosystém. <span class="owner">Vede: Kuba (Apify)</span></div>
+      </a>
+
+      <a class="block cyan" href="day1-3-skills.html">
+        <span class="arrow">→</span>
+        <div class="row">
+          <span class="id">DEN 1 · BLOK 03</span>
+          <span class="time">14:00 → 15:30</span>
+        </div>
+        <h3>OpenCode + Skills</h3>
+        <div class="desc">Stejný agent, stejný dotaz, jiný výsledek. Anatomie SKILL.md, vrstvy promptu, AGENTS.md, kontext engineering.</div>
+      </a>
+
+      <a class="block amber" href="day1-4-security.html">
+        <span class="arrow">→</span>
+        <div class="row">
+          <span class="id">DEN 1 · BLOK 04</span>
+          <span class="time">16:00 → 17:30</span>
+        </div>
+        <h3>Security + use cases + ДЗ</h3>
+        <div class="desc">Smrtelná trojka. Prompt injection (lísteček v dopisu). Use cases. Domácí úkol na večer.</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- DAY 2 -->
+  <section class="day">
+    <div class="day-head">
+      <span class="day-tag">DEN 2</span>
+      <h2>Středa — MCP, evals, report</h2>
+      <span class="when">27. 5. 2026</span>
+    </div>
+
+    <div class="block-grid">
+      <a class="block magenta" href="#" style="opacity: 0.5; pointer-events: none;">
+        <span class="arrow">—</span>
+        <div class="row">
+          <span class="id">DEN 2 · BLOK 01</span>
+          <span class="time">09:00 → 10:30</span>
+        </div>
+        <h3>MCP setup</h3>
+        <div class="desc">Připojení Snowflake MCP do agenta. <span class="owner">Vede: Tana</span></div>
+      </a>
+
+      <a class="block magenta" href="#" style="opacity: 0.5; pointer-events: none;">
+        <span class="arrow">—</span>
+        <div class="row">
+          <span class="id">DEN 2 · BLOK 02</span>
+          <span class="time">11:00 → 12:30</span>
+        </div>
+        <h3>Hands-on s daty</h3>
+        <div class="desc">První dotazy přes MCP, evals. <span class="owner">Vede: Tana</span></div>
+      </a>
+
+      <a class="block green" href="day2-3-report.html">
+        <span class="arrow">→</span>
+        <div class="row">
+          <span class="id">DEN 2 · BLOK 03</span>
+          <span class="time">14:00 → 15:30</span>
+        </div>
+        <h3>Report z přirozeného jazyka</h3>
+        <div class="desc">Jeden prompt → HTML dashboard. Skill + MCP + evals v akci. Past s COUNTRY_DIRTYDATA.</div>
+      </a>
+
+      <a class="block amber" href="#" style="opacity: 0.5; pointer-events: none;">
+        <span class="arrow">—</span>
+        <div class="row">
+          <span class="id">DEN 2 · BLOK 04</span>
+          <span class="time">16:00 → 17:30</span>
+        </div>
+        <h3>Wrap-up + co dál</h3>
+        <div class="desc">Závěr, otázky, jak pokračovat doma. <span class="owner">Společně</span></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- DEMOS -->
+  <section class="demos">
+    <h2>Live dema</h2>
+    <p class="sub">Klikací sandbox, který používáme během prezentací — můžeš si je pustit i sama.</p>
+    <div class="demos-grid">
+      <a class="block cyan" href="index.html">
+        <span class="arrow">→</span>
+        <div class="row">
+          <span class="id">DEMO · PIXEL AGENT</span>
+        </div>
+        <h3>Office walkthrough</h3>
+        <div class="desc">Pixel-art agent prochází 5 stanic. Zapínej / vypínej skill, MCP, evals — sleduj, co se rozbije.</div>
+      </a>
+      <a class="block magenta" href="https://ishalkin.github.io/czechitas-stack-trace/" target="_blank" rel="noopener">
+        <span class="arrow">↗</span>
+        <div class="row">
+          <span class="id">DEMO · STACK TRACE</span>
+        </div>
+        <h3>X-ray 5 vrstev</h3>
+        <div class="desc">Stejných 5 vrstev abstrahovaně — chat nahoře, x-ray dole. Bridge to action: stáhni si AGENTS.md / SKILL.md / mcp.json.</div>
+      </a>
+      <a class="block green" href="https://ishalkin.github.io/czechitas-skill-builder/" target="_blank" rel="noopener">
+        <span class="arrow">↗</span>
+        <div class="row">
+          <span class="id">DEMO · SKILL BUILDER</span>
+        </div>
+        <h3>Vyrob si vlastní skill</h3>
+        <div class="desc">Coloring book pro SKILL.md. Klikneš pravidla, vygeneruje ti to soubor připravený do <code>~/.claude/skills/</code>.</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- SETUP -->
+  <section class="setup">
+    <h2>Setup před workshopem</h2>
+    <p>OpenCode + OpenRouter + první spuštění. Cca 10 minut. Udělej před úterním ránem, ať jedeme z plynulého startu.</p>
+    <a class="btn" href="opencode-setup.html">Otevři setup guide →</a>
+  </section>
+
+  <footer>
+    <span>WORKSHOP · ČESKÝ JAZYK · 2026</span>
+    <span>STISKNI <strong>N</strong> V LIBOVOLNÉM DECKU PRO SPEAKER MODE</span>
+    <span><a href="https://github.com/IShalkin/czechitas-pixel-agent" target="_blank" rel="noopener">GITHUB →</a></span>
+  </footer>
+
+</main>
+
+</body>
+</html>
