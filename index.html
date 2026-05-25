@@ -18,7 +18,7 @@
   html, body { margin: 0; padding: 0; background: var(--cream); color: var(--fg);
     font-family: -apple-system, "Segoe UI", system-ui, sans-serif; }
   body { min-height: 100vh; padding: 20px; }
-  .wrap { max-width: 1200px; margin: 0 auto; }
+  .wrap { max-width: 1440px; margin: 0 auto; }
   h1 { font-family: var(--serif); font-weight: 400; font-size: 36px; margin: 0 0 4px; }
   .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
   .layout { display: grid; grid-template-columns: 220px 1fr; gap: 20px; }
@@ -36,21 +36,21 @@
   .toggle-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
   .toggle-row label { flex: 1; cursor: pointer; }
   .toggle-row input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
-  .stage-wrap { background: #2a2520; border-radius: 4px; padding: 16px; }
+  .stage-wrap { background: #2a2520; border-radius: 4px; padding: 6px; }
   .stage-row {
     display: grid;
-    grid-template-columns: minmax(0, 512px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
     gap: 14px;
     align-items: stretch;
   }
-  .stage-col { display: flex; flex-direction: column; gap: 10px; }
+  .stage-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
   @media (max-width: 980px) {
     .stage-row { grid-template-columns: 1fr; }
   }
   canvas#stage { display: block; image-rendering: pixelated; image-rendering: crisp-edges;
-    width: 100%; height: auto; max-width: 1440px; background: #000; }
+    width: 100%; height: auto; background: #000; }
   .log {
-    background: #1a1814; color: #e8d8b8; padding: 12px; margin-top: 12px;
+    background: #1a1814; color: #e8d8b8; padding: 12px;
     font-family: var(--mono); font-size: 11px; border-radius: 4px;
     height: 140px; overflow-y: auto;
   }
@@ -103,6 +103,13 @@
   .full-dashboard.warn .bar-fill { background: #d8a93a; }
   .full-dashboard.fail .bar-fill { background: #7a3030; }
   .dash-bar-row .value { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; }
+  .dash-bar-row.dup .country { color: #7a3030; font-weight: 500; }
+  .dash-bar-row.dup .bar-fill { background: repeating-linear-gradient(45deg, #d4452f, #d4452f 4px, #f4847a 4px, #f4847a 8px) !important; }
+  .dup-tag {
+    font-style: normal; font-family: var(--mono); font-size: 10px;
+    background: #fbe6e1; color: #7a3030; border: 1px solid #d4452f;
+    border-radius: 99px; padding: 1px 6px; margin-left: 6px; vertical-align: middle;
+  }
   @keyframes dash-bar-grow {
     from { transform: scaleX(0); }
     to   { transform: scaleX(1); }
@@ -390,6 +397,7 @@
             <button id="btn-run">Run scenario</button>
             <button id="btn-reset" class="ghost">Reset</button>
           </div>
+          <div id="log" class="log"><div class="line">[idle] click "Run scenario" to start</div></div>
         </div>
 
         <div id="db-terminal" class="db-terminal idle">
@@ -410,13 +418,11 @@
         </div>
       </div>
 
-      <div id="log" class="log"><div class="line">[idle] click "Run scenario" to start</div></div>
-
       <div id="full-dashboard" class="full-dashboard hidden">
         <div class="dash-head">
-          <h3 class="dash-title">Top 10 zemí podle počtu útoků</h3>
+          <h3 id="dash-title" class="dash-title">Top 10 zemí podle počtu útoků</h3>
           <div class="dash-meta">
-            <span class="dash-source">TEROR · 84 341 řádků · 153 zemí</span>
+            <span id="dash-source" class="dash-source">TEROR · 84 341 řádků · 153 zemí</span>
             <span id="dash-tag" class="dash-tag">čistý výsledek</span>
           </div>
         </div>
@@ -927,6 +933,9 @@ function drawTeacher() {
   const bx = x - Math.floor(w / 2);
   const by = y - h;
   const bob = t.walking ? (Math.floor(t.frame) % 2) : 0;
+  // When evals are turned off, fade the teacher so she's visibly inactive.
+  const prevAlpha = ctx.globalAlpha;
+  if (!state.evalsOn) ctx.globalAlpha = 0.32;
 
   // shadow
   ctx.fillStyle = "rgba(0,0,0,0.3)";
@@ -1051,6 +1060,8 @@ function drawTeacher() {
   ctx.fillStyle = "#2a3858";
   ctx.fillText(lab, x, ly);
   ctx.textAlign = "start";
+
+  ctx.globalAlpha = prevAlpha;
 }
 
 // Report card: floats above the whiteboard while the teacher grades.
@@ -1243,8 +1254,13 @@ function drawAgent() {
   // juliaPC spritesheet (it draws the agent welded into a workstation, which
   // looks like a "spinning computer" at our small office stations).
   let sheet;
-  if (!a.moving) {
-    // Standing still: use idle for front-facing, otherwise the directional sheet
+  // Idle = standing still with no specific activity → face us (front idle).
+  // Reading/tooling/drawing keep the directional sheet so we still see
+  // her oriented at the station, but she's locked to a single frame.
+  const isIdle = !a.moving && (!a.activity || a.activity === "idle");
+  if (isIdle) {
+    sheet = images.juliaIdle;
+  } else if (!a.moving) {
     if (a.facing === "up")         sheet = images.juliaUp;
     else if (a.facing === "left")  sheet = images.juliaLeft;
     else if (a.facing === "right") sheet = images.juliaRight;
@@ -1365,14 +1381,20 @@ function loop(t) {
   const dt = t - lastT;
   lastT = t;
 
-  // animate frames — walking is brisk, idle/reading/tooling/drawing are slow
-  // (when the agent is standing still, fast frame-cycling reads as nervous fidgeting)
+  // animate frames — walking is brisk, reading/tooling/drawing are slow.
+  // Pure idle (standing still, no activity) freezes on frame 0 so the
+  // agent stops looking like she's nervously bouncing in place.
   const a = state.agent;
-  const frameInterval = (a.activity === "walking" || a.moving) ? 140 : 420;
-  a.frameTime += dt;
-  if (a.frameTime > frameInterval) {
+  if (a.moving || (a.activity && a.activity !== "idle")) {
+    const frameInterval = (a.activity === "walking" || a.moving) ? 140 : 420;
+    a.frameTime += dt;
+    if (a.frameTime > frameInterval) {
+      a.frameTime = 0;
+      a.frame = (a.frame + 1) % FRAMES;
+    }
+  } else {
+    a.frame = 0;
     a.frameTime = 0;
-    a.frame = (a.frame + 1) % FRAMES;
   }
 
   // teacher walk cycle (own clock, slower)
@@ -1481,13 +1503,12 @@ function setEval(key, status) {
  * over to the dashboard. The clipboard appears in her hands once she
  * arrives — that's the "expected.json" reference she compares against. */
 
-const TEACHER_HOME_X = 478;     // off-canvas right (canvas is 480 wide)
 const TEACHER_GRADE_X = 380;    // standing position right of the whiteboard
 const TEACHER_Y = 218;          // same lane as the agent
 
 function spawnTeacher() {
   state.teacher = {
-    x: TEACHER_HOME_X,
+    x: TEACHER_GRADE_X,
     y: TEACHER_Y,
     walking: false,
     frame: 0,
@@ -1496,6 +1517,8 @@ function spawnTeacher() {
     verdict: null,
   };
 }
+// Teacher is now permanent — kept for symmetry with spawnTeacher but
+// no longer called from grading. Only resetAll() should call this.
 function despawnTeacher() {
   state.teacher = null;
   state.reportCard = null;
@@ -1543,9 +1566,9 @@ function closeReportCard() { state.reportCard = null; }
  * opts.finalVerdict: "pass"|"warn"|"fail"
  * opts.headline:     short Czech sentence she "says" at the end */
 async function runTeacherGrading(rows, opts = {}) {
-  spawnTeacher();
-  logLine("skill", "evals: učitelka přichází zkontrolovat výsledek");
-  await walkTeacherTo(TEACHER_GRADE_X);
+  if (!state.teacher) spawnTeacher();
+  logLine("skill", "evals: učitelka kontroluje výsledek");
+  state.teacher.verdict = null;
   state.teacher.holdingCard = true;
   await wait(300);
   openReportCard(rows.map(r => ({
@@ -1564,12 +1587,10 @@ async function runTeacherGrading(rows, opts = {}) {
   await wait(500);
   state.teacher.verdict = opts.finalVerdict || "pass";
   if (opts.headline) await teacherSay(opts.headline, 1500);
-  await wait(900);
-  // walk back off-stage
+  await wait(1100);
+  // teacher stays in the room; just lower the clipboard and clear the side card
   state.teacher.holdingCard = false;
   closeReportCard();
-  await walkTeacherTo(TEACHER_HOME_X);
-  despawnTeacher();
 }
 
 
@@ -1687,7 +1708,11 @@ function clearChart() {
 }
 
 // Full HTML dashboard — the "this is what you can build" payoff.
-// Renders real top-10 numbers below the stage when a clean run finishes.
+// Renders real numbers below the stage when a clean run finishes.
+// Scenario A = top-10 countries by attack count.
+// Scenario C = JOIN preview (country code → resolved name + attack count).
+//   When the JOIN runs against COUNTRY_DIRTYDATA, the same code resolves
+//   to two names — that's the "leak" learners can spot in the preview.
 const TOP10 = [
   { country: "Iraq",        n: 15400 },
   { country: "Afghanistan", n: 12970 },
@@ -1700,11 +1725,35 @@ const TOP10 = [
   { country: "Syria",       n:  2332 },
   { country: "Libya",       n:  2139 },
 ];
+const JOIN_CLEAN = [
+  { code: "95",  name: "Iraq",        n: 15400 },
+  { code: "4",   name: "Afghanistan", n: 12970 },
+  { code: "153", name: "Pakistan",    n:  6112 },
+  { code: "92",  name: "India",       n:  5700 },
+  { code: "228", name: "Yemen",       n:  4847 },
+  { code: "147", name: "Nigeria",     n:  4012 },
+  { code: "160", name: "Philippines", n:  4007 },
+  { code: "200", name: "Somalia",     n:  3681 },
+];
+// Same query against the dirty table: a few country codes appear twice
+// because DIRTYDATA carries duplicate rows under slightly different names.
+const JOIN_DIRTY = [
+  { code: "95",  name: "Iraq",        n: 15400 },
+  { code: "95",  name: "Iraq, Republic of", n: 15400, dup: true },
+  { code: "4",   name: "Afghanistan", n: 12970 },
+  { code: "153", name: "Pakistan",    n:  6112 },
+  { code: "153", name: "Pakistan (Islamic Rep.)", n: 6112, dup: true },
+  { code: "92",  name: "India",       n:  5700 },
+  { code: "228", name: "Yemen",       n:  4847 },
+  { code: "228", name: "Yemen, Rep.", n:  4847, dup: true },
+];
 
-function showFullDashboard(tone = "ok", source = "clean") {
+function showFullDashboard(tone = "ok", source = "clean", scenario = "A") {
   const dash = document.getElementById("full-dashboard");
   const bars = document.getElementById("dash-bars");
   const tag  = document.getElementById("dash-tag");
+  const title = document.getElementById("dash-title");
+  const meta = document.getElementById("dash-source");
   if (!dash || !bars) return;
 
   dash.classList.remove("hidden", "warn", "fail");
@@ -1716,6 +1765,30 @@ function showFullDashboard(tone = "ok", source = "clean") {
   else                      tag.textContent = source === "clean" ? "čistý výsledek" : "ready";
 
   bars.innerHTML = "";
+
+  if (scenario === "C") {
+    if (title) title.textContent = "JOIN: kód země → název";
+    const rows = source === "clean" ? JOIN_CLEAN : JOIN_DIRTY;
+    if (meta) meta.textContent = source === "clean"
+      ? "TEROR ⨯ COUNTRY · 204 řádků · 1× / země"
+      : "TEROR ⨯ COUNTRY_DIRTYDATA · 408 řádků · duplicity";
+    const max = Math.max(...rows.map(r => r.n));
+    rows.forEach((row, i) => {
+      const r = document.createElement("div");
+      r.className = "dash-bar-row" + (row.dup ? " dup" : "");
+      const pct = Math.max(2, Math.round((row.n / max) * 100));
+      r.innerHTML =
+        '<span class="country">' + row.code + ' → ' + row.name + (row.dup ? ' <em class="dup-tag">duplicate</em>' : '') + '</span>' +
+        '<div class="bar-track"><div class="bar-fill" style="width: ' + pct + '%; animation-delay: ' + (i * 60) + 'ms"></div></div>' +
+        '<span class="value">' + row.n.toLocaleString("cs-CZ") + '</span>';
+      bars.appendChild(r);
+    });
+    return;
+  }
+
+  // Scenario A (and the default): top-10 countries by attack count.
+  if (title) title.textContent = "Top 10 zemí podle počtu útoků";
+  if (meta) meta.textContent = "TEROR · 84 341 řádků · 153 zemí";
   const max = TOP10[0].n;
   TOP10.forEach((row, i) => {
     const r = document.createElement("div");
@@ -1833,8 +1906,8 @@ function beginRun() {
   state.recipeCard = null;
   state.toolbox = null;
   state.dbScreen = null;
-  state.teacher = null;
-  state.reportCard = null;
+  // Teacher is permanent — clear the report card + verdict but keep her in the room.
+  spawnTeacher();
   hideFullDashboard();
   hideDbTerminal();
   renderSkillPanel();
@@ -1962,7 +2035,7 @@ async function runScenarioA() {
     await gotoStation("board");
     await say("pravidlo RENDER_CHART —\nkreslím graf", 1200);
     await drawChartBar(chartTone);
-    showFullDashboard("ok");
+    showFullDashboard("ok", "clean", "A");
     logLine("ok", "DASHBOARD: top 10 zemí — ready to ship");
     renderedChart = true;
   } else {
@@ -2137,7 +2210,7 @@ async function runScenarioC() {
   if (state.skillOn && state.rules.renderChart) {
     await gotoStation("board");
     await drawChartBar(chartTone);
-    showFullDashboard(chartTone, useClean ? "clean" : "dirty");
+    showFullDashboard(chartTone, useClean ? "clean" : "dirty", "C");
     if (chartTone === "ok")   logLine("ok",   "DASHBOARD: ready");
     if (chartTone === "warn") logLine("warn", "DASHBOARD: warning");
     if (chartTone === "fail") logLine("fail", "DASHBOARD: silent bad numbers");
@@ -2363,8 +2436,8 @@ function resetAll() {
   state.recipeCard = null;
   state.toolbox = null;
   state.dbScreen = null;
-  state.teacher = null;
   state.reportCard = null;
+  spawnTeacher();
   hideFullDashboard();
   hideDbTerminal();
   renderLog();
@@ -2383,6 +2456,7 @@ function resetAll() {
   renderSkillPanel();
   renderMcpPanel();
   renderEvalsPanel();
+  spawnTeacher();
   await loadAll();
   requestAnimationFrame(loop);
 })();
