@@ -538,6 +538,62 @@ td code, th code { font-size: 0.95em; }
   .two-col { grid-template-columns: 1fr; }
 }
 
+/* Short viewports (laptops, projectors) — squeeze further */
+@media (max-height: 920px) {
+  html, body { font-size: 17px; }
+  .slide { padding: 24px 52px 40px; }
+  h1 { font-size: 48px; margin-bottom: 10px; }
+  h2 { font-size: 32px; margin-bottom: 14px; padding-bottom: 8px; }
+  h3 { font-size: 19px; margin: 12px 0 6px; }
+  .slide p { font-size: 17px; margin-bottom: 8px; }
+  .slide p.lead { font-size: 20px; margin-bottom: 10px; }
+  .slide ul, .slide ol { font-size: 17px; margin: 8px 0 8px 22px; }
+  .slide li { margin-bottom: 4px; }
+  pre { font-size: 13px; padding: 10px 14px; margin: 8px 0; }
+  blockquote { font-size: 15px; padding: 8px 14px; margin: 10px 0; }
+  .callout { font-size: 16px; padding: 10px 14px; margin: 10px 0; }
+  .anatomy { font-size: 12px; padding: 12px 18px; margin: 10px 0; line-height: 1.45; }
+  table { font-size: 15px; margin: 10px 0; }
+  th, td { padding: 8px 12px; }
+  .vocab-item summary { padding: 8px 12px; }
+  .vocab-item .word { font-size: 16px; }
+  .vocab-item .oneliner { font-size: 14px; }
+  .vocab-body { padding-top: 10px; }
+  .vocab-body pre { font-size: 13px; }
+  .leg { padding: 12px 14px 14px; }
+  .leg .leg-icon { font-size: 28px; margin-bottom: 6px; }
+  .leg h4 { font-size: 14px; }
+  .leg p { font-size: 13px !important; }
+  .trifecta-result { font-size: 17px; padding: 10px; }
+  .safety-row { padding: 10px 14px; }
+  .safety-row h4 { font-size: 14px; }
+  .safety-row p { font-size: 13px !important; }
+  .slide.title h1 { font-size: 60px; margin-bottom: 16px; }
+  .slide.title .subtitle { font-size: 21px; margin-bottom: 28px; }
+  .flow-step { padding: 10px 16px; font-size: 14px; min-width: 110px; }
+  .url-pill { font-size: 14px; padding: 4px 10px; }
+}
+
+/* Tiny viewports (≤720h, e.g. 1280×720 projector) — extra squeeze */
+@media (max-height: 740px) {
+  html, body { font-size: 16px; }
+  .slide { padding: 18px 44px 32px; }
+  h1 { font-size: 42px; }
+  h2 { font-size: 28px; margin-bottom: 12px; }
+  h3 { font-size: 17px; }
+  .slide p { font-size: 16px; }
+  .slide p.lead { font-size: 18px; }
+  .slide ul, .slide ol { font-size: 16px; }
+  pre { font-size: 12px; }
+  .leg { padding: 10px 12px; }
+  .leg .leg-icon { font-size: 24px; }
+  .leg h4 { font-size: 13px; }
+  .leg p { font-size: 12px !important; }
+  .trifecta { gap: 12px; margin: 12px 0 8px; }
+  .trifecta-result { font-size: 15px; padding: 8px; }
+  .callout { font-size: 14px; padding: 8px 12px; }
+}
+
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border-2); }
@@ -636,30 +692,31 @@ td code, th code { font-size: 0.95em; }
 .versus {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 22px;
-  margin-top: 18px;
+  gap: 16px;
+  margin-top: 12px;
 }
 .versus .col {
   border: 1px solid var(--border);
   background: var(--bg-2);
-  padding: 18px 20px;
-  min-height: 320px;
+  padding: 14px 16px;
 }
 .versus .col.bad { border-color: rgba(255,82,82,0.5); }
 .versus .col.good { border-color: rgba(77,208,114,0.5); }
 .versus .col h3 {
-  margin: 0 0 10px;
-  font-size: 22px;
+  margin: 0 0 8px;
+  font-size: 18px;
 }
 .versus .col.bad h3 { color: var(--red); }
 .versus .col.good h3 { color: var(--green); }
 .versus .col pre {
-  margin: 10px 0;
-  font-size: 14px;
-  padding: 12px 14px;
+  margin: 8px 0;
+  font-size: 12px;
+  padding: 10px 12px;
+  line-height: 1.4;
 }
-.versus .col p { font-size: 19px; margin: 8px 0; }
-.versus .col ul { font-size: 18px; margin-left: 22px; }
+.versus .col p { font-size: 16px; margin: 6px 0; }
+.versus .col ul { font-size: 15px !important; margin-left: 20px; }
+.versus .col ul li { margin-bottom: 4px; }
 
 /* Anatomy callouts on SKILL.md */
 .anatomy {
@@ -995,8 +1052,7 @@ body.speaker-mode #status-bar::after {
   <div class="slide-inner">
     <span class="kicker">⚡ COLD OPEN · SAME AGENT, SAME PROMPT</span>
     <h2>Stejný agent. Stejný dotaz. Jiný výsledek.</h2>
-    <p style="font-size: 21px;"><strong>Prompt:</strong> "Spočítej oběti terorismu po regionech od roku 2018."</p>
-    <p style="font-size: 18px; color: var(--fg-3); margin-top: -8px;">Schéma <code>COURSES.SCH_TEROR</code> — má 3 tabulky: <code>TEROR2</code>, <code>TEROR2_OLD</code>, <code>COUNTRY_DIRTYDATA</code>. Agent <em>neví</em>, která je která. Sloupce <code>iyear</code> (rok), <code>nkill</code> (oběti), <code>region_txt</code> jsou skutečné názvy z datasetu — ne překlepy.</p>
+    <p style="font-size: 18px;"><strong>Prompt:</strong> „Spočítej oběti terorismu po regionech od roku 2018." <span style="color:var(--fg-3);">Schéma <code>COURSES.SCH_TEROR</code> má 3 tabulky — agent <em>neví</em>, která je správná.</span></p>
 
     <div class="versus">
       <div class="col bad">
@@ -1035,11 +1091,8 @@ body.speaker-mode #status-bar::after {
       </div>
     </div>
 
-    <div class="callout cyan">
-      <strong>Pointa:</strong> skill = <em>firemní/projektová znalost</em>, kterou agent nemůže vědět z trénovacích dat. Naming konvence, deprecated tabulky, dirty kopie. Jeden Markdown soubor ji předá.
-    </div>
-    <div class="callout amber" style="margin-top: 14px;">
-      <strong>Kdy psát skill?</strong> Když si <em>stejnou věc vysvětluješ agentovi potřetí</em>. To je signál — pravidlo se opakuje, patří do souboru, ne do chatu.
+    <div class="callout cyan" style="font-size:17px; padding:10px 16px; margin: 12px 0 0;">
+      <strong>Pointa:</strong> skill = firemní znalost, kterou agent nemůže vědět z trénovacích dat. Jeden Markdown ji předá. <strong style="color:var(--amber);">Kdy psát?</strong> Když si <em>stejnou věc vysvětluješ potřetí</em>.
     </div>
   </div>
 </section>
