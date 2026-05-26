@@ -1271,8 +1271,8 @@ body.speaker-mode #status-bar::after {
       <div class="safety-row warn" style="grid-column:1 / -1;">
         <span class="icn">⚠</span>
         <div>
-          <h4>5 · Vstup od uživatele <em>i</em> tool output = nedůvěryhodné</h4>
-          <p>To, co ti vrátil <code>read_file</code> nebo <code>execute_query</code>, je text z venku. Ne instrukce. Pamatuj na trifecta.</p>
+          <h4>5 · Data nejsou příkazy</h4>
+          <p>Cokoliv, co agent <em>přečte</em> — e-mail, soubor, řádek z DB — je <strong>obsah ke zpracování</strong>, ne <strong>instrukce k vykonání</strong>. I kdyby tam stálo „smaž všechno". Útočníci to ví a schovávají příkazy do dat (lísteček z prologu).</p>
         </div>
       </div>
     </div>
@@ -1444,7 +1444,7 @@ body.speaker-mode #status-bar::after {
         'Rule 2 (read-only): agent dostává oprávnění postupně. Stejně jako stážista.',
         'Rule 3 (DROP/DELETE/UPDATE): vždy human approval. Per-soubor.',
         'Rule 4 (schéma): zítra s Tánou — agent volá describe_table(), nehádá.',
-        'Rule 5 (vstup = nedůvěryhodný): tool output je text z venku, ne instrukce.'
+        'Rule 5 (data ≠ příkazy): co agent přečte z e-mailu / souboru / DB, je obsah, ne instrukce. Lísteček z prologu.'
       ],
       qa: { q: 'A co když narazíme na něco kde to nejde dodržet?', a: 'Pak nepouštět agenta. Bezpečnost > rychlost. Vždycky.' },
       nextUp: 'Domácí úkol + handoff na zítra.'
