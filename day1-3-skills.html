@@ -1051,48 +1051,50 @@ body.speaker-mode #status-bar::after {
 <section class="slide">
   <div class="slide-inner">
     <span class="kicker">⚡ COLD OPEN · SAME AGENT, SAME PROMPT</span>
-    <h2>Stejný agent. Stejný dotaz. Jiný výsledek.</h2>
-    <p style="font-size: 18px;"><strong>Prompt:</strong> „Spočítej oběti terorismu po regionech od roku 2018." <span style="color:var(--fg-3);">Schéma <code>COURSES.SCH_TEROR</code> má 3 tabulky — agent <em>neví</em>, která je správná.</span></p>
+    <h2>„Udělej HTML report z dat za Q2."</h2>
+    <p style="font-size: 18px;">Stejný prompt, stejná data, stejný agent. Bez skillu — <strong>40 minut chatování</strong>. Se skillem — <strong>jeden prompt, dashboard ven</strong>.</p>
 
     <div class="versus">
       <div class="col bad">
-        <h3>❌ BEZ SKILLU — agent hádá</h3>
-<pre class="red-bar"><span class="c">// vybere první tabulku co zní rozumně</span>
-<span class="k">SELECT</span> region_txt, <span class="t">SUM</span>(nkill) <span class="k">AS</span> total
-<span class="k">FROM</span> teror2_old
-<span class="k">WHERE</span> iyear &gt;= <span class="n">2018</span>
-<span class="k">GROUP BY</span> region_txt
-<span class="k">ORDER BY</span> total <span class="k">DESC</span>;</pre>
+        <h3>❌ BEZ SKILLU — 40 min korekcí</h3>
+<pre class="red-bar"><span class="prompt">▸</span> Udělej HTML report z dat za Q2.
+<span class="c">→ generic tabulka v Times New Roman</span>
+
+<span class="prompt">▸</span> Použij naše firemní barvy.
+<span class="prompt">▸</span> Ne tyhle, máme tmavé pozadí.
+<span class="prompt">▸</span> Přidej executive summary nahoru.
+<span class="prompt">▸</span> Plotly, ne matplotlib.
+<span class="prompt">▸</span> Čísla s mezerami: 1 234 567.
+<span class="prompt">▸</span> Loga vlevo nahoře, footer s datem.
+<span class="prompt">▸</span> Jiný font, tohle je Comic Sans.
+<span class="c">// ... a tak dál ...</span></pre>
         <ul>
-          <li>SQL je <em>syntakticky správné</em>, vrátí čísla</li>
-          <li>ale <code>_OLD</code> je archív z roku 2017 → data jsou <strong>o 30 % nižší</strong></li>
-          <li>agent neměl jak vědět — pošle graf do reportu</li>
-          <li>chyba se najde za týden, když si toho někdo všimne</li>
+          <li>každá iterace = další zpráva, další čekání</li>
+          <li>příští týden <strong>znova to samé</strong> — agent si nepamatuje</li>
+          <li>jiná kolegyně? Začíná od nuly</li>
         </ul>
       </div>
 
       <div class="col good">
-        <h3>✅ SE SKILLEM <code>sql-review</code></h3>
-<pre class="green-bar"><span class="c">// skill obsahuje firemní znalost:</span>
-<span class="c">// "Tabulky _OLD jsou archiv, nepoužívej."</span>
-<span class="c">// "COUNTRY_DIRTYDATA má znečištěná data."</span>
-<span class="c">// "Hlavní fakta tabulka je TEROR2."</span>
-
-<span class="k">SELECT</span> region_txt, <span class="t">SUM</span>(nkill) <span class="k">AS</span> total
-<span class="k">FROM</span> teror2
-<span class="k">WHERE</span> iyear &gt;= <span class="n">2018</span>
-<span class="k">GROUP BY</span> region_txt
-<span class="k">ORDER BY</span> total <span class="k">DESC</span>;</pre>
-        <ul>
-          <li>agent <strong>ví, co neví</strong> — skill ho varuje</li>
-          <li>vybere správnou tabulku napoprvé</li>
-          <li>data sedí, report jde ven s důvěrou</li>
-        </ul>
+        <h3>✅ SE SKILLEM <code>q-report</code></h3>
+<pre class="green-bar"><span class="meta-line">---</span>
+<span class="frontmatter-key">name</span>: <span class="frontmatter-val">q-report</span>
+<span class="frontmatter-key">description</span>: <span class="frontmatter-val">Use when user asks for HTML quarterly report.</span>
+<span class="meta-line">---</span>
+<span class="heading"># Recept</span>
+<span class="rule">- Layout: hero + summary + 3 grafy + tabulka + footer.</span>
+<span class="rule">- Palette: #0a0e14 / #ff9c4a / #5bc0eb. Font: Inter.</span>
+<span class="rule">- Plotly, ne matplotlib. Čísla CZ formát (mezery).</span>
+<span class="rule">- Logo: assets/logo.svg vlevo nahoře.</span>
+<span class="rule">- Šablona: examples/Q1-2026.html — drž stejnou strukturu.</span></pre>
+        <p style="font-size:16px; margin-top:8px;"><strong>Příští spuštění:</strong></p>
+<pre class="green-bar" style="margin-top:4px;"><span class="prompt">▸</span> Udělej HTML report z dat za Q2.
+<span class="c">→ brandovaný dashboard, hotový k prezentaci</span></pre>
       </div>
     </div>
 
     <div class="callout cyan" style="font-size:17px; padding:10px 16px; margin: 12px 0 0;">
-      <strong>Pointa:</strong> skill = firemní znalost, kterou agent nemůže vědět z trénovacích dat. Jeden Markdown ji předá. <strong style="color:var(--amber);">Kdy psát?</strong> Když si <em>stejnou věc vysvětluješ potřetí</em>.
+      <strong>Skill = compressed conversation history.</strong> Jednou se domluvíš, pak forever. <strong style="color:var(--amber);">AGENTS.md</strong> říká <em>kdo jsme jako projekt</em>. <strong style="color:var(--amber);">SKILL.md</strong> je <em>recept na konkrétní deliverable</em>. Když to děláš podruhé — patří to do skillu.
     </div>
   </div>
 </section>
@@ -1146,7 +1148,7 @@ body.speaker-mode #status-bar::after {
   <div class="slide-inner">
     <span class="kicker">🎬 DEMO · 5 MIN</span>
     <h2>Skill Builder — ukázka, ne úkol.</h2>
-    <p class="lead">Tady ti naživo ukážu, jak vznikne SKILL.md za 2 minuty. <strong>Doma si to projdeš sama</strong> — máš to v ДЗ.</p>
+    <p class="lead">Tady ti naživo ukážu, jak vznikne SKILL.md za 2 minuty.</p>
 
     <table>
       <thead><tr><th style="width:60px;">#</th><th>Krok</th><th>Nástroj</th></tr></thead>
@@ -1282,7 +1284,7 @@ body.speaker-mode #status-bar::after {
 </section>
 
 <!-- ─────────────────────────────────────────────────────────
-     SLIDE 09 · ДЗ + Day 2 handoff
+     SLIDE 09 · Domácí úkol + Day 2 handoff
      ───────────────────────────────────────────────────────── -->
 <section class="slide">
   <div class="slide-inner">
@@ -1419,7 +1421,7 @@ body.speaker-mode #status-bar::after {
         'NEspouštět opencode — sežralo by to čas. Stačí ukázat, kde skill leží a říct „zítra to v MCP demu uvidíme aktivovat".',
         'Cíl: holky vidí, že to není magie. Markdown soubor, jasný formát.'
       ],
-      qa: { q: 'Můžu si to zkusit teď?', a: 'Můžeš, ale doporučuju doma. Tady bych musel zastavit prezentaci — radši ti to nechám na ДЗ.' },
+      qa: { q: 'Můžu si to zkusit teď?', a: 'Můžeš, ale doporučuju doma. Tady bych musel zastavit prezentaci — radši ti to nechám na domácí úkol.' },
       nextUp: 'Bezpečnost — lísteček v dopisu.'
     },
     { // 07 Lethal trifecta
@@ -1445,13 +1447,13 @@ body.speaker-mode #status-bar::after {
         'Rule 5 (vstup = nedůvěryhodný): tool output je text z venku, ne instrukce.'
       ],
       qa: { q: 'A co když narazíme na něco kde to nejde dodržet?', a: 'Pak nepouštět agenta. Bezpečnost > rychlost. Vždycky.' },
-      nextUp: 'ДЗ + handoff na zítra.'
+      nextUp: 'Domácí úkol + handoff na zítra.'
     },
-    { // 09 ДЗ + Day 2 handoff
+    { // 09 Domácí úkol + Day 2 handoff
       time: '45:00',
-      opener: '„Cíl ДЗ není postavit skill. Cíl je přijít zítra připravená — víte jak skill vypadá a máte jednu otázku."',
+      opener: '„Cíl domácího úkolu není postavit skill. Cíl je přijít zítra připravená — víte jak skill vypadá a máte jednu otázku."',
       beats: [
-        'ДЗ je PASIVNÍ: čti Anthropic guide, klikni Skill Builder, napiš 2-3 nápady. 20-30 min.',
+        'DÚ je PASIVNÍ: čti Anthropic guide, klikni Skill Builder, napiš 2-3 nápady. 20-30 min.',
         'NEslibuj „plug your homework skill into MCP" — holky nebudou mít skill na Day 2.',
         '2-3 věci k automatizaci, z práce I z domova. To dá Day 2 ownership.',
         'Zítra v 20:00 stavíme MCP s Tánou a uvidíte report z přirozeného jazyka.'
