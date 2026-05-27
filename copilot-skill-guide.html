@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Postav si vlastní skill v GitHub Copilotu · Czechitas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a0e14;
+  --bg-2:      #11161f;
+  --bg-card:   #131922;
+  --bg-code:   #050810;
+  --border:    #232c3a;
+  --border-2:  #2d3849;
+  --fg:        #eaf0f7;
+  --fg-2:      #b8c4d4;
+  --fg-3:      #7c8898;
+  --amber:     #ff9c4a;
+  --cyan:      #5bc0eb;
+  --green:     #4dd072;
+  --red:       #ff5252;
+  --yellow:    #ffd166;
+  --magenta:   #c77dff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 28px 96px;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 28px;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  position: sticky;
+  top: 8px;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+.topbar .brand { color: var(--amber); font-weight: 700; }
+.topbar .total { color: var(--cyan); }
+
+h1.title {
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 18px 0 8px;
+  line-height: 1.2;
+}
+.subtitle {
+  font-size: 18px;
+  color: var(--fg-2);
+  margin-bottom: 12px;
+}
+.meta-line {
+  font-size: 14px;
+  color: var(--fg-3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 36px;
+  letter-spacing: 0.04em;
+}
+
+h2 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 48px 0 18px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+h2 .step {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--amber);
+  background: rgba(255, 156, 74, 0.1);
+  border: 1px solid rgba(255, 156, 74, 0.3);
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  align-self: center;
+}
+
+h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 28px 0 10px;
+  color: var(--cyan);
+}
+
+p { margin: 12px 0; color: var(--fg-2); }
+p strong { color: var(--fg); }
+
+ul, ol {
+  margin: 12px 0 12px 22px;
+  color: var(--fg-2);
+}
+li { margin: 6px 0; }
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(91, 192, 235, 0.1);
+  border: 1px solid rgba(91, 192, 235, 0.2);
+  color: var(--cyan);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border-2);
+  border-radius: 6px;
+  padding: 18px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--fg);
+  position: relative;
+}
+pre.amber { border-left: 3px solid var(--amber); }
+pre.cyan { border-left: 3px solid var(--cyan); }
+pre.green { border-left: 3px solid var(--green); }
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+pre .c { color: var(--fg-3); font-style: italic; }
+pre .k { color: var(--magenta); }
+pre .s { color: var(--green); }
+pre .n { color: var(--amber); }
+pre .heading { color: var(--amber); font-weight: 600; }
+pre .frontmatter-key { color: var(--cyan); }
+pre .frontmatter-val { color: var(--green); }
+pre .meta-marker { color: var(--fg-3); }
+pre .rule { color: var(--fg); }
+pre .prompt { color: var(--amber); font-weight: 600; }
+
+.note {
+  background: rgba(91, 192, 235, 0.06);
+  border: 1px solid rgba(91, 192, 235, 0.2);
+  border-left: 3px solid var(--cyan);
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 16px;
+}
+.note.warn {
+  background: rgba(255, 209, 102, 0.06);
+  border-color: rgba(255, 209, 102, 0.2);
+  border-left-color: var(--yellow);
+}
+.note.danger {
+  background: rgba(255, 82, 82, 0.06);
+  border-color: rgba(255, 82, 82, 0.2);
+  border-left-color: var(--red);
+}
+.note.tip {
+  background: rgba(77, 208, 114, 0.06);
+  border-color: rgba(77, 208, 114, 0.2);
+  border-left-color: var(--green);
+}
+.note h4 {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.note.warn h4 { color: var(--yellow); }
+.note.danger h4 { color: var(--red); }
+.note.tip h4 { color: var(--green); }
+.note p { margin: 6px 0; color: var(--fg-2); }
+.note code { font-size: 0.95em; }
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 18px 0;
+}
+.compare .col {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 18px;
+}
+.compare .col h4 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.compare .col.anthropic h4 { color: var(--amber); }
+.compare .col.copilot h4 { color: var(--cyan); }
+.compare .col p { font-size: 14px; margin: 4px 0; }
+
+.kbd {
+  display: inline-block;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--fg);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.3);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 18px 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 15px;
+}
+th, td {
+  text-align: left;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+th {
+  background: var(--bg-2);
+  color: var(--fg-3);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+tr:last-child td { border-bottom: none; }
+td code { font-size: 0.85em; }
+
+.toc {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px 22px;
+  margin: 28px 0 36px;
+  font-size: 15px;
+}
+.toc h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-3);
+  margin-bottom: 10px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.toc ol { margin: 0 0 0 20px; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--cyan); text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+
+@media (max-width: 760px) {
+  body { padding: 18px 14px 80px; font-size: 16px; }
+  h1.title { font-size: 26px; }
+  h2 { font-size: 20px; flex-wrap: wrap; }
+  pre { font-size: 12px; padding: 14px 16px; }
+  .compare { grid-template-columns: 1fr; }
+}
+
+.footer-ribbon {
+  margin-top: 60px;
+  padding: 24px 22px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--fg-3);
+  font-size: 14px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.footer-ribbon strong { color: var(--amber); }
+.footer-ribbon a { color: var(--cyan); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span><span class="brand">CZECHITAS</span> · DEN 2 · DOMÁCÍ ÚKOL</span>
+  <span class="total">⏱ ~30 MIN · NEPOVINNÉ</span>
+</div>
+
+<h1 class="title">Postav si vlastní skill v GitHub Copilotu</h1>
+<p class="subtitle">Praktický návod — 5 kroků, žádný framework, jeden soubor v repu.</p>
+<p class="meta-line">PRO: kdo používá VS Code + GitHub Copilot · NEPOVINNÉ · ČAS: 30 min</p>
+
+<div class="toc">
+  <h4>Obsah</h4>
+  <ol>
+    <li><a href="#proc">Proč vůbec — Copilot vs Claude Code</a></li>
+    <li><a href="#prereq">Co potřebuješ</a></li>
+    <li><a href="#step1">Krok 1 · Připrav repo a chat mode</a></li>
+    <li><a href="#step2">Krok 2 · Napiš <code>copilot-instructions.md</code></a></li>
+    <li><a href="#step3">Krok 3 · Vytvoř první prompt file (skill)</a></li>
+    <li><a href="#step4">Krok 4 · Otestuj v chatu přes <code>/jméno</code></a></li>
+    <li><a href="#step5">Krok 5 · Připoj MCP server (volitelné)</a></li>
+    <li><a href="#troubleshoot">Když něco nefunguje</a></li>
+    <li><a href="#dal">Co dál</a></li>
+  </ol>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="proc"><span class="step">Proč</span> Copilot vs Claude Code</h2>
+
+<p>Na workshopu jste viděly skill v <strong>Claude Code</strong> — frontmatter <code>name</code> + <code>description</code>, agent si ho sám stáhne, když description sedí na váš dotaz. To je standard od Anthropic.</p>
+
+<p>V <strong>GitHub Copilotu</strong> není <em>úplně</em> totéž, ale je tam koncepčně blízký mechanismus. Místo „skill" se to jmenuje <strong>prompt file</strong>. Stejný nápad: jeden Markdown soubor s instrukcemi, který si vyvoláš znamým způsobem (<code>/jméno</code> v chatu).</p>
+
+<div class="compare">
+  <div class="col anthropic">
+    <h4>Anthropic / Claude Code</h4>
+    <p><code>~/.claude/skills/sql-review/SKILL.md</code></p>
+    <p>Frontmatter: <code>name</code> + <code>description</code></p>
+    <p>Auto-discovery: agent vybere podle <code>description</code></p>
+    <p>Globální (sdílí mezi projekty)</p>
+  </div>
+  <div class="col copilot">
+    <h4>GitHub Copilot</h4>
+    <p><code>.github/prompts/sql-review.prompt.md</code></p>
+    <p>Frontmatter: <code>mode</code> + <code>description</code> + <code>tools</code></p>
+    <p>Manual invoke: <code>/sql-review</code> v chatu</p>
+    <p>Per-projekt (žije v repu)</p>
+  </div>
+</div>
+
+<p>Bonus pro Copilot: prompt file můžeš commitnout do gitu — takže <em>celý tým</em> ho má sdílený, ne jen ty.</p>
+
+<div class="note">
+  <h4>Tři druhy Copilot „instruktážních" souborů</h4>
+  <p><code>.github/copilot-instructions.md</code> — <strong>vždycky</strong> načteno (jako AGENTS.md). Pravidla projektu.</p>
+  <p><code>.github/instructions/*.instructions.md</code> — načítá se podle <code>applyTo</code> patternu (např. jen pro <code>**/*.sql</code>).</p>
+  <p><code>.github/prompts/*.prompt.md</code> — vyvoláš ručně přes <code>/jméno</code>. <strong>Tohle je nejbližší skillu.</strong></p>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="prereq"><span class="step">0 ·</span> Co potřebuješ</h2>
+
+<ul>
+  <li><strong>VS Code</strong> (nebo VS Code Insiders) — minimum verze 1.97</li>
+  <li><strong>GitHub Copilot</strong> rozšíření aktivní (přihlášená přes svůj GitHub účet)</li>
+  <li><strong>GitHub Copilot Chat</strong> rozšíření</li>
+  <li>Vlastní git repo (i prázdné) — místní složka stačí</li>
+</ul>
+
+<div class="note tip">
+  <h4>✓ Jak ověříš, že máš Copilot správně</h4>
+  <p>V dolní liště VS Code uvidíš ikonu Copilota. Klik → otevře se Chat panel. Pokud nevidíš Chat panel, doinstaluj <code>GitHub.copilot-chat</code> z Marketplace.</p>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="step1"><span class="step">Krok 1</span> Připrav repo a strukturu</h2>
+
+<p>V kořeni svého projektu vytvoř dvě složky:</p>
+
+<pre class="cyan"><code><span class="c"># v terminálu, ve své projektové složce</span>
+mkdir -p .github/prompts
+mkdir -p .github/instructions</code></pre>
+
+<p>Tečka před <code>github</code> je důležitá — Copilot prohledává jenom tuhle skrytou složku.</p>
+
+<div class="note warn">
+  <h4>⚠ Pozor — VS Code Settings</h4>
+  <p>Prompt files jsou ve VS Code zatím za přepínačem. Otevři <kbd>Cmd/Ctrl + ,</kbd>, vyhledej <code>chat.promptFiles</code> a zaškrtni. Bez toho VS Code prompt soubory neuvidí.</p>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="step2"><span class="step">Krok 2</span> Napiš <code>copilot-instructions.md</code></h2>
+
+<p>Tohle je tvůj <strong>AGENTS.md ekvivalent</strong> — pravidla projektu, která Copilot načte vždycky.</p>
+
+<p>Vytvoř soubor <code>.github/copilot-instructions.md</code>:</p>
+
+<pre class="amber"><code><span class="heading"># Pravidla projektu</span>
+
+<span class="c">## Stack</span>
+- Python 3.13, pandas, plotly
+- Snowflake DB COURSES, schema SCH_TEROR
+- Výstupy do `dist/` složky (HTML reporty)
+
+<span class="c">## Konvence</span>
+- Read-only databáze. Žádné DROP / UPDATE bez schválení.
+- Tabulky `_OLD` jsou archivy — nepoužívej.
+- `COUNTRY_DIRTYDATA` je znečištěná kopie — místo ní použij `COUNTRY`.
+- Hlavní fakta tabulka je `TEROR2`.
+
+<span class="c">## Tón odpovědí</span>
+- Stručně, bez „rád ti pomohu".
+- Když se neptám na vysvětlení, nevysvětluj.
+- Czech komentáře v kódu, anglicky proměnné.
+
+<span class="c">## Bezpečnost</span>
+- API klíče vždy z `.env`, nikdy v kódu.
+- Necommituj `.env`, `secrets.json`, `dist/`.</code></pre>
+
+<p>Tohle Copilot načte při <strong>každém</strong> chatu, který se týká tohohle repa. Žádný frontmatter, jen markdown.</p>
+
+<div class="note">
+  <h4>Test — funguje to?</h4>
+  <p>Otevři Copilot Chat, zeptej se: <em>„Jaké jsou pravidla tohoto projektu?"</em> Copilot by měl shrnout, co je v <code>copilot-instructions.md</code>. Pokud řekne, že žádná pravidla nezná → soubor není na správném místě nebo není zapnutý preview flag.</p>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="step3"><span class="step">Krok 3</span> Vytvoř první prompt file</h2>
+
+<p>Tohle je <strong>tvůj skill</strong>. Reusable recept na konkrétní úkol.</p>
+
+<p>Vytvoř soubor <code>.github/prompts/q-report.prompt.md</code>:</p>
+
+<pre class="amber"><code><span class="meta-marker">---</span>
+<span class="frontmatter-key">mode</span>: <span class="frontmatter-val">'agent'</span>
+<span class="frontmatter-key">description</span>: <span class="frontmatter-val">'Vygeneruj brandovaný HTML report z dat. Použij naši paletu, layout, formátování čísel.'</span>
+<span class="frontmatter-key">tools</span>: <span class="frontmatter-val">['codebase', 'editFiles', 'runCommands']</span>
+<span class="meta-marker">---</span>
+
+<span class="heading"># Q-Report Generator</span>
+
+Tvým úkolem je vyrobit HTML dashboard z poskytnutých dat.
+
+<span class="heading">## Layout (přesně tento pořádek)</span>
+1. Hero sekce — název reportu + datum
+2. Executive summary — 3-5 bulletů
+3. Tři grafy (Plotly, ne matplotlib)
+4. Tabulka top 10 řádků
+5. Footer s logem a poznámkou „Generováno {datum}"
+
+<span class="heading">## Brand</span>
+- Paleta: `#0a0e14` (pozadí), `#ff9c4a` (akcent), `#5bc0eb` (data)
+- Font: Inter pro text, JetBrains Mono pro čísla
+- Čísla v českém formátu: `1 234 567` (mezery, ne tečky)
+- Logo z `assets/logo.svg` vlevo nahoře
+
+<span class="heading">## Pravidla</span>
+- Vždy se zeptej, jaký quartal/měsíc, pokud uživatel neřekl.
+- Když data nemají sloupec, který bys čekal — neuhádej. Zeptej se.
+- Výstupní soubor uložíš do `dist/q-report-{datum}.html`.
+- Šablonu drž stejnou jako v předchozí verzi (`dist/q-report-Q1-2026.html` jako referenční).
+
+<span class="heading">## Po dokončení</span>
+- Stručně shrň, co jsi vygeneroval (3 řádky).
+- Nech otevřený VS Code preview HTML souboru.</code></pre>
+
+<p>To je celý tvůj skill. Markdown s frontmatter na začátku.</p>
+
+<table>
+  <thead>
+    <tr><th style="width:30%;">Pole</th><th>Co dělá</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>mode</code></td><td><code>agent</code> = Copilot může číst soubory, editovat, spouštět příkazy. <code>ask</code> = jen odpovídá. <code>edit</code> = navrhuje úpravy v souborech, které otevřeš.</td></tr>
+    <tr><td><code>description</code></td><td>Co prompt dělá. Zobrazí se v UI při výběru.</td></tr>
+    <tr><td><code>tools</code></td><td>Které schopnosti smí použít. <code>codebase</code> = čte projekt, <code>editFiles</code> = mění soubory, <code>runCommands</code> = spouští příkazy v terminálu, <code>fetch</code> = HTTP, <code>search</code> = web search.</td></tr>
+  </tbody>
+</table>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="step4"><span class="step">Krok 4</span> Otestuj v chatu</h2>
+
+<p>Otevři Copilot Chat (<kbd>Ctrl/Cmd + Alt + I</kbd>) a napiš:</p>
+
+<pre class="cyan"><code><span class="prompt">/</span>q-report</code></pre>
+
+<p>Copilot ti rozbalí menu — uvidíš svůj prompt v seznamu. Vyber, případně připoj data:</p>
+
+<pre class="cyan"><code><span class="prompt">/</span>q-report Vygeneruj report za druhé čtvrtletí, data jsou v `data/q2-2026.csv`.</code></pre>
+
+<p>Co se teď stane:</p>
+<ol>
+  <li>Copilot načte <code>q-report.prompt.md</code> + <code>copilot-instructions.md</code> dohromady</li>
+  <li>Přečte CSV (díky <code>codebase</code> tool)</li>
+  <li>Vyrobí HTML soubor v <code>dist/</code> (díky <code>editFiles</code> tool)</li>
+  <li>V chatu shrne, co udělal</li>
+</ol>
+
+<div class="note tip">
+  <h4>✓ Sigál, že to funguje</h4>
+  <p>HTML soubor se zjeví v <code>dist/</code>, otevřeš ho v prohlížeči, vidíš svou paletu, čísla s mezerami, layout přesně podle promptu. <strong>To je ten „oooo" moment, který jsi viděla na workshopu.</strong></p>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="step5"><span class="step">Krok 5</span> Připoj MCP (volitelné)</h2>
+
+<p>Pokud chceš, aby tvůj skill chodil rovnou do databáze — místo CSV — připoj MCP server. V Copilotu se MCP konfiguruje v <code>.vscode/mcp.json</code>.</p>
+
+<p>Příklad pro Snowflake (stejný setup, který jsi viděla s Tánou):</p>
+
+<pre class="cyan"><code><span class="meta-marker">{</span>
+  <span class="frontmatter-key">"servers"</span>: <span class="meta-marker">{</span>
+    <span class="frontmatter-key">"snowflake"</span>: <span class="meta-marker">{</span>
+      <span class="frontmatter-key">"command"</span>: <span class="frontmatter-val">"uvx"</span>,
+      <span class="frontmatter-key">"args"</span>: <span class="meta-marker">[</span>
+        <span class="frontmatter-val">"mcp-server-snowflake"</span>,
+        <span class="frontmatter-val">"--account"</span>, <span class="frontmatter-val">"${input:account}"</span>,
+        <span class="frontmatter-val">"--user"</span>, <span class="frontmatter-val">"${input:user}"</span>,
+        <span class="frontmatter-val">"--warehouse"</span>, <span class="frontmatter-val">"COMPUTE_WH"</span>
+      <span class="meta-marker">]</span>,
+      <span class="frontmatter-key">"env"</span>: <span class="meta-marker">{</span>
+        <span class="frontmatter-key">"SNOWFLAKE_PASSWORD"</span>: <span class="frontmatter-val">"${input:password}"</span>
+      <span class="meta-marker">}</span>
+    <span class="meta-marker">}</span>
+  <span class="meta-marker">}</span>
+<span class="meta-marker">}</span></code></pre>
+
+<p>Po uložení Copilot zobrazí v Chatu nový set nástrojů (<code>list_tables</code>, <code>describe_table</code>, <code>execute_query</code>). Přidej je do svého skillu:</p>
+
+<pre class="amber"><code><span class="meta-marker">---</span>
+<span class="frontmatter-key">mode</span>: <span class="frontmatter-val">'agent'</span>
+<span class="frontmatter-key">tools</span>: <span class="frontmatter-val">['codebase', 'editFiles', 'runCommands', 'list_tables', 'describe_table', 'execute_query']</span>
+<span class="meta-marker">---</span></code></pre>
+
+<p>Teď tvůj skill umí <strong>tahat data přímo ze Snowflake</strong> a generovat HTML. Stejný workflow, který jsme dnes ukazovali na workshopu — jen ve tvém VS Code.</p>
+
+<div class="note warn">
+  <h4>⚠ Klíče nikdy v souboru</h4>
+  <p><code>${input:password}</code> = VS Code se zeptá pokaždé. Necommituj <code>.vscode/mcp.json</code> s heslem v textu. Lepší: <code>.env</code> + <code>${env:SNOWFLAKE_PASSWORD}</code>.</p>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="troubleshoot"><span class="step">FIX</span> Když něco nefunguje</h2>
+
+<table>
+  <thead>
+    <tr><th style="width:35%;">Symptom</th><th>Co s tím</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/q-report</code> není v menu</td>
+      <td>Zapni <code>chat.promptFiles</code> v Settings. Restart VS Code. Zkontroluj, že soubor je v <code>.github/prompts/</code> a má příponu <code>.prompt.md</code>.</td>
+    </tr>
+    <tr>
+      <td>Copilot říká „nemám pravidla"</td>
+      <td><code>copilot-instructions.md</code> musí být v <code>.github/</code>, ne v kořenu. Žádné podsložky.</td>
+    </tr>
+    <tr>
+      <td>Skill ignoruje brand barvy</td>
+      <td>Frontmatter <code>tools</code> nesmí být moc úzký. Zkus přidat <code>'codebase'</code>, ať Copilot vidí <code>copilot-instructions.md</code>.</td>
+    </tr>
+    <tr>
+      <td>MCP server nestartuje</td>
+      <td>Otevři výstupní panel <em>„MCP"</em> ve VS Code. Tam je log. Nejčastěji: chybný path k <code>uvx</code> nebo špatné heslo.</td>
+    </tr>
+    <tr>
+      <td>Copilot edituje špatné soubory</td>
+      <td>Buď konkrétní v promptu: <em>„uprav <code>dist/q-report.html</code>, nic jiného"</em>. Nebo zužitnost <code>tools</code> — vyhoď <code>'editFiles'</code> a nech jen <code>'runCommands'</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="dal"><span class="step">Co dál</span> Tvůj druhý skill</h2>
+
+<p>První skill jsi udělala. Teď přidej druhý — něco, co děláš opakovaně. Pár inspirací:</p>
+
+<ul>
+  <li><strong>Code review checklist</strong> — Copilot ti řekne, jestli PR splňuje pravidla projektu</li>
+  <li><strong>Slack zápis z porady</strong> — z přepisu vyrob 5 bulletů + action items</li>
+  <li><strong>SQL optimizer</strong> — vezmi pomalý dotaz, navrhni indexy a EXPLAIN</li>
+  <li><strong>README generator</strong> — z kódu projektu vyrob README s instalací a příklady</li>
+  <li><strong>Email tone fix</strong> — vlož draft, dostaneš profesionální verzi v jednotném tónu</li>
+</ul>
+
+<p>Pravidlo: <em>když to děláš podruhé, patří to do skillu.</em></p>
+
+<div class="note tip">
+  <h4>✓ Anthropic ekvivalent</h4>
+  <p>Pokud později přejdeš na Claude Code (CLI od Anthropic) nebo OpenCode, převést prompt file na skill je triviální. Frontmatter <code>mode</code>/<code>tools</code> nahradíš za <code>name</code>/<code>description</code>, soubor přesuneš do <code>~/.claude/skills/&lt;name&gt;/SKILL.md</code>. Tělo zůstane <em>úplně stejné</em>.</p>
+</div>
+
+<div class="footer-ribbon">
+  <p><strong>Czechitas workshop · Den 2 · Domácí úkol</strong></p>
+  <p style="margin-top: 6px;">Hub: <a href="https://ishalkin.github.io/czechitas-pixel-agent/">ishalkin.github.io/czechitas-pixel-agent</a></p>
+  <p style="margin-top: 4px; color: var(--fg-3);">Otázky? Skill builder + odkazy najdeš v hubu.</p>
+</div>
+
+</body>
+</html>
