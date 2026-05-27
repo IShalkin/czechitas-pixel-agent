@@ -263,66 +263,121 @@ code {
 <section class="slide" id="s4">
   <div class="slide-head">
     <span class="slide-num">⚡ Slide 04</span>
-    <span class="slide-time">12:00 → 32:00</span>
-    <span class="slide-duration">~20 min · LIVE</span>
+    <span class="slide-time">12:00 → 37:00</span>
+    <span class="slide-duration">~25 min · LIVE</span>
   </div>
-  <div class="slide-title">Live demo — vy diktujete, agent dělá</div>
+  <div class="slide-title">Live demo — od chatu k skillu (3 fáze)</div>
 
-  <div class="cue">Otevři terminál. Zvětši písmo (Cmd/Ctrl+).  Spusť Claude Code. Mlč 5 sekund — ať si holky všimnou, že tam nic není.</div>
+  <div class="cue">Otevři terminál. Zvětši písmo (Cmd/Ctrl+). Spusť Claude Code. Žádný skill načtený. Jen agent + Snowflake MCP. Mlč 3 sekundy — ať si všimnou, že je tam <em>prázdno</em>.</div>
 
+  <div class="spoken">
+    Před vámi je čistý chat. <em>Žádný skill.</em> Jen agent a databáze, kterou nám Tana před chvílí připojila. Začneme úplně bez pravidel a uvidíme, co z toho bude.
+  </div>
+
+  <!-- ─── FÁZE 1 ─── -->
   <div class="note demo">
-    <h4>FÁZE 1 · Vytáhneme skill před nimi (~3 min)</h4>
-    <p>Než zadám prompt, ukážu jim, <strong>co skill je</strong>.</p>
+    <h4>FÁZE 1 · Naked chat — vy diktujete (~7 min)</h4>
+    <p>Otoč se na holky.</p>
     <ul>
-      <li>Otevři <code>~/.claude/skills/html-report/SKILL.md</code> v editoru</li>
-      <li>Zvětši písmo</li>
-      <li>Ukaž frontmatter (<code>name</code>, <code>description</code>) — řekni „toto je <em>kdy</em> ho použít"</li>
-      <li>Ukaž tělo — sekce „What to fetch first", „Reject", „Output"</li>
+      <li>„<strong>Co vás zajímá z těch dat?</strong>" — sbírej 2-3 nápady, zopakuj.</li>
+      <li>Sestav prompt nahlas, pošli, mlč.</li>
+      <li>Komentuj nástroje, jak letí: <code>list_tables</code>, <code>describe</code>, <code>execute_query</code>.</li>
+      <li><strong>Tabulky v DB:</strong> COUNTRY, COUNTRY_DIRTYDATA, TEROR, TEROR2, TEROR2_OLD, REGION, ATTACKTYPE, WEAPTYPE.</li>
     </ul>
   </div>
 
   <div class="spoken">
-    Tohle je <strong>celý skill</strong>. Ten markdown soubor. <em>Třicet řádků.</em> Žádný framework, žádná aplikace. Jen recept. „Když uživatel chce HTML report z dat, dělej toto, vyhni se tomuhle, výstup vrať takhle." Zavírám editor — stejný soubor agent uvidí, až se ho zeptám.
+    Takže — <em>co byste chtěly vidět</em>? Tana ukázala tabulky. Top útoky podle země? Nejčastější typ zbraně? Časová řada útoků za poslední roky? <em>Říkejte.</em>
   </div>
 
-  <div class="pause">— PAUZA — 3 SEKUNDY</div>
+  <div class="cue">Když je ticho 8 sekund, navrhni: „<em>Pojďme s top 10 zemí podle počtu událostí — to je rychlé a vidíme tam tu past s 408.</em>"</div>
 
+  <div class="spoken">
+    OK. Píšu: <strong>„Připoj se ke Snowflake. Najdi tabulky. Vrať mi top 10 zemí podle počtu událostí v tabulce TEROR. A k tomu časovou řadu za posledních 20 let."</strong>
+  </div>
+
+  <div class="cue">Pošli. Komentuj během práce — <em>co</em> agent dělá, ne proč.</div>
+
+  <ul style="margin: 8px 0 8px 22px; color: var(--fg-2); font-size: 17px;">
+    <li>„Vidíte — udělal <code>list_tables</code>. <em>Sám.</em> Nikdo mu neřekl, že to má udělat — ale ví, že nemůže psát SQL na slepo."</li>
+    <li>„Teď <code>describe</code> na TEROR. Zjišťuje sloupce."</li>
+    <li>„Pošle SQL. <em>Read-only.</em> MCP ho stejně neumí jinak — to je bezpečnostní bonus."</li>
+  </ul>
+
+  <div class="note warn">
+    <h4>🪤 Pokud agent sáhne na COUNTRY_DIRTYDATA nebo TEROR2_OLD</h4>
+    <p>NEOPRAVUJ ho hned. Nech to projít. Až vrátí výsledek — ukaž na číslo: „<strong>408 zemí.</strong> Kolik je na světě? <em>193.</em> Co se stalo? Vzal špatnou tabulku. Žádná pravidla, žádný skill — jen heuristika." → tohle je tvůj přechod na fázi 2.</p>
+  </div>
+
+  <div class="pause">— PŘECHOD —</div>
+
+  <!-- ─── FÁZE 2 ─── -->
   <div class="note demo">
-    <h4>FÁZE 2 · Vy diktujete, já píšu (~12 min)</h4>
-    <p>Otevři Claude Code chat. Otoč se na holky.</p>
+    <h4>FÁZE 2 · Dashboard + GitHub deploy (~7 min)</h4>
+    <p>Číselný výstup máme. Teď z toho udělej <em>artefakt, který lze poslat</em>.</p>
     <ul>
-      <li>„<strong>Co vás zajímá z těch tabulek, co Tana ukázala?</strong>"</li>
-      <li>Sbírej 2–3 nápady. Zopakuj je nahlas (kotvení).</li>
-      <li>Sestav z toho prompt v reálném čase, mluvíc nahlas.</li>
+      <li>Pošli další prompt: „<strong>Udělej z toho self-contained HTML dashboard. Tmavý theme. KPI nahoře, tabulka, jednoduchý graf. A pak to commitni a pushni do <code>czechitas-dashboard</code> repa, ať se otevře přes GitHub Pages.</strong>"</li>
+      <li>Agent píše HTML. Ukázat soubor v editoru když ho dokončí.</li>
+      <li>Agent dělá <code>git push</code>. Otevřít URL v prohlížeči. <strong>Wow moment.</strong></li>
     </ul>
   </div>
 
   <div class="spoken">
-    Takže — co byste chtěly z těch dat vidět? Nějaký report z Czechitas kurzů? Top 5 lektorek podle hodnocení? Vývoj počtu studentek za rok? <em>Říkejte.</em>
+    Máme čísla. Ale <em>čísla v terminálu</em> nikomu nepomohou. Potřebujeme to dostat ven — do prohlížeče, na URL, kterou pošlu kolegyni.
   </div>
 
-  <div class="cue">Sbírej odpovědi. Když je ticho, navrhni sama: „Co takhle <em>top 10 nejnavštěvovanějších kurzů + grafy podle měsíců</em>?"</div>
+  <div class="cue">Pošli prompt na HTML + push. Komentuj během.</div>
+
+  <ul style="margin: 8px 0 8px 22px; color: var(--fg-2); font-size: 17px;">
+    <li>Když píše HTML: „Self-contained znamená <em>jeden soubor, žádný server</em>. Otevřu přímo v prohlížeči."</li>
+    <li>Když dělá <code>git add</code> + <code>commit</code> + <code>push</code>: „Tohle dělá agent <em>sám</em>, není to magie — má povolení používat shell. Vidíte commit message? Napsal ji sám podle kontextu."</li>
+    <li>Po pushi otevři URL v prohlížeči. <strong>Pauza 5 sekund.</strong> Ať se holky podívají.</li>
+  </ul>
 
   <div class="spoken">
-    Dobře. Takže napíšu agentovi: <strong>„Vygeneruj HTML report z tabulek ve Snowflake. Top 10 kurzů podle počtu studentek. Časová řada za posledních dvanáct měsíců. Pro junior analyst, který ta data vidí poprvé. Self-contained HTML."</strong>
+    Máme to. <em>Veřejná URL.</em> Cokoliv kolegyně otevře — uvidí stejně jako my.
   </div>
 
-  <div class="cue">Pošli prompt. <strong>Mlč.</strong> Nechej agenta pracovat.</div>
+  <div class="pause">— PŘECHOD — KLÍČOVÝ MOMENT —</div>
 
+  <!-- ─── FÁZE 3 ─── -->
   <div class="note demo">
-    <h4>FÁZE 3 · Komentář během práce (~5 min)</h4>
-    <p>Když vidíš <code>list_tables</code> / <code>describe_table</code>: říkej nahlas <em>co</em> agent dělá. Nesmí to být ticho.</p>
+    <h4>FÁZE 3 · Extrahuj skill (~5 min) · PUNCHLINE</h4>
+    <p>Teď ten <em>moment narození skillu</em>.</p>
     <ul>
-      <li>„Vidíte? Začal <code>list_tables</code>. To <strong>vynutil skill</strong>. Bez skillu by si vymyslel sloupce z hlavy."</li>
-      <li>„Sahá na <code>describe_table</code>. Ověřuje si, co tam vůbec je."</li>
-      <li>Když pošle SQL: „Tohle je <em>read-only</em>. Skill ho zakázal psát do databáze."</li>
-      <li>Když píše HTML: „<strong>Reálná čísla</strong>, žádné placeholdery. To zase vynucuje skill."</li>
+      <li>Pošli: „<strong>Z téhle konverzace teď udělej SKILL.md, abych příště nemusela diktovat všechny tyhle kroky. Ulož ho do <code>~/.claude/skills/snowflake-html-report/SKILL.md</code>.</strong>"</li>
+      <li>Agent vygeneruje skill. Otevři ho v editoru.</li>
+      <li>Ukaž frontmatter (<code>name</code>, <code>description</code>) a tělo.</li>
     </ul>
+  </div>
+
+  <div class="spoken">
+    Teď přichází ta nejdůležitější věc dnešního večera. <em>Sledujte.</em>
+  </div>
+
+  <div class="spoken">
+    Píšu: <strong>„Z téhle konverzace udělej SKILL.md, abych příště nemusela tyhle kroky diktovat znovu. Ulož ho do skills složky."</strong>
+  </div>
+
+  <div class="cue">Pošli. Otevři vygenerovaný SKILL.md v editoru. Zvětši.</div>
+
+  <div class="spoken">
+    Tohle je <strong>skill</strong>. Markdown soubor. Frontmatter — <code>name</code> a <code>description</code> — to říká agentovi, <em>kdy</em> ten skill použít. Tělo — co fetchnout, čeho se vyhnout, jaký výstup vrátit.
+  </div>
+
+  <div class="spoken">
+    A všimněte si — <em>nikdo ho nepsal na prázdno</em>. Vznikl <strong>z naší konverzace</strong>. Z toho, co jsme právě udělaly. Příště, až přijdu k databázi a řeknu „udělej report" — agent ten skill najde a tyhle kroky <em>zopakuje</em>. Bez ptaní, bez chyb, beze mě.
+  </div>
+
+  <div class="spoken">
+    To je princip. <strong>Skill je zápis první úspěšné konverzace, abys ji nemusela opakovat.</strong> Tady jste viděly, jak vzniká.
   </div>
 
   <div class="note warn">
-    <h4>⚠ Pokud agent zatuhne / MCP padne</h4>
-    <p>Nepanikuj. Řekni: „<em>Tohle se dnes občas stává — síť, autorizace. Mám zálohu.</em>" → otevři <code>dashboard.html</code> z czechitas-pixel-agent / nebo přejdi na Stack Trace demo. Pointa zůstává.</p>
+    <h4>⚠ Pokud něco selže během fází</h4>
+    <p><strong>MCP padne ve fázi 1:</strong> přeskoč na fázi 2 — otevři předem vygenerovaný <code>dashboard.html</code> a komentuj jako live.</p>
+    <p><strong>git push selže ve fázi 2:</strong> ukaž HTML lokálně, řekni „push si pak udělám sama".</p>
+    <p><strong>Skill ve fázi 3 vyleze špatně:</strong> otevři ho stejně, řekni „<em>tohle je první draft. V práci si ho ještě upravíš ručně. Ale pointa: rodí se z práce, ne na prázdno.</em>"</p>
   </div>
 </section>
 
@@ -330,10 +385,14 @@ code {
 <section class="slide" id="s5">
   <div class="slide-head">
     <span class="slide-num">🪤 Slide 05</span>
-    <span class="slide-time">32:00 → 38:00</span>
-    <span class="slide-duration">~6 min</span>
+    <span class="slide-time">37:00 → 41:00</span>
+    <span class="slide-duration">~4 min</span>
   </div>
-  <div class="slide-title">Trap reveal — „počkejte, tohle nesedí"</div>
+  <div class="slide-title">Trap reveal — „a tohle skill teď chrání"</div>
+
+  <div class="cue">Pokud past už proběhla ve fázi 1 (agent sáhl na _DIRTYDATA / _OLD), tahle slide je <strong>pojmenování</strong>: ukaž skill, najdi v něm sekci <code>## Reject</code>, řekni „už to víme. Příště to nestane."</div>
+
+  <div class="cue">Pokud past neproběhla, vytáhni ji teď: „<em>Mimochodem — všimly jste si, že v databázi jsou dvě tabulky se zeměmi? COUNTRY a COUNTRY_DIRTYDATA. Druhá má 408 řádků. Kolik je na světě států?</em>"</div>
 
   <div class="cue">Otevři vygenerovaný dashboard.html. Zvětši. Pauza 5 sekund — ať se holky podívají.</div>
 
@@ -373,34 +432,34 @@ code {
 <section class="slide" id="s6">
   <div class="slide-head">
     <span class="slide-num">📦 Slide 06</span>
-    <span class="slide-time">38:00 → 45:00</span>
-    <span class="slide-duration">~7 min</span>
+    <span class="slide-time">41:00 → 45:00</span>
+    <span class="slide-duration">~4 min</span>
   </div>
   <div class="slide-title">Co si odnášíš — tři dema + domácí úkol</div>
 
   <div class="spoken">
-    Než předám slovo Kubovi, dvě praktické věci.
+    Před chvílí jste viděly, jak <strong>skill vznikl</strong> — z konverzace. To, co příště zopakuju jedním promptem, dnes trvalo čtvrt hodiny. Tak skilly funguji.
   </div>
 
   <div class="spoken">
-    <strong>Tři demo stránky</strong> jsou nahrané online. Pixel Agent — vizualizace toho, co jsme teď viděly. Stack Trace — pět vrstev kontextu jednoho dotazu. Skill Builder — ten samý soubor, jen postavený klikáním. Všechno běží v prohlížeči, žádný setup.
+    <strong>Tři demo stránky</strong> jsou nahrané online. Pixel Agent — vizualizace toho, jak agent prochází kontext. Stack Trace — pět vrstev jednoho dotazu. Skill Builder — soubor SKILL.md, jen postavený klikáním. Všechno v prohlížeči, žádný setup.
   </div>
 
   <div class="spoken">
-    A <strong>domácí úkol</strong> — volitelný, ale stojí za to. Univerzální gajd „kam patří skill v Copilotu, Claude Code i OpenCode". Ten samý úkol — HTML report — ve třech harness'ech. <em>Princip pochopíš jednou, použiješ kdekoliv.</em>
+    <strong>Domácí úkol</strong> — volitelný, ~30 minut. Univerzální gajd: <em>„kam patří skill v Copilotu, v Claude Code, v OpenCode"</em>. Ten samý nápad ve třech harness'ech. Princip pochopíš jednou, použiješ kdekoliv.
   </div>
 
   <div class="note">
-    <h4>Praktická poznámka</h4>
-    <p>Většina z vás bude pokračovat v <strong>Copilotu</strong> (to, co Tana nastavila). Gajd je pro to napsaný — ale ukazuje i Claude Code variantu, abyste viděly, že je to <em>stejný princip, jen jiná složka</em>. Až někdy budete pracovat s jiným agentem, znáte to.</p>
+    <h4>Praktická poznámka pro DÚ</h4>
+    <p>S Tanou jste setupovaly <strong>Copilot</strong> — gajd ukazuje cestu pro něj jako první. Ale dnes jste viděly Claude Code variantu (to byl můj terminál) — ta je v gajdu druhá. Stejný princip, jen jiná složka.</p>
   </div>
 
   <div class="spoken">
-    A tím dnes končíme. Dvě věci, co byste si měly odnést — <strong>skill je markdown soubor, ne framework</strong>, a <strong>nedůvěřujte výstupu, dokud ho nezměříte</strong>. To první vám usnadní práci. To druhé vám zachrání práci.
+    A závěr. Dvě věty, co si odnesete. <strong>Skill je markdown soubor, který vznikne z konverzace.</strong> A <strong>nedůvěřujte výstupu, dokud ho nezměříte</strong> — to převezme za chvíli Kuba.
   </div>
 
   <div class="spoken">
-    Předávám Kubovi. Děkuju.
+    Předávám. Díky.
   </div>
 
   <div class="cue">Tlesk by měl přijít. Pokud ne — řekni „díky" a posaď se. Kuba převezme.</div>
@@ -417,11 +476,11 @@ code {
       <tr><td>0:00</td><td>01 · Title</td><td>Krátký úvod, Ilia, co bude.</td></tr>
       <tr><td>1:30</td><td>02 · Recap</td><td>Včera + dnes před chvílí. Slovo „past" ronit.</td></tr>
       <tr><td>7:00</td><td>03 · Pipeline</td><td>Čtyři krabičky. Ukázat skill úryvek.</td></tr>
-      <tr><td>12:00</td><td>04 · Demo fáze 1</td><td>Otevřít SKILL.md v editoru, ukázat.</td></tr>
-      <tr><td>15:00</td><td>04 · Demo fáze 2</td><td>Sebrat nápady od holek, sestavit prompt.</td></tr>
-      <tr><td>20:00</td><td>04 · Demo fáze 3</td><td>Komentář během práce agenta (~10 min).</td></tr>
-      <tr><td>32:00</td><td>05 · Trap reveal</td><td>Otevřít report, najít/zinscenovat past.</td></tr>
-      <tr><td>38:00</td><td>06 · Wrap-up</td><td>Tři dema + DÚ + závěrečné dvě věty.</td></tr>
+      <tr><td>12:00</td><td>04 · Fáze 1</td><td>Naked chat — holky diktují, agent volá MCP. ~7 min.</td></tr>
+      <tr><td>19:00</td><td>04 · Fáze 2</td><td>HTML dashboard + git push na Pages. ~7 min.</td></tr>
+      <tr><td>26:00</td><td>04 · Fáze 3</td><td><strong>Extrakce skillu z konverzace.</strong> ~5 min. Pointa večera.</td></tr>
+      <tr><td>37:00</td><td>05 · Trap</td><td>Pojmenovat past (DIRTYDATA / _OLD), ukázat <code>Reject</code> sekci.</td></tr>
+      <tr><td>41:00</td><td>06 · Wrap-up</td><td>Tři dema + DÚ + závěrečné dvě věty.</td></tr>
       <tr><td>45:00</td><td>—</td><td><strong>Kuba</strong> přebírá (evals).</td></tr>
     </tbody>
   </table>

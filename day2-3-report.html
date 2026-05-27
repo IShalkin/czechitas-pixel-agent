@@ -598,43 +598,36 @@ body.speaker-mode #speaker-panel { display: block; }
     <span class="kicker green">⚡ LIVE · 2–4 MIN</span>
     <h2>Sledujte agenta. Komentář k tomu.</h2>
 
-    <p style="font-size:21px;">Sdílím terminál v Claude Code. <strong>Vy diktujete</strong> — co chcete z databáze vidět? Já píšu prompt, agent dělá.</p>
+    <p style="font-size:21px;">Sdílím terminál v Claude Code. <strong>Žádný skill</strong> zatím nemám — jen agent + Snowflake MCP. Vy diktujete, co chcete vidět. Postavíme report, deploynem na GitHub. <em>A teprve nakonec</em> z té konverzace vytáhneme skill.</p>
 
-<pre class="green-bar"><span class="c">// Claude Code · čistý kontext · Snowflake MCP enabled</span>
-
-<span class="t">Vygeneruj mi HTML report z dat, která máš ve Snowflake.</span>
-<span class="t">[ ← sem dáme to, co holky řeknou: jaké tabulky, jaký řez,</span>
-<span class="t">    co je zajímá — KPI, časová řada, top N, geo… ]</span>
-<span class="t">Audience: junior analyst, vidí ta data poprvé.</span>
-<span class="t">Chci 1 self-contained HTML, otevřu v prohlížeči.</span></pre>
-
-    <p style="font-size:17px; color: var(--fg-3); margin-top:8px;">Skill „HTML report" si <strong>vytáhneme z agenta v reálném čase</strong> — uvidíte, jak vypadá, než ho použijeme. Pak hodím prompt a komentujeme.</p>
-
-    <h3>Co budu komentovat nahlas</h3>
+    <h3>Tři fáze · ~25 minut</h3>
     <table>
-      <thead><tr><th style="width:40%;">Kdy</th><th>Co řeknu</th></tr></thead>
+      <thead><tr><th style="width:18%;">Fáze</th><th style="width:22%;">Co dělám</th><th>Pointa</th></tr></thead>
       <tbody>
         <tr>
-          <td><code>list_tables</code> proběhne</td>
-          <td>„Ten <code>list_tables</code> ho vynutil <em>skill</em>. Bez skillu by začal hádat sloupce z hlavy."</td>
+          <td><strong style="color: var(--cyan);">1 · Naked chat</strong><br><span style="color: var(--fg-3); font-size: 14px;">~7 min</span></td>
+          <td>Holky diktují, já píšu prompt, agent volá MCP</td>
+          <td>Žádná pravidla. Agent <em>nemusí</em> vědět, že <code>_OLD</code> tabulky jsou špatné. Vidíme realitu.</td>
         </tr>
         <tr>
-          <td>SQL queries letí</td>
-          <td>„Všimněte si — sahá na <code>TEROR2</code>, ne <code>TEROR2_OLD</code>. Tohle není SQL hygiena, to je <em>firemní znalost</em> ze skillu."</td>
+          <td><strong style="color: var(--amber);">2 · Dashboard + deploy</strong><br><span style="color: var(--fg-3); font-size: 14px;">~6 min</span></td>
+          <td>„Udělej z toho HTML, push na GitHub Pages"</td>
+          <td>Veřejná URL. Otevřeme v prohlížeči. <em>Wow moment.</em></td>
         </tr>
         <tr>
-          <td>Sahá na <code>COUNTRY</code> i <code>COUNTRY_DIRTYDATA</code></td>
-          <td>„Skill ho nutí porovnat dva zdroje. Hned uvidíme, proč."</td>
-        </tr>
-        <tr>
-          <td>Generuje HTML</td>
-          <td>„Píše soubor s reálnými čísly. Žádné placeholdery. To zase vynucuje skill — sekce <em>What you'll produce</em>."</td>
+          <td><strong style="color: var(--green);">3 · Extrahuj skill</strong><br><span style="color: var(--fg-3); font-size: 14px;">~5 min</span></td>
+          <td>„Teď z téhle konverzace udělej SKILL.md"</td>
+          <td><strong>Punchline.</strong> Skill se rodí <em>z práce</em>, ne na prázdno. Uloží se do <code>~/.claude/skills/</code>.</td>
         </tr>
       </tbody>
     </table>
 
+    <div class="callout green">
+      <strong>Pointa celého bloku:</strong> včera jste skill viděly <em>jako recept</em>. Dnes vidíte, <em>odkud se ten recept bere</em> — je to zápis první úspěšné konverzace, abyste ji nemuseli opakovat.
+    </div>
+
     <div class="callout cyan">
-      <strong>Backup:</strong> pokud agent zatuhne nebo MCP padne, otevřu <code>dashboard.html</code> z <code>czechitas-pixel-agent</code> a komentuju jako live. Princip stejný.
+      <strong>Backup:</strong> pokud MCP padne, přeskočím fázi 1 a fáze 2-3 udělám offline z <code>czechitas-pixel-agent/dashboard.html</code>. Princip stejný.
     </div>
   </div>
 </section>
@@ -716,17 +709,17 @@ body.speaker-mode #speaker-panel { display: block; }
         <ul>
           <li><strong>SQL Quality Judge</strong> — automaticky kontroluje, že agent ze skillu vyjel správný query</li>
           <li>před / po se <strong>změří</strong>, ne jen ukáže</li>
-          <li>skill, který jsme právě vytáhli + evaly = produkční pipeline</li>
+          <li>skill, který jsme právě vytvořily + evaly = produkční pipeline</li>
         </ul>
       </div>
     </div>
 
     <div class="callout green">
-      <strong>Domácí úkol (volitelně):</strong> univerzální gajd <em>„kam patří skill v Copilotu / Claude Code / OpenCode"</em> — jednu úlohu vyřešíš ve třech harness'ech. Princip: harness vždy hledá složku <code>skills/</code> ve své dotfiles, jen pod jiným jménem. Pochopíš to jednou, použiješ kdekoliv.
+      <strong>Pointa dnešního demo:</strong> skill <em>nevznikl na prázdno</em>. Vznikl <strong>z první úspěšné konverzace</strong>. To, co dnes trvalo 15 minut s mojí navigací, příště agent zopakuje jedním promptem.
     </div>
 
     <div class="callout green" style="margin-top: 12px;">
-      <strong>Princip celého workshopu:</strong> API + Agent + MCP + Skill + Evals. Pět dílů, jeden loop. Dnes jste viděly, co skill umí — <strong>doma si ho postavíte sami</strong> podle gajdu.
+      <strong>Domácí úkol (volitelně):</strong> univerzální gajd <em>„kam patří skill v Copilotu / Claude Code / OpenCode"</em>. Princip: harness vždy hledá složku <code>skills/</code> ve svých dotfiles, jen pod jiným jménem. <strong>Pochopíš to jednou, použiješ kdekoliv.</strong>
     </div>
   </div>
 </section>
