@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speaker Script · Den 2 · Blok 03 · Report z přirozeného jazyka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a0e14;
+  --bg-2:      #11161f;
+  --bg-card:   #131922;
+  --border:    #232c3a;
+  --fg:        #eaf0f7;
+  --fg-2:      #b8c4d4;
+  --fg-3:      #7c8898;
+  --amber:     #ff9c4a;
+  --cyan:      #5bc0eb;
+  --green:     #4dd072;
+  --red:       #ff5252;
+  --yellow:    #ffd166;
+  --magenta:   #c77dff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg); color: var(--fg);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 19px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+body { max-width: 880px; margin: 0 auto; padding: 32px 28px 96px; }
+
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 20px;
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px;
+  margin-bottom: 28px;
+  font-size: 14px; letter-spacing: 0.05em;
+  font-family: 'JetBrains Mono', monospace; color: var(--fg-3);
+  text-transform: uppercase;
+  position: sticky; top: 8px; z-index: 50;
+  backdrop-filter: blur(8px);
+}
+.topbar .brand { color: var(--amber); font-weight: 700; }
+.topbar .total { color: var(--cyan); }
+
+h1.title { font-size: 38px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 6px; line-height: 1.2; }
+.subtitle { font-size: 17px; color: var(--fg-3); margin-bottom: 36px; }
+
+.slide { margin-top: 44px; padding-top: 28px; border-top: 1px solid var(--border); }
+.slide:first-of-type { border-top: none; padding-top: 0; }
+.slide-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+.slide-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--amber);
+  background: rgba(255, 156, 74, 0.1); border: 1px solid rgba(255, 156, 74, 0.3);
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 0.08em; text-transform: uppercase;
+  white-space: nowrap;
+}
+.slide-time { font-family: 'JetBrains Mono', monospace; font-size: 14px; color: var(--cyan); font-weight: 500; }
+.slide-duration { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--fg-3); }
+.slide-title { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; margin-top: 4px; width: 100%; }
+
+.spoken {
+  font-size: 22px; line-height: 1.55; color: var(--fg);
+  margin: 14px 0; padding: 18px 22px;
+  background: var(--bg-card); border-left: 3px solid var(--amber); border-radius: 4px;
+}
+.spoken strong { color: var(--amber); font-weight: 600; }
+.spoken em { color: var(--cyan); font-style: italic; }
+
+.cue {
+  font-size: 15px; color: var(--fg-3); font-style: italic;
+  margin: 14px 0; padding-left: 22px; border-left: 2px solid var(--border);
+}
+.cue::before { content: "▸ "; color: var(--cyan); font-style: normal; margin-left: -14px; }
+
+.note {
+  background: rgba(91, 192, 235, 0.06); border: 1px solid rgba(91, 192, 235, 0.2);
+  border-left: 3px solid var(--cyan); border-radius: 4px;
+  padding: 14px 18px; margin: 18px 0; font-size: 17px;
+}
+.note.warn { background: rgba(255,209,102,0.06); border-color: rgba(255,209,102,0.2); border-left-color: var(--yellow); }
+.note.danger { background: rgba(255,82,82,0.06); border-color: rgba(255,82,82,0.2); border-left-color: var(--red); }
+.note.demo { background: rgba(77,208,114,0.06); border-color: rgba(77,208,114,0.2); border-left-color: var(--green); }
+.note.magenta { background: rgba(199,125,255,0.06); border-color: rgba(199,125,255,0.2); border-left-color: var(--magenta); }
+.note h4 {
+  font-size: 14px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--cyan); margin-bottom: 8px; font-weight: 600;
+}
+.note.warn h4 { color: var(--yellow); }
+.note.danger h4 { color: var(--red); }
+.note.demo h4 { color: var(--green); }
+.note.magenta h4 { color: var(--magenta); }
+.note p { margin: 6px 0; }
+.note p + p { margin-top: 10px; }
+.note ul { margin: 6px 0 6px 22px; }
+.note ul li { margin: 4px 0; }
+
+.pause {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 13px;
+  letter-spacing: 0.15em; color: var(--fg-3);
+  margin: 14px 0; text-transform: uppercase;
+}
+.pause::before, .pause::after { content: " · · · "; color: var(--border); }
+
+.timing-table {
+  margin: 40px 0; width: 100%; border-collapse: collapse;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden; font-size: 16px;
+}
+.timing-table th, .timing-table td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.timing-table th { background: var(--bg-2); color: var(--fg-3); font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.timing-table td:first-child { font-family: 'JetBrains Mono', monospace; color: var(--cyan); width: 90px; }
+.timing-table td:nth-child(2) { width: 160px; color: var(--amber); font-weight: 500; }
+.timing-table tr:last-child td { border-bottom: none; }
+
+.fallback {
+  margin: 40px 0; padding: 20px 24px;
+  background: var(--bg-card); border: 1px solid var(--red); border-radius: 8px;
+}
+.fallback h3 { color: var(--red); font-size: 17px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+.fallback ul { padding-left: 20px; }
+.fallback li { margin: 8px 0; font-size: 16px; color: var(--fg-2); }
+.fallback strong { color: var(--amber); }
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(91,192,235,0.1); border: 1px solid rgba(91,192,235,0.2);
+  color: var(--cyan); padding: 1px 6px; border-radius: 3px; font-size: 0.9em;
+}
+
+@media (max-width: 900px) {
+  body { padding: 20px 18px 80px; font-size: 18px; }
+  h1.title { font-size: 30px; }
+  .spoken { font-size: 20px; padding: 16px 18px; }
+  .slide-title { font-size: 22px; }
+  .quicknav { display: none; }
+}
+@media print {
+  body { background: white; color: black; max-width: none; padding: 20mm; font-size: 11pt; }
+  .topbar { display: none; }
+  .slide { break-inside: avoid; }
+  .spoken { background: #f4f4f4; color: black; border-left-color: #c47820; }
+  .cue { color: #555; }
+  .note { background: #f8f8f8; color: black; }
+}
+
+.quicknav {
+  position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; gap: 6px; z-index: 100;
+}
+.quicknav a {
+  width: 28px; height: 28px;
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px;
+  color: var(--fg-3); text-decoration: none;
+  font-family: 'JetBrains Mono', monospace; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.quicknav a:hover { background: var(--amber); color: var(--bg); border-color: var(--amber); }
+</style>
+</head>
+<body>
+
+<nav class="quicknav">
+  <a href="#s1">01</a>
+  <a href="#s2">02</a>
+  <a href="#s3">03</a>
+  <a href="#s4">04</a>
+  <a href="#s5">05</a>
+  <a href="#s6">06</a>
+  <a href="#timing">⏱</a>
+  <a href="#fallback">🚨</a>
+</nav>
+
+<div class="topbar">
+  <span><span class="brand">CZECHITAS</span> · DEN 2 · BLOK 03</span>
+  <span class="total">⏱ 50 MIN · 6 SLIDŮ + LIVE DEMO</span>
+</div>
+
+<h1 class="title">Speaker script — Report z přirozeného jazyka</h1>
+<p class="subtitle">Tučně = mluvený text. <em>Kurzíva</em> = režijní pokyn (co dělat rukama). Zelené karty = demo / interakce s holkami. Červené = fallback.</p>
+
+<!-- ─────────── SLIDE 01 ─────────── -->
+<section class="slide" id="s1">
+  <div class="slide-head">
+    <span class="slide-num">📊 Slide 01</span>
+    <span class="slide-time">0:00 → 1:30</span>
+    <span class="slide-duration">~1.5 min</span>
+  </div>
+  <div class="slide-title">Title — co dnes uděláme</div>
+
+  <div class="cue">Stůj rovně. Po Kubovi a Táně máš pozornost — neztrať ji dlouhým úvodem.</div>
+
+  <div class="spoken">
+    Dobrý večer. Já jsem zase <strong>Ilia</strong>. Včera jsme řešily <em>pravidla</em> — skill, markdown soubor, AGENTS.md. Před chvílí Tana ukázala <em>data</em> — Snowflake přes MCP. Teď to spojíme.
+  </div>
+
+  <div class="spoken">
+    Cíl těchto padesáti minut: <strong>jeden český dotaz → HTML dashboard</strong>, který otevřete v prohlížeči. Žádné SQL, žádný kód. Pracujeme spolu — vy diktujete, agent dělá, já komentuju.
+  </div>
+
+  <div class="cue">→ na slide 02.</div>
+</section>
+
+<!-- ─────────── SLIDE 02 ─────────── -->
+<section class="slide" id="s2">
+  <div class="slide-head">
+    <span class="slide-num">🔁 Slide 02</span>
+    <span class="slide-time">1:30 → 7:00</span>
+    <span class="slide-duration">~5.5 min</span>
+  </div>
+  <div class="slide-title">Recap — kde jsme a co teď</div>
+
+  <div class="spoken">
+    Tahle slide má dva sloupce. Vlevo včera, vpravo dnes. Skill nás naučil <em>jak</em>. MCP dal agentovi <em>k čemu</em> sahat. Když to spojíme — z jednoho českého dotazu vyleze brandovaný report.
+  </div>
+
+  <div class="cue">Ukazuj rukou na sloupce, když mluvíš.</div>
+
+  <div class="spoken">
+    A pozor — v reálných datech bývají <strong>pasti</strong>. Staré tabulky, dirty kopie, sentinely. Schválně sledujte čísla, která agent vytáhne. Něco vás dnes možná zkusí oklamat. Když to uvidíte, řekněte to nahlas. Já čekám.
+  </div>
+
+  <div class="note warn">
+    <h4>⚠ Pokud žádná past nepřijde</h4>
+    <p>Není to katastrofa. Pointa „nedůvěřuj reportu" platí i bez ní. Slide 05 (trap reveal) můžeš přeskočit nebo to <em>já</em> zinscenuju tím, že schválně se zeptám na <code>COUNTRY_DIRTYDATA</code>.</p>
+  </div>
+
+  <div class="cue">→ na slide 03.</div>
+</section>
+
+<!-- ─────────── SLIDE 03 ─────────── -->
+<section class="slide" id="s3">
+  <div class="slide-head">
+    <span class="slide-num">🔧 Slide 03</span>
+    <span class="slide-time">7:00 → 12:00</span>
+    <span class="slide-duration">~5 min</span>
+  </div>
+  <div class="slide-title">Pipeline — co se za 3 minuty stane</div>
+
+  <div class="spoken">
+    Než pustím demo, ukážu <strong>z čeho je to udělané</strong>. Čtyři krabičky.
+  </div>
+
+  <div class="cue">Postupně ukazuj na každou krabičku. Počítej k tomu prsty.</div>
+
+  <div class="spoken">
+    <strong>Jedna.</strong> Český prompt. To, co napíšete vy. Žádné SQL. <strong>Dvě.</strong> Skill. Markdown soubor, který říká agentovi <em>jak</em> ten report vyrobit. <strong>Tři.</strong> MCP. To, co Tana před chvílí nastavila. Agent pošle <code>list_tables</code>, <code>describe_table</code>, šestkrát <code>execute_query</code>. <strong>Čtyři.</strong> Dashboard.html. Self-contained, otevřu v prohlížeči.
+  </div>
+
+  <div class="spoken">
+    A pod tím vidíte <em>úryvek skillu</em>. Třicet řádků markdownu. „<strong>Co fetchnout</strong>", „<strong>co odmítnout</strong>", „<strong>co výstupit</strong>". Stejný formát jako včera — jen jiný recept.
+  </div>
+
+  <div class="cue">→ na slide 04. <strong>Tady začíná živá akce.</strong></div>
+</section>
+
+<!-- ─────────── SLIDE 04 ─────────── -->
+<section class="slide" id="s4">
+  <div class="slide-head">
+    <span class="slide-num">⚡ Slide 04</span>
+    <span class="slide-time">12:00 → 32:00</span>
+    <span class="slide-duration">~20 min · LIVE</span>
+  </div>
+  <div class="slide-title">Live demo — vy diktujete, agent dělá</div>
+
+  <div class="cue">Otevři terminál. Zvětši písmo (Cmd/Ctrl+).  Spusť Claude Code. Mlč 5 sekund — ať si holky všimnou, že tam nic není.</div>
+
+  <div class="note demo">
+    <h4>FÁZE 1 · Vytáhneme skill před nimi (~3 min)</h4>
+    <p>Než zadám prompt, ukážu jim, <strong>co skill je</strong>.</p>
+    <ul>
+      <li>Otevři <code>~/.claude/skills/html-report/SKILL.md</code> v editoru</li>
+      <li>Zvětši písmo</li>
+      <li>Ukaž frontmatter (<code>name</code>, <code>description</code>) — řekni „toto je <em>kdy</em> ho použít"</li>
+      <li>Ukaž tělo — sekce „What to fetch first", „Reject", „Output"</li>
+    </ul>
+  </div>
+
+  <div class="spoken">
+    Tohle je <strong>celý skill</strong>. Ten markdown soubor. <em>Třicet řádků.</em> Žádný framework, žádná aplikace. Jen recept. „Když uživatel chce HTML report z dat, dělej toto, vyhni se tomuhle, výstup vrať takhle." Zavírám editor — stejný soubor agent uvidí, až se ho zeptám.
+  </div>
+
+  <div class="pause">— PAUZA — 3 SEKUNDY</div>
+
+  <div class="note demo">
+    <h4>FÁZE 2 · Vy diktujete, já píšu (~12 min)</h4>
+    <p>Otevři Claude Code chat. Otoč se na holky.</p>
+    <ul>
+      <li>„<strong>Co vás zajímá z těch tabulek, co Tana ukázala?</strong>"</li>
+      <li>Sbírej 2–3 nápady. Zopakuj je nahlas (kotvení).</li>
+      <li>Sestav z toho prompt v reálném čase, mluvíc nahlas.</li>
+    </ul>
+  </div>
+
+  <div class="spoken">
+    Takže — co byste chtěly z těch dat vidět? Nějaký report z Czechitas kurzů? Top 5 lektorek podle hodnocení? Vývoj počtu studentek za rok? <em>Říkejte.</em>
+  </div>
+
+  <div class="cue">Sbírej odpovědi. Když je ticho, navrhni sama: „Co takhle <em>top 10 nejnavštěvovanějších kurzů + grafy podle měsíců</em>?"</div>
+
+  <div class="spoken">
+    Dobře. Takže napíšu agentovi: <strong>„Vygeneruj HTML report z tabulek ve Snowflake. Top 10 kurzů podle počtu studentek. Časová řada za posledních dvanáct měsíců. Pro junior analyst, který ta data vidí poprvé. Self-contained HTML."</strong>
+  </div>
+
+  <div class="cue">Pošli prompt. <strong>Mlč.</strong> Nechej agenta pracovat.</div>
+
+  <div class="note demo">
+    <h4>FÁZE 3 · Komentář během práce (~5 min)</h4>
+    <p>Když vidíš <code>list_tables</code> / <code>describe_table</code>: říkej nahlas <em>co</em> agent dělá. Nesmí to být ticho.</p>
+    <ul>
+      <li>„Vidíte? Začal <code>list_tables</code>. To <strong>vynutil skill</strong>. Bez skillu by si vymyslel sloupce z hlavy."</li>
+      <li>„Sahá na <code>describe_table</code>. Ověřuje si, co tam vůbec je."</li>
+      <li>Když pošle SQL: „Tohle je <em>read-only</em>. Skill ho zakázal psát do databáze."</li>
+      <li>Když píše HTML: „<strong>Reálná čísla</strong>, žádné placeholdery. To zase vynucuje skill."</li>
+    </ul>
+  </div>
+
+  <div class="note warn">
+    <h4>⚠ Pokud agent zatuhne / MCP padne</h4>
+    <p>Nepanikuj. Řekni: „<em>Tohle se dnes občas stává — síť, autorizace. Mám zálohu.</em>" → otevři <code>dashboard.html</code> z czechitas-pixel-agent / nebo přejdi na Stack Trace demo. Pointa zůstává.</p>
+  </div>
+</section>
+
+<!-- ─────────── SLIDE 05 ─────────── -->
+<section class="slide" id="s5">
+  <div class="slide-head">
+    <span class="slide-num">🪤 Slide 05</span>
+    <span class="slide-time">32:00 → 38:00</span>
+    <span class="slide-duration">~6 min</span>
+  </div>
+  <div class="slide-title">Trap reveal — „počkejte, tohle nesedí"</div>
+
+  <div class="cue">Otevři vygenerovaný dashboard.html. Zvětši. Pauza 5 sekund — ať se holky podívají.</div>
+
+  <div class="spoken">
+    Dobře. Máme report. Vypadá to hezky. <em>Ale.</em>
+  </div>
+
+  <div class="pause">PAUZA</div>
+
+  <div class="spoken">
+    Když ten report přinesete v pondělí na poradu — co by mělo zarazit? <em>Sledujte čísla.</em>
+  </div>
+
+  <div class="note magenta">
+    <h4>Pokud je v reportu COUNTRY_DIRTYDATA</h4>
+    <p>Ukaž na číslo. „<strong>408 zemí.</strong> Kolik je na světě států? OSN má 193 + 2 pozorovatele. Kolik říká náš report? 408. <em>Kde se vzala ta dvojnásobná hodnota?</em>"</p>
+    <p>Ukaž na zdroj v kódu. „Z tabulky <code>COUNTRY_DIRTYDATA</code>. Duplikovaná. Agent <em>mohl</em> sáhnout na <code>COUNTRY</code>, ale šel po té špatné. Skill ho varoval — ale výsledný HTML to neopravil."</p>
+  </div>
+
+  <div class="note warn">
+    <h4>Pokud past v reportu není</h4>
+    <p>Řekni: „Dnes to dopadlo dobře. <em>Ale kdo garantuje, že to dopadne dobře zítra, na jiných datech?</em>" Pointa stejná — agent může vybrat špatně, skill je <em>nutná podmínka, ne dostatečná</em>.</p>
+  </div>
+
+  <div class="spoken">
+    A tohle je rozdíl mezi „<strong>funguje</strong>" a „<strong>funguje pokaždé</strong>". Skill je silný, <em>když funguje</em>. Otázka, kterou si položíte v práci: <em>jak víme, že funguje pokaždé?</em>
+  </div>
+
+  <div class="spoken">
+    Odpověď: <strong>evals</strong>. Automatický test, který říká „ano, agent ze skillu vyjel správný query, ano, vybral správnou tabulku, ano, čísla sedí". Ale to už je téma pro Kubu — on po mně dnes evals dělá.
+  </div>
+
+  <div class="cue">→ na slide 06.</div>
+</section>
+
+<!-- ─────────── SLIDE 06 ─────────── -->
+<section class="slide" id="s6">
+  <div class="slide-head">
+    <span class="slide-num">📦 Slide 06</span>
+    <span class="slide-time">38:00 → 45:00</span>
+    <span class="slide-duration">~7 min</span>
+  </div>
+  <div class="slide-title">Co si odnášíš — tři dema + domácí úkol</div>
+
+  <div class="spoken">
+    Než předám slovo Kubovi, dvě praktické věci.
+  </div>
+
+  <div class="spoken">
+    <strong>Tři demo stránky</strong> jsou nahrané online. Pixel Agent — vizualizace toho, co jsme teď viděly. Stack Trace — pět vrstev kontextu jednoho dotazu. Skill Builder — ten samý soubor, jen postavený klikáním. Všechno běží v prohlížeči, žádný setup.
+  </div>
+
+  <div class="spoken">
+    A <strong>domácí úkol</strong> — volitelný, ale stojí za to. Univerzální gajd „kam patří skill v Copilotu, Claude Code i OpenCode". Ten samý úkol — HTML report — ve třech harness'ech. <em>Princip pochopíš jednou, použiješ kdekoliv.</em>
+  </div>
+
+  <div class="note">
+    <h4>Praktická poznámka</h4>
+    <p>Většina z vás bude pokračovat v <strong>Copilotu</strong> (to, co Tana nastavila). Gajd je pro to napsaný — ale ukazuje i Claude Code variantu, abyste viděly, že je to <em>stejný princip, jen jiná složka</em>. Až někdy budete pracovat s jiným agentem, znáte to.</p>
+  </div>
+
+  <div class="spoken">
+    A tím dnes končíme. Dvě věci, co byste si měly odnést — <strong>skill je markdown soubor, ne framework</strong>, a <strong>nedůvěřujte výstupu, dokud ho nezměříte</strong>. To první vám usnadní práci. To druhé vám zachrání práci.
+  </div>
+
+  <div class="spoken">
+    Předávám Kubovi. Děkuju.
+  </div>
+
+  <div class="cue">Tlesk by měl přijít. Pokud ne — řekni „díky" a posaď se. Kuba převezme.</div>
+</section>
+
+<!-- ─────────── TIMING ─────────── -->
+<section id="timing">
+  <h2 style="margin-top: 60px; font-size: 24px; letter-spacing: -0.01em;">⏱ Timing cheat-sheet</h2>
+  <table class="timing-table">
+    <thead>
+      <tr><th>Čas</th><th>Slide / fáze</th><th>Co dělám</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>0:00</td><td>01 · Title</td><td>Krátký úvod, Ilia, co bude.</td></tr>
+      <tr><td>1:30</td><td>02 · Recap</td><td>Včera + dnes před chvílí. Slovo „past" ronit.</td></tr>
+      <tr><td>7:00</td><td>03 · Pipeline</td><td>Čtyři krabičky. Ukázat skill úryvek.</td></tr>
+      <tr><td>12:00</td><td>04 · Demo fáze 1</td><td>Otevřít SKILL.md v editoru, ukázat.</td></tr>
+      <tr><td>15:00</td><td>04 · Demo fáze 2</td><td>Sebrat nápady od holek, sestavit prompt.</td></tr>
+      <tr><td>20:00</td><td>04 · Demo fáze 3</td><td>Komentář během práce agenta (~10 min).</td></tr>
+      <tr><td>32:00</td><td>05 · Trap reveal</td><td>Otevřít report, najít/zinscenovat past.</td></tr>
+      <tr><td>38:00</td><td>06 · Wrap-up</td><td>Tři dema + DÚ + závěrečné dvě věty.</td></tr>
+      <tr><td>45:00</td><td>—</td><td><strong>Kuba</strong> přebírá (evals).</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note warn">
+    <h4>⏱ Timing rezerva</h4>
+    <p>Slide 04 je <strong>20 minut</strong> — největší blok. Pokud agent pracuje rychle (5 min), použij ušetřený čas na druhý prompt nebo druhou interakci s holkami. Pokud agent pracuje pomalu, přeskoč podrobný komentář a hned přejdi na slide 05.</p>
+    <p>Slide 06 nesmí být kratší než 5 min — wrap-up je důležitý, holky si odnesou poslední větu.</p>
+  </div>
+</section>
+
+<!-- ─────────── FALLBACK ─────────── -->
+<section id="fallback">
+  <h2 style="margin-top: 60px; font-size: 24px; letter-spacing: -0.01em;">🚨 Fallback — když něco selže</h2>
+  <div class="fallback">
+    <h3>Pokud Snowflake MCP padne</h3>
+    <ul>
+      <li>Neřeš to nahlas víc než 10 sekund. „<strong>Síť. Mám zálohu.</strong>"</li>
+      <li>Otevři <code>dashboard.html</code> z czechitas-pixel-agent (předem nachystaný).</li>
+      <li>Komentuj, jako by ho právě vyrobil agent. Pointa <em>jak skill řídí flow</em> zůstává.</li>
+      <li>Slide 05 (trap reveal) udělej ručně — ukaž na něco v dashboardu, řekni „kdyby tohle bylo z _OLD tabulky, nevěděl bys to".</li>
+    </ul>
+  </div>
+
+  <div class="fallback">
+    <h3>Pokud Claude Code zatuhne / token expiroval</h3>
+    <ul>
+      <li>Nikdy neztrácej více než 30 sekund na restart.</li>
+      <li>Plán B: <strong>Stack Trace demo</strong> — <code>ishalkin.github.io/czechitas-stack-trace</code> — ukáže pět vrstev jednoho dotazu staticky. Pointa stejná.</li>
+      <li>Plán C: otevři SKILL.md v editoru a <em>vysvětli ho čtením</em>. Říkej, co by agent měl udělat. Holky si představí.</li>
+    </ul>
+  </div>
+
+  <div class="fallback">
+    <h3>Pokud holky nereagují / nediktují prompt</h3>
+    <ul>
+      <li>Nečekej víc než 10 sekund. Navrhni sama: „<strong>Co takhle top 10 kurzů s časovou řadou?</strong>"</li>
+      <li>Pokud někdo navrhne těžkou věc (machine learning, predikci) — pochval, ale řekni: „Skvělé, to je krok dva. Dnes uděláme krok jedna — zobrazení."</li>
+    </ul>
+  </div>
+</section>
+
+</body>
+</html>
