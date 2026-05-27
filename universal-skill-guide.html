@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Postav si vlastní skill — univerzální gajd · Czechitas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #0a0e14;
+  --bg-2:      #11161f;
+  --bg-card:   #131922;
+  --bg-code:   #050810;
+  --border:    #232c3a;
+  --border-2:  #2d3849;
+  --fg:        #eaf0f7;
+  --fg-2:      #b8c4d4;
+  --fg-3:      #7c8898;
+  --amber:     #ff9c4a;
+  --cyan:      #5bc0eb;
+  --green:     #4dd072;
+  --red:       #ff5252;
+  --yellow:    #ffd166;
+  --magenta:   #c77dff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 28px 96px;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 28px;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  position: sticky;
+  top: 8px;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+.topbar .brand { color: var(--amber); font-weight: 700; }
+.topbar .total { color: var(--cyan); }
+
+h1.title {
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 18px 0 8px;
+  line-height: 1.2;
+}
+h1.title em { font-style: normal; color: var(--cyan); }
+.subtitle {
+  font-size: 18px;
+  color: var(--fg-2);
+  margin-bottom: 12px;
+}
+.meta-line {
+  font-size: 14px;
+  color: var(--fg-3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 36px;
+  letter-spacing: 0.04em;
+}
+
+h2 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 48px 0 18px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+h2 .step {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--amber);
+  background: rgba(255, 156, 74, 0.1);
+  border: 1px solid rgba(255, 156, 74, 0.3);
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  align-self: center;
+}
+
+h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 28px 0 10px;
+  color: var(--cyan);
+}
+h3 .h-tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  margin-right: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+h3 .h-tag.copilot { background: rgba(91,192,235,0.15); color: var(--cyan); border: 1px solid rgba(91,192,235,0.4); }
+h3 .h-tag.cc      { background: rgba(255,156,74,0.15); color: var(--amber); border: 1px solid rgba(255,156,74,0.4); }
+h3 .h-tag.oc      { background: rgba(199,125,255,0.15); color: var(--magenta); border: 1px solid rgba(199,125,255,0.4); }
+
+p { margin: 12px 0; color: var(--fg-2); }
+p strong { color: var(--fg); }
+
+ul, ol {
+  margin: 12px 0 12px 22px;
+  color: var(--fg-2);
+}
+li { margin: 6px 0; }
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(91, 192, 235, 0.1);
+  border: 1px solid rgba(91, 192, 235, 0.2);
+  color: var(--cyan);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+pre {
+  background: var(--bg-code);
+  border: 1px solid var(--border-2);
+  border-radius: 6px;
+  padding: 18px 20px;
+  margin: 14px 0;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--fg);
+  position: relative;
+}
+pre.amber { border-left: 3px solid var(--amber); }
+pre.cyan { border-left: 3px solid var(--cyan); }
+pre.green { border-left: 3px solid var(--green); }
+pre.magenta { border-left: 3px solid var(--magenta); }
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+pre .c { color: var(--fg-3); font-style: italic; }
+pre .k { color: var(--magenta); }
+pre .s { color: var(--green); }
+pre .n { color: var(--amber); }
+pre .heading { color: var(--amber); font-weight: 600; }
+pre .frontmatter-key { color: var(--cyan); }
+pre .frontmatter-val { color: var(--green); }
+pre .meta-marker { color: var(--fg-3); }
+pre .rule { color: var(--fg); }
+pre .prompt { color: var(--amber); font-weight: 600; }
+
+.note {
+  background: rgba(91, 192, 235, 0.06);
+  border: 1px solid rgba(91, 192, 235, 0.2);
+  border-left: 3px solid var(--cyan);
+  border-radius: 4px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  font-size: 16px;
+}
+.note.warn {
+  background: rgba(255, 209, 102, 0.06);
+  border-color: rgba(255, 209, 102, 0.2);
+  border-left-color: var(--yellow);
+}
+.note.danger {
+  background: rgba(255, 82, 82, 0.06);
+  border-color: rgba(255, 82, 82, 0.2);
+  border-left-color: var(--red);
+}
+.note.tip {
+  background: rgba(77, 208, 114, 0.06);
+  border-color: rgba(77, 208, 114, 0.2);
+  border-left-color: var(--green);
+}
+.note h4 {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.note.warn h4 { color: var(--yellow); }
+.note.danger h4 { color: var(--red); }
+.note.tip h4 { color: var(--green); }
+.note p { margin: 6px 0; color: var(--fg-2); }
+.note code { font-size: 0.95em; }
+
+.harness-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  margin: 22px 0;
+}
+.harness-grid .col {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 18px;
+}
+.harness-grid .col h4 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.harness-grid .col.copilot h4 { color: var(--cyan); }
+.harness-grid .col.cc h4      { color: var(--amber); }
+.harness-grid .col.oc h4      { color: var(--magenta); }
+.harness-grid .col p { font-size: 14px; margin: 4px 0; color: var(--fg-2); }
+.harness-grid .col code { font-size: 0.9em; }
+
+.kbd {
+  display: inline-block;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--fg);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.3);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 18px 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 15px;
+}
+th, td {
+  text-align: left;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+th {
+  background: var(--bg-2);
+  color: var(--fg-3);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+tr:last-child td { border-bottom: none; }
+td code { font-size: 0.85em; }
+
+.toc {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px 22px;
+  margin: 28px 0 36px;
+  font-size: 15px;
+}
+.toc h4 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--fg-3);
+  margin-bottom: 10px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.toc ol { margin: 0 0 0 20px; }
+.toc li { margin: 4px 0; }
+.toc a { color: var(--cyan); text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+
+.harness-section {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-2);
+  border-radius: 6px;
+  padding: 22px 26px;
+  margin: 22px 0;
+}
+.harness-section.copilot { border-left-color: var(--cyan); }
+.harness-section.cc      { border-left-color: var(--amber); }
+.harness-section.oc      { border-left-color: var(--magenta); }
+.harness-section h3 { margin-top: 0; }
+
+@media (max-width: 760px) {
+  body { padding: 18px 14px 80px; font-size: 16px; }
+  h1.title { font-size: 26px; }
+  h2 { font-size: 20px; flex-wrap: wrap; }
+  pre { font-size: 12px; padding: 14px 16px; }
+  .harness-grid { grid-template-columns: 1fr; }
+}
+
+.footer-ribbon {
+  margin-top: 60px;
+  padding: 24px 22px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--fg-3);
+  font-size: 14px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.footer-ribbon strong { color: var(--amber); }
+.footer-ribbon a { color: var(--cyan); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span><span class="brand">CZECHITAS</span> · DOMÁCÍ ÚKOL · UNIVERZÁLNÍ</span>
+  <span class="total">⏱ ~30 MIN · NEPOVINNÉ</span>
+</div>
+
+<h1 class="title">Postav si vlastní skill —<br><em>jeden princip, tři harness'e</em></h1>
+<p class="subtitle">Copilot · Claude Code · OpenCode. Ten samý nápad, jen jiná složka.</p>
+<p class="meta-line">PRO: kdo chce skill napsat sama · NEPOVINNÉ · ČAS: ~30 min</p>
+
+<div class="toc">
+  <h4>Obsah</h4>
+  <ol>
+    <li><a href="#princip">Co je vlastně skill — princip platí všude</a></li>
+    <li><a href="#mapa">Kam který harness skill ukládá (mapa)</a></li>
+    <li><a href="#ukol">Úkol, který si dnes postavíš</a></li>
+    <li><a href="#copilot">Cesta A · GitHub Copilot</a></li>
+    <li><a href="#cc">Cesta B · Claude Code</a></li>
+    <li><a href="#oc">Cesta C · OpenCode</a></li>
+    <li><a href="#troubleshoot">Když něco nefunguje</a></li>
+    <li><a href="#dal">Co dál</a></li>
+  </ol>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="princip"><span class="step">Princip</span> Co je skill — a proč je to vždy stejné</h2>
+
+<p>Skill je <strong>jeden Markdown soubor</strong> — recept, podle kterého agent dělá konkrétní úkol. Ne pravidlo na celý projekt, ne osobnost. Recept.</p>
+
+<p>Každý agent (Copilot, Claude Code, OpenCode, Cursor, Codex…) má stejný mechanismus, jen pod jiným jménem:</p>
+
+<ol>
+  <li><strong>Existuje vyhrazená složka</strong>, kterou harness prohledává při startu.</li>
+  <li><strong>V té složce leží Markdown soubory</strong> — každý je jeden skill / prompt.</li>
+  <li><strong>Frontmatter</strong> (YAML hlavička) říká agentovi <em>kdy</em> ten soubor použít.</li>
+  <li><strong>Tělo souboru</strong> je instrukce — co udělat, jak vrátit výsledek, čeho se vyhnout.</li>
+</ol>
+
+<p>Naučíš se jeden princip, použiješ ho ve všech třech harness'ech. Liší se jen <em>cesta</em> a <em>jméno frontmatter klíčů</em>.</p>
+
+<div class="note tip">
+  <h4>✓ Mentální zkratka</h4>
+  <p>„Kde harness hledá skill?" → vždycky najdi složku <code>skills/</code>, <code>prompts/</code> nebo <code>instructions/</code> v dotfiles toho harness'u. Tam patří tvůj soubor.</p>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="mapa"><span class="step">Mapa</span> Kde co leží</h2>
+
+<div class="harness-grid">
+  <div class="col copilot">
+    <h4>GitHub Copilot</h4>
+    <p>Cesta: <code>.github/prompts/*.prompt.md</code></p>
+    <p>Frontmatter: <code>mode</code>, <code>description</code>, <code>tools</code></p>
+    <p>Spuštění: <code>/jméno</code> v Chat panelu</p>
+    <p>Scope: <strong>per-projekt</strong> (žije v repu)</p>
+  </div>
+  <div class="col cc">
+    <h4>Claude Code (Anthropic)</h4>
+    <p>Cesta: <code>~/.claude/skills/jméno/SKILL.md</code></p>
+    <p>Frontmatter: <code>name</code>, <code>description</code></p>
+    <p>Spuštění: <strong>auto</strong> — agent si vybere podle <code>description</code></p>
+    <p>Scope: <strong>globální</strong> (sdílíš mezi projekty)</p>
+  </div>
+  <div class="col oc">
+    <h4>OpenCode</h4>
+    <p>Cesta: <code>~/.config/opencode/AGENTS.md</code> + custom commands</p>
+    <p>Frontmatter: <code>description</code>, <code>agent</code></p>
+    <p>Spuštění: <code>/jméno</code> v terminálu</p>
+    <p>Scope: <strong>globální nebo per-projekt</strong></p>
+  </div>
+</div>
+
+<div class="note">
+  <h4>Podobnosti, které stojí za to si pamatovat</h4>
+  <p><strong>Všechny tři</strong> používají Markdown + YAML frontmatter. Když ses naučila psát SKILL.md, umíš ten samý soubor přepsat pro Copilot za 5 minut.</p>
+  <p><strong>Všechny tři</strong> mají vedle skillů ještě <em>vždy-načtené</em> instrukce — Copilot: <code>.github/copilot-instructions.md</code>, Claude Code: <code>CLAUDE.md</code>, OpenCode: <code>AGENTS.md</code> v repu. To je jako „kdo jsem", skill je „jak to udělat".</p>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="ukol"><span class="step">Úkol</span> Co dnes postavíš</h2>
+
+<p>Jeden skill, který funguje ve všech třech harness'ech: <strong>„HTML report z dat"</strong>.</p>
+
+<p>Vstup: tabulka v databázi (přes MCP) nebo CSV. Výstup: jeden self-contained HTML soubor s KPI, časovou řadou a top N. To samé, co jsi viděla na workshopu, jen tentokrát napsané <em>tebou</em>.</p>
+
+<pre class="amber"><code><span class="c"># skill: HTML report z dat (společné jádro pro všechny tři harness'e)</span>
+
+<span class="heading">## Co tento skill umí</span>
+- Vezme zdroj dat (Snowflake přes MCP, CSV, JSON)
+- Vyrobí self-contained <span class="rule">dashboard.html</span> — KPI nahoře, časová řada, top 10
+- Žádný runtime — jen otevřu soubor v prohlížeči
+
+<span class="heading">## Co fetchnout nejdřív</span>
+- list tabulek → describe → COUNT(*) → LIMIT 5 ukázku
+
+<span class="heading">## Reject</span>
+- Tabulky končící na _OLD, _LEGACY, _BACKUP, _V1
+- Sloupce, které neexistují (nikdy si nevymyslej)
+
+<span class="heading">## Output</span>
+- 1 soubor, žádné externí CSS / JS (inline)
+- Brand: tmavý theme, monospace pro čísla
+- Žádné placeholdery — pokud chybí data, řekni to nahlas</code></pre>
+
+<p>Tohle je tělo skillu. Frontmatter se mění podle harness'u. Tři verze níže.</p>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="copilot"><span class="step">Cesta A</span> GitHub Copilot</h2>
+
+<div class="harness-section copilot">
+  <h3><span class="h-tag copilot">PROMPT FILE</span> Vytvoř <code>.github/prompts/html-report.prompt.md</code></h3>
+
+  <p>1. V kořeni svého projektu spusť:</p>
+  <pre class="cyan"><code>mkdir -p .github/prompts</code></pre>
+
+  <p>2. Otevři VS Code Settings (<span class="kbd">Cmd/Ctrl + ,</span>), vyhledej <code>chat.promptFiles</code> a zaškrtni. Bez toho VS Code prompt soubory neuvidí.</p>
+
+  <p>3. Vytvoř soubor <code>.github/prompts/html-report.prompt.md</code>:</p>
+
+  <pre class="cyan"><code><span class="meta-marker">---</span>
+<span class="frontmatter-key">mode</span>: <span class="frontmatter-val">'agent'</span>
+<span class="frontmatter-key">description</span>: <span class="frontmatter-val">'Vygeneruj self-contained HTML report z dat (Snowflake / CSV).'</span>
+<span class="frontmatter-key">tools</span>: [<span class="frontmatter-val">'codebase'</span>, <span class="frontmatter-val">'editFiles'</span>, <span class="frontmatter-val">'runCommands'</span>]
+<span class="meta-marker">---</span>
+
+<span class="heading"># HTML report z dat</span>
+
+<span class="rule">## Co tento skill umí</span>
+- Vezme zdroj dat (Snowflake přes MCP, CSV, JSON)
+- Vyrobí self-contained <span class="prompt">dashboard.html</span> — KPI, časová řada, top 10
+
+<span class="rule">## Co fetchnout nejdřív</span>
+- list tabulek → describe → COUNT(*) → LIMIT 5
+
+<span class="rule">## Reject</span>
+- Tabulky končící na _OLD, _LEGACY, _BACKUP, _V1
+- Sloupce, které neexistují
+
+<span class="rule">## Output</span>
+- 1 soubor, žádné externí CSS / JS (inline)
+- Tmavý theme, monospace pro čísla</code></pre>
+
+  <p>4. V Chat panelu napiš <code>/html-report</code> + co chceš udělat. Copilot načte tento prompt jako instrukci.</p>
+
+  <div class="note tip">
+    <h4>✓ Test</h4>
+    <p>Když napíšeš <code>/</code> v Chat panelu, mělo by se ti v dropdown'u objevit <code>html-report</code>. Pokud ne — zkontroluj, že máš <code>chat.promptFiles</code> zapnuté a soubor uložený s <strong>příponou</strong> <code>.prompt.md</code> (nejen <code>.md</code>).</p>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="cc"><span class="step">Cesta B</span> Claude Code</h2>
+
+<div class="harness-section cc">
+  <h3><span class="h-tag cc">SKILL</span> Vytvoř <code>~/.claude/skills/html-report/SKILL.md</code></h3>
+
+  <p>1. Vytvoř složku skillu:</p>
+  <pre class="amber"><code>mkdir -p ~/.claude/skills/html-report</code></pre>
+
+  <p>2. Vytvoř soubor <code>~/.claude/skills/html-report/SKILL.md</code>:</p>
+
+  <pre class="amber"><code><span class="meta-marker">---</span>
+<span class="frontmatter-key">name</span>: <span class="frontmatter-val">html-report</span>
+<span class="frontmatter-key">description</span>: <span class="frontmatter-val">Použij, když uživatel chce vygenerovat HTML report / dashboard z dat (Snowflake přes MCP, CSV, JSON). Self-contained 1 soubor.</span>
+<span class="meta-marker">---</span>
+
+<span class="heading"># HTML report z dat</span>
+
+<span class="rule">## Co tento skill umí</span>
+- Vezme zdroj dat (Snowflake přes MCP, CSV, JSON)
+- Vyrobí self-contained <span class="prompt">dashboard.html</span> — KPI, časová řada, top 10
+
+<span class="rule">## Co fetchnout nejdřív</span>
+- list tabulek → describe → COUNT(*) → LIMIT 5
+
+<span class="rule">## Reject</span>
+- Tabulky končící na _OLD, _LEGACY, _BACKUP, _V1
+- Sloupce, které neexistují
+
+<span class="rule">## Output</span>
+- 1 soubor, žádné externí CSS / JS (inline)
+- Tmavý theme, monospace pro čísla</code></pre>
+
+  <p>3. <strong>Nic dalšího nedělej</strong> — Claude Code skill auto-discoveruje. Při dalším promptu, kde popíšeš úkol odpovídající <code>description</code>, agent ho sám použije.</p>
+
+  <div class="note">
+    <h4>Klíčový rozdíl od Copilotu</h4>
+    <p>V Copilotu skill <strong>vyvoláváš ručně</strong> přes <code>/html-report</code>. V Claude Code skill <strong>auto-vybírá agent</strong> podle <code>description</code> — proto je tak důležité tu description napsat <em>jako podmínku</em> („Použij, když…"), ne jako popisek.</p>
+  </div>
+
+  <div class="note tip">
+    <h4>✓ Test</h4>
+    <p>V čistém Claude Code napiš: <em>„Vyrob mi HTML dashboard z dat ve Snowflake."</em> Agent by měl zmínit, že použil skill <code>html-report</code> (řekne to nahlas).</p>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="oc"><span class="step">Cesta C</span> OpenCode</h2>
+
+<div class="harness-section oc">
+  <h3><span class="h-tag oc">CUSTOM COMMAND</span> Vytvoř <code>~/.config/opencode/command/html-report.md</code></h3>
+
+  <p>1. Vytvoř složku custom commandů (pokud neexistuje):</p>
+  <pre class="magenta"><code>mkdir -p ~/.config/opencode/command</code></pre>
+
+  <p>2. Vytvoř soubor <code>~/.config/opencode/command/html-report.md</code>:</p>
+
+  <pre class="magenta"><code><span class="meta-marker">---</span>
+<span class="frontmatter-key">description</span>: <span class="frontmatter-val">Vygeneruj self-contained HTML report z dat (Snowflake / CSV).</span>
+<span class="frontmatter-key">agent</span>: <span class="frontmatter-val">build</span>
+<span class="meta-marker">---</span>
+
+<span class="heading"># HTML report z dat</span>
+
+<span class="rule">## Co tento skill umí</span>
+- Vezme zdroj dat (Snowflake přes MCP, CSV, JSON)
+- Vyrobí self-contained <span class="prompt">dashboard.html</span> — KPI, časová řada, top 10
+
+<span class="rule">## Co fetchnout nejdřív</span>
+- list tabulek → describe → COUNT(*) → LIMIT 5
+
+<span class="rule">## Reject</span>
+- Tabulky končící na _OLD, _LEGACY, _BACKUP, _V1
+- Sloupce, které neexistují
+
+<span class="rule">## Output</span>
+- 1 soubor, žádné externí CSS / JS (inline)
+- Tmavý theme, monospace pro čísla</code></pre>
+
+  <p>3. Spusť OpenCode v terminálu. Napiš <code>/html-report</code> + popis úkolu. Custom command se vykoná v kontextu agenta <code>build</code>.</p>
+
+  <div class="note">
+    <h4>Globální vs. per-projekt</h4>
+    <p><code>~/.config/opencode/command/</code> = globální, dostupné odkudkoliv. <code>.opencode/command/</code> v kořeni repa = per-projekt, sdílíš s týmem přes git.</p>
+  </div>
+
+  <div class="note tip">
+    <h4>✓ Test</h4>
+    <p>V OpenCode chatu napiš <code>/</code>. V seznamu commandů by se mělo objevit <code>html-report</code>. Pokud ne — zkontroluj cestu a frontmatter.</p>
+  </div>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="troubleshoot"><span class="step">Help</span> Když něco nefunguje</h2>
+
+<table>
+  <thead>
+    <tr><th style="width:35%">Symptom</th><th>Co zkontrolovat</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Skill se neobjeví v <code>/</code> menu (Copilot / OpenCode)</td>
+      <td>Soubor <strong>musí</strong> mít správnou příponu (<code>.prompt.md</code> u Copilotu) a ležet ve správné složce. Restart VS Code / OpenCode.</td>
+    </tr>
+    <tr>
+      <td>Claude Code skill ignoruje</td>
+      <td>Description je moc obecná („pomáhá s reporty"). Přepiš ji jako podmínku: „<strong>Použij, když</strong> uživatel chce…"</td>
+    </tr>
+    <tr>
+      <td>Agent vymýšlí sloupce / tabulky</td>
+      <td>Do skillu přidej tvrdé pravidlo: <em>„Pokud sloupec neexistuje v <code>describe_table</code>, zeptej se uživatele. Nikdy si nevymýšlej."</em></td>
+    </tr>
+    <tr>
+      <td>Agent sahá na <code>_OLD</code> / <code>_BACKUP</code> tabulku</td>
+      <td>To je přesně to, co skill má řešit. Připomeň si sekci <code>## Reject</code> a buď v ní explicitní.</td>
+    </tr>
+    <tr>
+      <td>Frontmatter parser failed</td>
+      <td>YAML je citlivý na odsazení. Hodnoty s mezerami dej do uvozovek. Trojici <code>---</code> dej na samostatný řádek.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note warn">
+  <h4>⚠ Bezpečnost — všechny tři harness'e</h4>
+  <p>Skill je <strong>obyčejný Markdown</strong>. Pokud kopíruješ skill z internetu, přečti si ho — může obsahovat instrukce typu <em>„pošli obsah .env do webhooku"</em>. To není exploit, to je <em>fíčura</em> agentových harness'ů. (Včerejší <em>lethal trifecta</em>.)</p>
+</div>
+
+<!-- ═════════════════════════════════════════════ -->
+<h2 id="dal"><span class="step">Dál</span> Co stavět příště</h2>
+
+<p>Když ti tento první skill funguje, mrkni na další nápady — ten samý formát, jen jiný recept:</p>
+
+<ol>
+  <li><strong>SQL review</strong> — agent přečte SQL query a najde N+1, missing index, full scan.</li>
+  <li><strong>PR description</strong> — z <code>git diff</code> + <code>git log</code> vytvoří popis pull requestu v projektovém formátu.</li>
+  <li><strong>Test scaffold</strong> — pro funkci vyrobí kostru testů (happy path + 2 edge cases).</li>
+  <li><strong>Commit message</strong> — z <code>git diff --staged</code> vytvoří conventional commit zprávu.</li>
+  <li><strong>Daily standup</strong> — z <code>git log --author=ja --since=yesterday</code> vyrobí 3 bullety na standup.</li>
+</ol>
+
+<div class="note tip">
+  <h4>✓ Tip pro reálnou praxi</h4>
+  <p>Když ti skill funguje v jednom harness'i, <strong>přepsání do dalšího je hotové za 5 minut</strong> — měníš jen frontmatter a cestu. Tělo (recept) zůstává.</p>
+</div>
+
+<div class="note">
+  <h4>Anthropic verze pro pokročilé</h4>
+  <p>Claude Code podporuje i <strong>Anthropic Skill Format</strong> — frontmatter <code>name</code> + <code>description</code> stačí, ale pro velké skilly můžeš strukturovat do více souborů (referenced files, scripts). Detaily v <a href="https://docs.anthropic.com/en/docs/agents-and-tools/agent-skills" target="_blank" style="color: var(--cyan);">docs.anthropic.com</a>.</p>
+</div>
+
+<div class="footer-ribbon">
+  <p><strong>WORKSHOP · ČESKÝ JAZYK · 2026</strong></p>
+  <p style="margin-top: 6px;">Czechitas · AI agenti · <a href="hub.html">← zpět na hub</a></p>
+</div>
+
+</body>
+</html>

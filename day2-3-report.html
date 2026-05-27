@@ -598,14 +598,17 @@ body.speaker-mode #speaker-panel { display: block; }
     <span class="kicker green">⚡ LIVE · 2–4 MIN</span>
     <h2>Sledujte agenta. Komentář k tomu.</h2>
 
-    <p style="font-size:21px;">Sdílíme terminál. Pošlu prompt. Pak ticho — necháme agenta pracovat.</p>
+    <p style="font-size:21px;">Sdílím terminál v Claude Code. <strong>Vy diktujete</strong> — co chcete z databáze vidět? Já píšu prompt, agent dělá.</p>
 
-<pre class="green-bar"><span class="c">// OpenCode chat · čistý kontext · Snowflake MCP enabled</span>
+<pre class="green-bar"><span class="c">// Claude Code · čistý kontext · Snowflake MCP enabled</span>
 
-<span class="t">Vygeneruj mi report o dataset COURSES.SCH_TEROR.</span>
-<span class="t">Audience: junior analyst v Czechitas, který tu databázi</span>
-<span class="t">vidí poprvé. Chci 1 self-contained HTML soubor, který</span>
-<span class="t">otevřu v prohlížeči. Použij ten skill, co máme načtený.</span></pre>
+<span class="t">Vygeneruj mi HTML report z dat, která máš ve Snowflake.</span>
+<span class="t">[ ← sem dáme to, co holky řeknou: jaké tabulky, jaký řez,</span>
+<span class="t">    co je zajímá — KPI, časová řada, top N, geo… ]</span>
+<span class="t">Audience: junior analyst, vidí ta data poprvé.</span>
+<span class="t">Chci 1 self-contained HTML, otevřu v prohlížeči.</span></pre>
+
+    <p style="font-size:17px; color: var(--fg-3); margin-top:8px;">Skill „HTML report" si <strong>vytáhneme z agenta v reálném čase</strong> — uvidíte, jak vypadá, než ho použijeme. Pak hodím prompt a komentujeme.</p>
 
     <h3>Co budu komentovat nahlas</h3>
     <table>
@@ -713,13 +716,17 @@ body.speaker-mode #speaker-panel { display: block; }
         <ul>
           <li><strong>SQL Quality Judge</strong> — automaticky kontroluje, že agent ze skillu vyjel správný query</li>
           <li>před / po se <strong>změří</strong>, ne jen ukáže</li>
-          <li>tvůj vlastní skill (ten, na kterém jsme dnes pracovali) + evaly = produkční pipeline</li>
+          <li>skill, který jsme právě vytáhli + evaly = produkční pipeline</li>
         </ul>
       </div>
     </div>
 
     <div class="callout green">
-      <strong>Princip celého workshopu:</strong> API + Agent + MCP + Skill + Evals. Pět dílů, jeden loop. Holky odcházejí s vlastním skillem v <code>~/.claude/skills/</code> — a vědí, jak ho zítra v práci použít.
+      <strong>Domácí úkol (volitelně):</strong> univerzální gajd <em>„kam patří skill v Copilotu / Claude Code / OpenCode"</em> — jednu úlohu vyřešíš ve třech harness'ech. Princip: harness vždy hledá složku <code>skills/</code> ve své dotfiles, jen pod jiným jménem. Pochopíš to jednou, použiješ kdekoliv.
+    </div>
+
+    <div class="callout green" style="margin-top: 12px;">
+      <strong>Princip celého workshopu:</strong> API + Agent + MCP + Skill + Evals. Pět dílů, jeden loop. Dnes jste viděly, co skill umí — <strong>doma si ho postavíte sami</strong> podle gajdu.
     </div>
   </div>
 </section>
