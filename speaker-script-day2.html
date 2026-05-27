@@ -316,9 +316,9 @@ code {
     <h4>FÁZE 2 · Dashboard + GitHub deploy (~7 min)</h4>
     <p>Číselný výstup máme. Teď z toho udělej <em>artefakt, který lze poslat</em>.</p>
     <ul>
-      <li>Pošli další prompt: „<strong>Udělej z toho self-contained HTML dashboard. Tmavý theme. KPI nahoře, tabulka, jednoduchý graf. A pak to commitni a pushni do <code>czechitas-dashboard</code> repa, ať se otevře přes GitHub Pages.</strong>"</li>
-      <li>Agent píše HTML. Ukázat soubor v editoru když ho dokončí.</li>
-      <li>Agent dělá <code>git push</code>. Otevřít URL v prohlížeči. <strong>Wow moment.</strong></li>
+      <li>Repo už máme: <code>czechitas-pixel-agent</code>. Pages tam běží. Push do něj = nový soubor je za minutu online.</li>
+      <li>URL po pushi: <code>ishalkin.github.io/czechitas-pixel-agent/<strong>czechitas-dashboard.html</strong></code></li>
+      <li>Agent píše HTML, dělá <code>git add</code> + <code>commit</code> + <code>push</code>, ukázat URL v prohlížeči.</li>
     </ul>
   </div>
 
@@ -326,12 +326,13 @@ code {
     Máme čísla. Ale <em>čísla v terminálu</em> nikomu nepomohou. Potřebujeme to dostat ven — do prohlížeče, na URL, kterou pošlu kolegyni.
   </div>
 
-  <div class="cue">Pošli prompt na HTML + push. Komentuj během.</div>
+  <div class="cue">Pošli prompt: <em>„Udělej z toho self-contained HTML dashboard. Tmavý theme, KPI nahoře, tabulka, jeden graf. Ulož jako <code>czechitas-dashboard.html</code> do tohohle repa a pushni — Pages už tam běží."</em> Komentuj během.</div>
 
   <ul style="margin: 8px 0 8px 22px; color: var(--fg-2); font-size: 17px;">
     <li>Když píše HTML: „Self-contained znamená <em>jeden soubor, žádný server</em>. Otevřu přímo v prohlížeči."</li>
     <li>Když dělá <code>git add</code> + <code>commit</code> + <code>push</code>: „Tohle dělá agent <em>sám</em>, není to magie — má povolení používat shell. Vidíte commit message? Napsal ji sám podle kontextu."</li>
-    <li>Po pushi otevři URL v prohlížeči. <strong>Pauza 5 sekund.</strong> Ať se holky podívají.</li>
+    <li>Po pushi otevři <code>ishalkin.github.io/czechitas-pixel-agent/czechitas-dashboard.html</code>. <strong>Pauza 5 sekund.</strong></li>
+    <li><strong>Pokud se zobrazí 404:</strong> klid. Pages buduje 30-60 sekund. Řekni „Pages teď staví, dáme tomu chvilku" — pokračuj komentářem k HTML v editoru, refreshni za minutu.</li>
   </ul>
 
   <div class="spoken">
